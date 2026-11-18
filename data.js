@@ -65,6 +65,15 @@ const SITE_DATA = {
     "從小台或微台等小規模合約開始，而不是一開始就做大台。",
   ],
 
+  // ---------- 08 聯絡我們 ----------
+  // link 可以填：mailto:信箱、https://網址；不想要連結就留 ""
+  // 不需要的項目整行刪掉即可
+  contact: [
+    // 要顯示信箱：把下一行開頭的 // 刪掉，並改成你的信箱
+    // { icon: "✉️", title: "電子郵件", value: "you@example.com", link: "mailto:you@example.com" },
+    { icon: "💬", title: "意見回饋", value: "在 GitHub 提出問題或建議", link: "https://github.com/dctonyhsia/futureStep/issues" },
+  ],
+
   // ---------- 07 名詞表 ----------
   glossary: [
     { term: "多單 / 做多",   desc: "買進期貨，預期價格上漲後賣出獲利。" },

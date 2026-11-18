@@ -50,6 +50,11 @@ a { color: var(--accent); }
 .nav { display: flex; gap: 4px; margin-left: auto; }
 .nav a { color: var(--muted); text-decoration: none; font-size: 14px; padding: 6px 10px; border-radius: 6px; }
 .nav a:hover, .nav a.active { color: var(--text); background: var(--bg-alt); }
+.nav a.nav-cta { background: var(--accent); color: #fff; font-weight: 700; margin-left: 6px; }
+.nav a.nav-cta:hover { background: var(--accent); color: #fff; filter: brightness(1.08); }
+.contact-card { text-decoration: none; color: inherit; display: block; }
+a.contact-card:hover { border-color: var(--accent); }
+.contact-card b { display: block; word-break: break-all; }
 .theme-btn, .menu-btn {
   border: 1px solid var(--line); background: var(--surface); color: var(--text);
   width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 16px;

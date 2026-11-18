@@ -10,6 +10,11 @@ fill('risk-list', D.risks, cardTpl);
 fill('rules-list', D.rules, r => `<li>${esc(r)}</li>`);
 fill('products-tw', D.productsTW, p =>
   `<tr><td>${esc(p.name)}</td><td class="mono">${esc(p.code)}</td><td>${esc(p.underlying)}</td><td>${esc(p.pointValue)}</td><td>${esc(p.settle)}</td></tr>`);
+fill('contact-list', D.contact, c => {
+  const inner = `<div class="icon">${esc(c.icon)}</div><h3>${esc(c.title)}</h3><b>${esc(c.value)}</b>`;
+  const ext = /^https?:/.test(c.link || '') ? ' target="_blank" rel="noopener"' : '';
+  return c.link ? `<a class="card contact-card" href="${esc(c.link)}"${ext}>${inner}</a>` : `<div class="card contact-card">${inner}</div>`;
+});
 fill('g-list', D.glossary, g => `<div><dt>${esc(g.term)}</dt><dd>${esc(g.desc)}</dd></div>`);
 (function () {
   const sel = document.getElementById('c-product');
