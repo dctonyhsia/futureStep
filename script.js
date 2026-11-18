@@ -22,7 +22,6 @@ fill('g-list', D.glossary, g => `<div><dt>${esc(g.term)}</dt><dd>${esc(g.desc)}<
   (D.calcProducts || []).forEach(p => {
     const o = document.createElement('option');
     o.value = p.pointValue; o.textContent = p.label;
-    o.dataset.currency = p.currency || '元';
     sel.insertBefore(o, custom);
   });
   sel.selectedIndex = 0;
@@ -73,8 +72,6 @@ function calc() {
   const product = $('c-product').value;
   $('c-custom-wrap').hidden = product !== 'custom';
   const pointValue = product === 'custom' ? +$('c-custom').value : +product;
-  const cur = $('c-product').selectedOptions[0].dataset.currency || '元';
-  $('c-margin-unit').textContent = cur;
   const dir = +document.querySelector('input[name="dir"]:checked').value;
   const entry = +$('c-entry').value;
   const exit = +$('c-exit').value;
@@ -88,13 +85,13 @@ function calc() {
   const roi = margin > 0 ? pnl / margin * 100 : NaN;
 
   const pnlEl = $('o-pnl');
-  pnlEl.textContent = signed(pnl) + ' ' + cur;
+  pnlEl.textContent = signed(pnl) + ' 元';
   pnlEl.className = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : '';
   $('o-roi').textContent = isFinite(roi) ? `保證金報酬率 ${roi > 0 ? '+' : ''}${roi.toFixed(1)}%` : '請輸入保證金';
   $('o-roi').className = pnlEl.className;
   $('o-pts').textContent = (pts > 0 ? '+' : '') + pts.toLocaleString('zh-TW') + ' 點';
-  $('o-value').textContent = fmt(value) + ' ' + cur;
-  $('o-margin').textContent = fmt(margin) + ' ' + cur;
+  $('o-value').textContent = fmt(value) + ' 元';
+  $('o-margin').textContent = fmt(margin) + ' 元';
   $('o-lev').textContent = margin > 0 ? (value / margin).toFixed(1) + ' 倍' : '—';
 
   // 報酬率條：±100% 為滿格

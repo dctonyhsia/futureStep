@@ -42,12 +42,10 @@ const SITE_DATA = {
 
   // ---------- 04 試算器的商品選單 ----------
   // pointValue = 每點價值（數字，不要加逗號或「元」）
-  // currency = 計價幣別（不填就是「元」）
   calcProducts: [
-    { label: "微型台指（每點 10 元）",          pointValue: 10 },
-    { label: "大阪微日經 JNU（每點 10 日圓）",  pointValue: 10, currency: "日圓" },
-    { label: "小型台指（每點 50 元）",          pointValue: 50 },
-    { label: "台指期（每點 200 元）",           pointValue: 200 },
+    { label: "台指期（每點 200 元）",   pointValue: 200 },
+    { label: "小型台指（每點 50 元）",  pointValue: 50 },
+    { label: "微型台指（每點 10 元）",  pointValue: 10 },
   ],
 
   // ---------- 06 風險（卡片）----------
