@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>期貨入門指南</title>
+  <meta name="description" content="從零開始認識期貨：基本概念、保證金與槓桿、多空操作、結算方式、台灣常見商品與風險管理。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="#top">期貨<span>入門</span></a>
+      <button class="menu-btn" aria-label="開啟選單" aria-expanded="false">☰</button>
+      <nav class="nav">
+        <a href="#what">什麼是期貨</a>
+        <a href="#terms">合約要素</a>
+        <a href="#margin">保證金與槓桿</a>
+        <a href="#calc">損益試算</a>
+        <a href="#products">常見商品</a>
+        <a href="#risk">風險</a>
+        <a href="#glossary">名詞表</a>
+      </nav>
+      <button class="theme-btn" aria-label="切換深淺色">◐</button>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="wrap">
+        <p class="eyebrow">Futures 101</p>
+        <h1>用十分鐘，<br>搞懂<em>期貨</em>在交易什麼。</h1>
+        <p class="lead">期貨是一份「約定未來以特定價格買賣某樣東西」的標準化合約。它可以用來避險，也可以用來投機——但槓桿讓獲利和虧損都被放大。</p>
+        <div class="hero-cta">
+          <a class="btn primary" href="#what">開始閱讀</a>
+          <a class="btn ghost" href="#calc">直接試算損益</a>
+        </div>
+        <div class="stats">
+          <div><strong>標準化</strong><span>規格由交易所制定</span></div>
+          <div><strong>保證金</strong><span>只需付合約價值的一小部分</span></div>
+          <div><strong>可做空</strong><span>看跌也能操作</span></div>
+          <div><strong>有到期日</strong><span>到期必須結算</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What -->
+    <section id="what" class="section">
+      <div class="wrap">
+        <h2><span class="num">01</span>什麼是期貨？</h2>
+        <div class="two-col">
+          <div>
+            <p>想像一位麵包店老闆擔心三個月後麵粉漲價，而一位小麥農夫擔心三個月後價格下跌。兩人現在就約好：<strong>三個月後，以每噸 10,000 元成交</strong>。不管到時市價是多少，雙方都照約定價格交易——這就是期貨最原始的概念。</p>
+            <p>現代的期貨在<strong>交易所</strong>集中交易，合約的數量、品質、到期月份都已標準化，買賣雙方不需要認識彼此，由<strong>結算機構</strong>擔保履約。</p>
+          </div>
+          <div class="card story">
+            <h3>同一份合約，兩種角色</h3>
+            <ul class="check">
+              <li><b>避險者</b>：想鎖定未來成本或售價，降低價格波動的衝擊（例如農夫、航空公司、持股的基金）。</li>
+              <li><b>投機者</b>：預測價格方向賺取價差，同時為市場提供流動性。</li>
+              <li><b>套利者</b>：利用期貨與現貨之間不合理的價差獲利，讓價格趨於合理。</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 class="sub">期貨 vs. 股票</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>股票（現股）</th><th>期貨</th></tr></thead>
+            <tbody>
+              <tr><td>買到的是</td><td>公司的所有權</td><td>一份未來買賣的合約</td></tr>
+              <tr><td>需要資金</td><td>全額價金</td><td>保證金（約合約價值的一成上下）</td></tr>
+              <tr><td>到期日</td><td>無，可長期持有</td><td>有，到期必須結算或轉倉</td></tr>
+              <tr><td>做空</td><td>需融券，有限制</td><td>直接賣出即可，與做多一樣方便</td></tr>
+              <tr><td>每日結算</td><td>無</td><td>有，每天依收盤價計算盈虧</td></tr>
+              <tr><td>最大虧損</td><td>投入的本金</td><td>可能超過保證金</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Terms -->
+    <section id="terms" class="section alt">
+      <div class="wrap">
+        <h2><span class="num">02</span>一份期貨合約包含什麼？</h2>
+        <p class="intro">交易所會把每份合約的規格寫清楚，交易前先看懂這幾項：</p>
+        <div class="grid" id="terms-list"></div>
+      </div>
+    </section>
+
+    <!-- Margin -->
+    <section id="margin" class="section">
+      <div class="wrap">
+        <h2><span class="num">03</span>保證金與槓桿</h2>
+        <div class="two-col">
+          <div>
+            <p>買賣期貨不用付全額，只要存入一筆<strong>保證金</strong>作為履約擔保。因為用小錢控制大部位，就產生了<strong>槓桿</strong>。</p>
+            <div class="formula">槓桿倍數 ≈ 合約價值 ÷ 保證金</div>
+            <p>例如合約價值 200 萬元、保證金 20 萬元，槓桿約 10 倍：價格變動 1%，你的保證金就變動約 10%。</p>
+          </div>
+          <div class="card">
+            <h3>三種保證金</h3>
+            <dl class="defs">
+              <dt>原始保證金</dt><dd>新建一口部位時，帳戶至少要有的金額。</dd>
+              <dt>維持保證金</dt><dd>持倉期間帳戶權益不能低於的水位，通常約為原始保證金的七到八成。</dd>
+              <dt>追繳（Margin Call）</dt><dd>權益跌破維持保證金時，期貨商會通知你補足至原始保證金；未補足可能被<strong>強制平倉（斷頭）</strong>。</dd>
+            </dl>
+          </div>
+        </div>
+
+        <h3 class="sub">每日結算是怎麼運作的？</h3>
+        <ol class="timeline">
+          <li><span>第 1 天</span>以 20,000 點買進 1 口，存入保證金。</li>
+          <li><span>收盤</span>結算價 20,100 點，帳上獲利入帳，可用資金增加。</li>
+          <li><span>第 2 天</span>結算價跌到 19,600 點，虧損從帳戶扣除。</li>
+          <li><span>低於維持</span>帳戶權益跌破維持保證金 → 收到追繳通知。</li>
+          <li><span>處理</span>補錢、或自行平倉；未處理則可能被砍倉。</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Calculator -->
+    <section id="calc" class="section alt">
+      <div class="wrap">
+        <h2><span class="num">04</span>損益試算器</h2>
+        <p class="intro">輸入你的假設，看看價格變動對帳戶的影響。保證金數字請以期交所與期貨商最新公告為準。</p>
+        <div class="calc">
+          <form id="calc-form" class="calc-inputs" autocomplete="off">
+            <label>商品
+              <select id="c-product">
+                <option value="custom">自訂每點價值</option>
+              </select>
+            </label>
+            <label id="c-custom-wrap" hidden>每點價值（元）
+              <input id="c-custom" type="number" min="0" step="any" value="100">
+            </label>
+            <div class="seg" role="radiogroup" aria-label="方向">
+              <label><input type="radio" name="dir" value="1" checked><span>做多（買進）</span></label>
+              <label><input type="radio" name="dir" value="-1"><span>做空（賣出）</span></label>
+            </div>
+            <label>進場價（點）<input id="c-entry" type="number" step="any" value="22000"></label>
+            <label>出場價（點）<input id="c-exit" type="number" step="any" value="22300"></label>
+            <label>口數<input id="c-qty" type="number" min="1" step="1" value="1"></label>
+            <label>每口保證金（元，自填）<input id="c-margin" type="number" min="0" step="any" value="330000"></label>
+          </form>
+          <div class="calc-output" aria-live="polite">
+            <div class="out-main">
+              <span>損益</span>
+              <strong id="o-pnl">—</strong>
+              <em id="o-roi">—</em>
+            </div>
+            <div class="out-grid">
+              <div><span>點數變動</span><b id="o-pts">—</b></div>
+              <div><span>合約總價值</span><b id="o-value">—</b></div>
+              <div><span>所需保證金</span><b id="o-margin">—</b></div>
+              <div><span>約略槓桿</span><b id="o-lev">—</b></div>
+            </div>
+            <div class="bar"><div id="o-bar"></div></div>
+            <p class="note">報酬率 = 損益 ÷ 所需保證金；未計入手續費與期交稅。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Products -->
+    <section id="products" class="section">
+      <div class="wrap">
+        <h2><span class="num">05</span>常見期貨商品</h2>
+        <div class="tabs" role="tablist">
+          <button role="tab" class="tab active" data-tab="tw" aria-selected="true">台灣期交所</button>
+          <button role="tab" class="tab" data-tab="intl" aria-selected="false">國際市場</button>
+        </div>
+        <div class="tab-panel active" id="tab-tw">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>商品</th><th>代號</th><th>標的</th><th>每點價值</th><th>結算</th></tr></thead>
+              <tbody id="products-tw"></tbody>
+            </table>
+          </div>
+          <p class="note">台指期貨類多於每月第三個星期三到期。規格可能調整，請以臺灣期貨交易所官網為準。</p>
+        </div>
+        <div class="tab-panel" id="tab-intl">
+          <div class="grid" id="products-intl"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Risk -->
+    <section id="risk" class="section alt">
+      <div class="wrap">
+        <h2><span class="num">06</span>風險與管理</h2>
+        <div class="warn">
+          <strong>⚠️ 期貨的虧損可能超過你存入的保證金。</strong>
+          <p>遇到跳空、極端行情或流動性不足時，停損單可能無法在預期價位成交，帳戶甚至可能出現負數（超額損失），需要另外補錢。</p>
+        </div>
+        <div class="grid" id="risk-list"></div>
+        <h3 class="sub">新手守則</h3>
+        <ol class="rules" id="rules-list"></ol>
+      </div>
+    </section>
+
+    <!-- Glossary -->
+    <section id="glossary" class="section">
+      <div class="wrap">
+        <h2><span class="num">07</span>名詞表</h2>
+        <input id="g-search" class="search" type="search" placeholder="搜尋名詞，例如：平倉、轉倉、逆價差…">
+        <dl id="g-list" class="glossary"></dl>
+        <p id="g-empty" class="note" hidden>找不到符合的名詞。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p><strong>免責聲明：</strong>本網站內容僅供教育與知識分享，不構成任何投資建議。期貨交易具高度風險，商品規格、保證金與稅費請以臺灣期貨交易所及您的期貨商最新公告為準。</p>
+      <p class="small">© <span id="year"></span> 期貨入門指南</p>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
