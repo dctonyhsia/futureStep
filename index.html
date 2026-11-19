@@ -378,14 +378,26 @@
         <div class="tab-panel" id="tab-copt" role="tabpanel">
         <div class="calc">
           <form id="opt-form" class="calc-inputs" autocomplete="off">
-            <div class="seg seg4" role="radiogroup" aria-label="選擇權部位">
+            <div class="seg seg3" role="radiogroup" aria-label="試算模式">
+              <label><input type="radio" name="omode" value="single" checked><span>單一部位</span></label>
+              <label><input type="radio" name="omode" value="long"><span>雙買<small>Buy Call + Buy Put</small></span></label>
+              <label><input type="radio" name="omode" value="short"><span>雙賣<small>Sell Call + Sell Put</small></span></label>
+            </div>
+            <div class="seg seg4 op-single" role="radiogroup" aria-label="選擇權部位">
               <label><input type="radio" name="opos" value="bc" checked><span>Buy Call<small>買進買權</small></span></label>
               <label><input type="radio" name="opos" value="bp"><span>Buy Put<small>買進賣權</small></span></label>
               <label><input type="radio" name="opos" value="sc"><span>Sell Call<small>賣出買權</small></span></label>
               <label><input type="radio" name="opos" value="sp"><span>Sell Put<small>賣出賣權</small></span></label>
             </div>
-            <label>履約價（點）<input id="op-k" type="number" step="any" value="22000"></label>
-            <label>權利金（點）<input id="op-p" type="number" min="0" step="any" value="200"></label>
+            <label class="op-single">履約價（點）<input id="op-k" type="number" step="any" value="22000"></label>
+            <label class="op-single">權利金（點）<input id="op-p" type="number" min="0" step="any" value="200"></label>
+            <p class="op-dual leg-h span2" hidden>買權（Call）</p>
+            <label class="op-dual" hidden>Call 履約價（點）<input id="op-kc" type="number" step="any" value="22000"></label>
+            <label class="op-dual" hidden>Call 權利金（點）<input id="op-pc" type="number" min="0" step="any" value="200"></label>
+            <p class="op-dual leg-h span2" hidden>賣權（Put）</p>
+            <label class="op-dual" hidden>Put 履約價（點）<input id="op-kp" type="number" step="any" value="22000"></label>
+            <label class="op-dual" hidden>Put 權利金（點）<input id="op-pp" type="number" min="0" step="any" value="180"></label>
+            <p class="op-dual hint span2" hidden>兩個履約價相同為「跨式」（Straddle），不同為「勒式」（Strangle），系統會自動判斷。</p>
             <label>到期結算價（點）<input id="op-s" type="number" step="any" value="22300"></label>
             <label>口數<input id="op-q" type="number" min="1" step="1" value="1"></label>
             <label class="span2">每點價值（元）<input id="op-m" type="number" min="0" step="any" value="50"><small class="hint">台指選（TXO）每點 50 元</small></label>

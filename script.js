@@ -191,53 +191,92 @@ if ($('calc-form')) {
   calc();
 }
 
-// ===== 選擇權損益試算 + 損益圖 =====
+// ===== 選擇權損益試算 + 損益圖（單一部位、雙買、雙賣）=====
 const OPT = {
   bc: { name: 'Buy Call', zh: '買進買權', buy: true,  call: true },
   bp: { name: 'Buy Put',  zh: '買進賣權', buy: true,  call: false },
   sc: { name: 'Sell Call', zh: '賣出買權', buy: false, call: true },
   sp: { name: 'Sell Put',  zh: '賣出賣權', buy: false, call: false },
 };
-// 到期時每單位損益（點）
-function optPayoff(pos, K, P, S) {
-  const intrinsic = pos.call ? Math.max(S - K, 0) : Math.max(K - S, 0);
-  return pos.buy ? intrinsic - P : P - intrinsic;
+// 單一腳位到期每單位損益（點）
+function legPayoff(leg, S) {
+  const intrinsic = leg.call ? Math.max(S - leg.K, 0) : Math.max(leg.K - S, 0);
+  return leg.buy ? intrinsic - leg.P : leg.P - intrinsic;
 }
 const money = n => signed(n) + ' 元';
+const num = id => +$(id).value;
+
+// 由腳位組出整個部位：損益函數、轉折點、兩平點、最大獲利／虧損
+function buildPosition(legs, unit) {
+  const f = S => legs.reduce((a, l) => a + legPayoff(l, S), 0) * unit;
+  const kinks = [...new Set(legs.map(l => l.K))].sort((a, b) => a - b);
+  // 損益是分段直線：在轉折點與左右遠端取樣，即可精確求出兩平點
+  const far = Math.max(...kinks) * 10 + 1e6;
+  const xs = [Math.max(0, kinks[0] - far), ...kinks, kinks[kinks.length - 1] + far];
+  const bes = [];
+  for (let i = 0; i < xs.length - 1; i++) {
+    const a = xs[i], b = xs[i + 1], fa = f(a), fb = f(b);
+    if (fa === 0 && (i === 0 || f(xs[i - 1]) !== 0)) bes.push(a);
+    if ((fa < 0 && fb > 0) || (fa > 0 && fb < 0)) bes.push(a + (b - a) * (0 - fa) / (fb - fa));
+  }
+  const slopeR = f(xs[xs.length - 1]) - f(kinks[kinks.length - 1]);
+  const atKinks = kinks.map(f), atZero = f(0);
+  const maxP = slopeR > 0 ? Infinity : Math.max(...atKinks, atZero);
+  const maxL = slopeR < 0 ? -Infinity : Math.min(...atKinks, atZero);
+  return { f, kinks, bes: [...new Set(bes.map(v => Math.round(v * 100) / 100))], maxP, maxL };
+}
 
 function optCalc() {
-  const pos = OPT[document.querySelector('input[name="opos"]:checked').value];
-  const K = +$('op-k').value, P = Math.max(0, +$('op-p').value), S = +$('op-s').value;
-  const Q = Math.max(1, Math.floor(+$('op-q').value || 1)), M = Math.max(0, +$('op-m').value);
+  const mode = document.querySelector('input[name="omode"]:checked').value;
+  document.querySelectorAll('#opt-form .op-single').forEach(e => e.hidden = mode !== 'single');
+  document.querySelectorAll('#opt-form .op-dual').forEach(e => e.hidden = mode === 'single');
+  const S = num('op-s'), Q = Math.max(1, Math.floor(num('op-q') || 1)), M = Math.max(0, num('op-m'));
   const unit = M * Q;
-  const pnl = optPayoff(pos, K, P, S) * unit;
-  const be = pos.call ? K + P : K - P;
 
+  let legs, title, desc, buyer, note;
+  if (mode === 'single') {
+    const pos = OPT[document.querySelector('input[name="opos"]:checked').value];
+    legs = [{ ...pos, K: num('op-k'), P: Math.max(0, num('op-p')) }];
+    buyer = pos.buy;
+    title = pos.name;
+    desc = `${pos.name}（${pos.zh}）・履約價 ${fmt(legs[0].K)}`;
+    note = pos.buy
+      ? '買方最大虧損就是權利金，不需繳保證金。未計入手續費與期交稅。'
+      : '賣方需繳交保證金（依期交所公式與最新 A、B 值計算），最大虧損可能遠大於收取的權利金。未計入手續費與期交稅。';
+  } else {
+    buyer = mode === 'long';
+    const Kc = num('op-kc'), Kp = num('op-kp');
+    legs = [
+      { call: true,  buy: buyer, K: Kc, P: Math.max(0, num('op-pc')) },
+      { call: false, buy: buyer, K: Kp, P: Math.max(0, num('op-pp')) },
+    ];
+    const kind = Kc === Kp ? '跨式' : '勒式', en = Kc === Kp ? 'Straddle' : 'Strangle';
+    title = (buyer ? 'Long ' : 'Short ') + en;
+    desc = `雙${buyer ? '買' : '賣'}・${buyer ? '買進' : '賣出'}${kind}（${title}）`;
+    note = buyer
+      ? `同時買進買權與賣權，押注「大漲或大跌」。最大虧損是兩邊權利金合計，盤整到期最不利。${Kp > Kc ? '注意：Put 履約價高於 Call，屬於兩邊都價內的組合。' : ''}未計入手續費與期交稅。`
+      : '同時賣出買權與賣權，押注「盤整、波動縮小」。最大獲利是兩邊權利金合計，大漲或大跌時虧損可能很大。賣方需繳保證金：Max(Sell Call 保證金, Sell Put 保證金) ＋ 另一邊權利金市值 ＋ C 值，以期交所公告為準。未計入手續費與期交稅。';
+  }
+
+  const ptot = legs.reduce((a, l) => a + l.P, 0);
+  const P = buildPosition(legs, unit);
+  const pnl = P.f(S);
   const el = $('op-pnl');
   el.textContent = money(pnl);
   el.className = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : '';
-  $('op-desc').textContent = `${pos.name}（${pos.zh}）・履約價 ${fmt(K)}`;
-  $('op-prem-l').textContent = pos.buy ? '支付權利金' : '收取權利金';
-  $('op-prem').textContent = fmt(P * unit) + ' 元';
-  $('op-be').textContent = fmt(be) + ' 點';
-
-  // 最大獲利／最大虧損
-  let maxP, maxL;
-  if (pos.buy) {
-    maxL = '−' + fmt(P * unit) + ' 元';
-    maxP = pos.call ? '理論上無上限' : '+' + fmt(Math.max(K - P, 0) * unit) + ' 元';
-  } else {
-    maxP = '+' + fmt(P * unit) + ' 元';
-    maxL = pos.call ? '理論上無上限' : '−' + fmt(Math.max(K - P, 0) * unit) + ' 元';
-  }
-  $('op-max').textContent = maxP;
-  $('op-min').textContent = maxL;
+  $('op-desc').textContent = desc;
+  $('op-prem-l').textContent = (buyer ? '支付權利金' : '收取權利金') + (legs.length > 1 ? '（合計）' : '');
+  $('op-prem').textContent = fmt(ptot * unit) + ' 元';
+  $('op-be').textContent = P.bes.length ? P.bes.map(v => fmt(v)).join(' / ') + ' 點' : '—';
+  $('op-max').textContent = P.maxP === Infinity ? '理論上無上限' : (P.maxP > 0 ? '+' : '') + fmt(P.maxP) + ' 元';
+  $('op-min').textContent = P.maxL === -Infinity ? '理論上無上限' : (P.maxL < 0 ? '−' : '') + fmt(Math.abs(P.maxL)) + ' 元';
   $('op-max').className = 'pos'; $('op-min').className = 'neg';
-  $('op-note').textContent = pos.buy
-    ? '買方最大虧損就是權利金，不需繳保證金。未計入手續費與期交稅。'
-    : '賣方需繳交保證金（依期交所公式與最新 A、B 值計算），最大虧損可能遠大於收取的權利金。未計入手續費與期交稅。';
+  $('op-note').textContent = note;
 
-  drawOptChart(pos, K, P, S, unit, be);
+  const capLegs = legs.length > 1
+    ? `Call ${fmt(legs[0].K)}＠${fmt(legs[0].P)}・Put ${fmt(legs[1].K)}＠${fmt(legs[1].P)}`
+    : `履約價 ${fmt(legs[0].K)}・權利金 ${fmt(legs[0].P)} 點`;
+  drawOptChart({ legs, S, P, unit, ptot, title, cap: `${title}・${capLegs} × ${fmt(unit)} 元` });
 }
 
 function niceTicks(lo, hi, n) {
@@ -251,15 +290,16 @@ function niceTicks(lo, hi, n) {
 // 粗估文字寬度（中日文字較寬）
 const textW = (s, px) => [...s].reduce((w, c) => w + (c.charCodeAt(0) > 0x2E80 ? px : px * 0.62), 0);
 
-function drawOptChart(pos, K, P, S, unit, be) {
+function drawOptChart({ legs, S, P, unit, ptot, title, cap }) {
   const box = $('op-chart');
   const W = Math.round(Math.max(300, box.clientWidth || 1000));
   const narrow = W < 520;
   const H = Math.round(Math.min(360, Math.max(260, W * 0.5))), L = narrow ? 58 : 76, R = 20, T = 34, B = 42;
-  const span = Math.max(P * 4, Math.abs(S - K) * 1.25, K * 0.03, 300);
-  const x0 = K - span, x1 = K + span;
-  const f = s => optPayoff(pos, K, P, s) * unit;
-  const ys = [f(x0), f(x1), f(K), 0, f(S)];
+  const { f, kinks, bes } = P;
+  const k1 = kinks[0], k2 = kinks[kinks.length - 1], mid = (k1 + k2) / 2;
+  const half = Math.max(ptot * 2.5 + (k2 - k1) / 2, Math.abs(S - mid) * 1.25, mid * 0.03, 300);
+  const x0 = mid - half, x1 = mid + half;
+  const ys = [f(x0), f(x1), ...kinks.map(f), 0, f(S)];
   let lo = Math.min(...ys), hi = Math.max(...ys);
   const pad = (hi - lo) * 0.14 || 1000; lo -= pad; hi += pad;
   const X = s => L + (W - L - R) * (s - x0) / (x1 - x0);
@@ -267,13 +307,21 @@ function drawOptChart(pos, K, P, S, unit, be) {
   const lab = v => (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v));
   const short = v => Math.abs(v) >= 10000 && narrow ? (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v) / 10000) + '萬' : lab(v);
   const y0 = Y(0);
-  const line = [x0, K, x1].map(s => `${X(s).toFixed(1)},${Y(f(s)).toFixed(1)}`).join(' ');
+  const line = [x0, ...kinks, x1].map(s => `${X(s).toFixed(1)},${Y(f(s)).toFixed(1)}`).join(' ');
   const area = `M${X(x0)},${y0} L${line.replace(/ /g, ' L')} L${X(x1)},${y0} Z`;
-  // 刻度：整數刻度 + 平坦段的金額（買方最大虧損／賣方最大獲利），太近的整數刻度拿掉
-  const flat = (pos.buy ? -P : P) * unit;
-  const yt = niceTicks(lo, hi, narrow ? 4 : 5).filter(v => Math.abs(Y(v) - Y(flat)) > 16).concat(flat).sort((a, b) => b - a);
-  const xt = niceTicks(x0, x1, narrow ? 4 : 6).filter(v => Math.abs(X(v) - X(K)) > (narrow ? 46 : 40));
+  // 刻度：整數刻度 + 平坦段／轉折點金額（最大虧損或最大獲利），太近的整數刻度拿掉
+  const flats = [...new Set(kinks.map(k => Math.round(f(k))))];
+  const yt = niceTicks(lo, hi, narrow ? 4 : 5).filter(v => flats.every(fl => Math.abs(Y(v) - Y(fl)) > 16)).concat(flats).sort((a, b) => b - a);
+  const xt = niceTicks(x0, x1, narrow ? 4 : 6).filter(v => kinks.every(k => Math.abs(X(v) - X(k)) > (narrow ? 46 : 40)));
   const id = 'oc' + Math.random().toString(36).slice(2, 7);
+
+  // 履約價標籤：兩個履約價時分左右擺放
+  const strikeLabels = legs.length > 1 && k1 !== k2
+    ? legs.map(l => {
+        const left = l.K === k1;
+        return `<text class="oc-strike-l" x="${X(l.K) + (left ? -4 : 4)}" y="${T - 16}" text-anchor="${left ? 'end' : 'start'}">${l.call ? 'Call' : 'Put'} ${fmt(l.K)}</text>`;
+      }).join('')
+    : `<text class="oc-strike-l" x="${X(k1)}" y="${T - 16}" text-anchor="middle">履約價 ${fmt(k1)}</text>`;
 
   // 結算價標籤（膠囊）
   const fS = f(S), sx = X(S), sy = Y(fS), sIn = S >= x0 && S <= x1;
@@ -285,43 +333,40 @@ function drawOptChart(pos, K, P, S, unit, be) {
   if (py < T - 8) py = sy + 12;
 
   const parts = [
-    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${pos.zh}到期損益圖：損益兩平點 ${fmt(be)}，結算價 ${fmt(S)} 時損益 ${lab(fS)} 元">`,
-    `<defs><clipPath id="${id}-up"><rect x="0" y="0" width="${W}" height="${y0}"/></clipPath>`,
-    `<clipPath id="${id}-dn"><rect x="0" y="${y0}" width="${W}" height="${H - y0}"/></clipPath></defs>`,
-    // 格線與刻度
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}到期損益圖：損益兩平點 ${bes.map(fmt).join('、') || '無'}，結算價 ${fmt(S)} 時損益 ${lab(fS)} 元">`,
+    `<defs><clipPath id="${id}-up"><rect x="0" y="0" width="${W}" height="${Math.max(0, y0)}"/></clipPath>`,
+    `<clipPath id="${id}-dn"><rect x="0" y="${y0}" width="${W}" height="${Math.max(0, H - y0)}"/></clipPath></defs>`,
     `<g class="oc-grid">${yt.map(v => `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/>`).join('')}</g>`,
     `<g class="oc-tick">${yt.map(v => `<text x="${L - 10}" y="${Y(v) + 4}" text-anchor="end">${short(v)}</text>`).join('')}`,
     xt.map(v => `<text x="${X(v)}" y="${H - 14}" text-anchor="middle">${fmt(v)}</text>`).join(''), `</g>`,
-    // 獲利／虧損區塊
     `<path class="oc-fill-up" d="${area}" clip-path="url(#${id}-up)"/>`,
     `<path class="oc-fill-dn" d="${area}" clip-path="url(#${id}-dn)"/>`,
     `<line class="oc-zero" x1="${L}" x2="${W - R}" y1="${y0}" y2="${y0}"/>`,
-    // 履約價
-    `<line class="oc-strike" x1="${X(K)}" x2="${X(K)}" y1="${T - 10}" y2="${H - B}"/>`,
-    `<text class="oc-strike-l" x="${X(K)}" y="${T - 16}" text-anchor="middle">履約價 ${fmt(K)}</text>`,
-    // 損益線
+    kinks.map(k => `<line class="oc-strike" x1="${X(k)}" x2="${X(k)}" y1="${T - 10}" y2="${H - B}"/>`).join(''),
+    strikeLabels,
     `<polyline class="oc-line" points="${line}"/>`,
-    // 區塊文字
     hi > 0 ? `<text class="oc-zone up" x="${W - R - 8}" y="${Math.min(y0 - 10, T + 16)}" text-anchor="end">獲利區</text>` : '',
     lo < 0 ? `<text class="oc-zone dn" x="${W - R - 8}" y="${Math.max(y0 + 22, H - B - 10)}" text-anchor="end">虧損區</text>` : '',
-    // 損益兩平
-    be >= x0 && be <= x1 ? `<circle class="oc-be" cx="${X(be)}" cy="${y0}" r="5.5"/>` +
-      (() => { // 標籤放在線的另一側空白處
-        const right = be > K, far = f(right ? x1 : x0);
-        return `<text class="oc-be-l" x="${X(be) + (right ? 10 : -10)}" y="${y0 + (far > 0 ? 20 : -11)}" text-anchor="${right ? 'start' : 'end'}">兩平 ${fmt(be)}</text>`;
-      })() : '',
-    // 結算價
+    // 損益兩平：標籤放在線的外側空白處
+    bes.filter(b => b >= x0 && b <= x1).map(b => {
+      const right = b >= mid, farV = f(right ? x1 : x0);
+      const t = `兩平 ${fmt(b)}`, tw = textW(t, 12);
+      // 預設放在點的外側；超出圖框時往內收
+      let tx = right ? X(b) + 10 : X(b) - 10 - tw;
+      tx = Math.min(Math.max(tx, L + 2), W - R - tw - 2);
+      return `<circle class="oc-be" cx="${X(b)}" cy="${y0}" r="5.5"/>` +
+        `<text class="oc-be-l" x="${tx}" y="${y0 + (farV > 0 ? 20 : -11)}">${t}</text>`;
+    }).join(''),
     sIn ? `<line class="oc-drop" x1="${sx}" x2="${sx}" y1="${sy}" y2="${y0}"/>` +
       `<circle class="oc-pt ${fS >= 0 ? 'up' : 'dn'}" cx="${sx}" cy="${sy}" r="6.5"/>` +
       `<g class="oc-pill"><rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="13"/>` +
       `<text x="${px + pw / 2}" y="${py + 17}" text-anchor="middle">${pill}</text></g>` : '',
-    // 滑鼠游標
     `<g class="oc-hover" visibility="hidden"><line class="oc-cross" y1="${T}" y2="${H - B}"/><circle class="oc-hdot" r="5"/></g>`,
     `<rect class="oc-hit" x="${L}" y="${T - 10}" width="${W - L - R}" height="${H - T - B + 10}"/>`,
     `</svg><div class="oc-tip" hidden></div>`,
   ];
   box.innerHTML = parts.join('');
-  $('op-chart-cap').textContent = `${pos.name}・履約價 ${fmt(K)}・權利金 ${fmt(P)} 點 × ${fmt(unit)} 元`;
+  $('op-chart-cap').textContent = cap;
 
   // 滑鼠／觸控：顯示任一結算價的損益
   const svg = box.querySelector('svg'), hov = svg.querySelector('.oc-hover'), cross = hov.querySelector('.oc-cross'),
@@ -343,7 +388,7 @@ function drawOptChart(pos, K, P, S, unit, be) {
   };
   const leave = () => { hov.setAttribute('visibility', 'hidden'); tip.hidden = true; };
   hit.addEventListener('mousemove', move);
-  hit.addEventListener('touchmove', e => { move(e); }, { passive: true });
+  hit.addEventListener('touchmove', move, { passive: true });
   hit.addEventListener('touchstart', move, { passive: true });
   hit.addEventListener('mouseleave', leave);
   hit.addEventListener('touchend', () => setTimeout(leave, 1200));
