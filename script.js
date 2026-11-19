@@ -30,7 +30,7 @@ if (gList) {
 const gIndex = document.getElementById('g-index');
 if (gIndex) {
   gIndex.innerHTML = gCats.map(c =>
-    `<div class="g-index-row" data-cat="${esc(c)}"><b>${esc(c)}</b>${G.filter(g => g.cat === c).map(g => `<a href="#${g.id}">${esc(g.term)}</a>`).join('')}</div>`).join('');
+    `<div class="g-index-row" data-cat="${esc(c)}"><b>${esc(c)}</b><div class="g-chips">${G.filter(g => g.cat === c).map(g => `<a href="#${g.id}">${esc(g.term)}</a>`).join('')}</div></div>`).join('');
 }
 const gFilter = document.getElementById('g-filter');
 if (gFilter) {
