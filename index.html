@@ -326,10 +326,17 @@
     <!-- Calculator -->
     <section id="calc" class="section alt">
       <div class="wrap">
-        <header class="sec-head">
+        <header class="sec-head sec-head-switch">
           <span class="num">04</span>
-          <div><h2>損益試算器</h2><p>輸入假設條件，計算損益、槓桿與保證金報酬率</p></div>
+          <div class="sec-head-text"><h2>期貨損益試算器</h2><p>輸入假設條件，計算損益、槓桿與保證金報酬率</p></div>
+          <div class="tabs switch" role="tablist" aria-label="切換期貨或選擇權試算">
+            <button role="tab" class="tab active" data-tab="cfut" aria-selected="true" aria-controls="tab-cfut"
+              data-title="期貨損益試算器" data-sub="輸入假設條件，計算損益、槓桿與保證金報酬率">期貨</button>
+            <button role="tab" class="tab" data-tab="copt" aria-selected="false" aria-controls="tab-copt"
+              data-title="選擇權損益試算器" data-sub="選擇部位與履約價，計算到期損益、損益兩平點並畫出損益圖">選擇權</button>
+          </div>
         </header>
+        <div class="tab-panel active" id="tab-cfut" role="tabpanel">
         <div class="calc">
           <form id="calc-form" class="calc-inputs" autocomplete="off">
             <label>商品
@@ -366,6 +373,44 @@
             <p class="note">報酬率 = 損益 ÷ 所需保證金；未計入手續費與期交稅。保證金請以期交所與期貨商最新公告為準。</p>
           </div>
         </div>
+        </div><!-- /tab-cfut -->
+
+        <div class="tab-panel" id="tab-copt" role="tabpanel">
+        <div class="calc">
+          <form id="opt-form" class="calc-inputs" autocomplete="off">
+            <div class="seg seg4" role="radiogroup" aria-label="選擇權部位">
+              <label><input type="radio" name="opos" value="bc" checked><span>Buy Call<small>買進買權</small></span></label>
+              <label><input type="radio" name="opos" value="bp"><span>Buy Put<small>買進賣權</small></span></label>
+              <label><input type="radio" name="opos" value="sc"><span>Sell Call<small>賣出買權</small></span></label>
+              <label><input type="radio" name="opos" value="sp"><span>Sell Put<small>賣出賣權</small></span></label>
+            </div>
+            <label>履約價（點）<input id="op-k" type="number" step="any" value="22000"></label>
+            <label>權利金（點）<input id="op-p" type="number" min="0" step="any" value="200"></label>
+            <label>到期結算價（點）<input id="op-s" type="number" step="any" value="22300"></label>
+            <label>口數<input id="op-q" type="number" min="1" step="1" value="1"></label>
+            <label class="span2">每點價值（元）<input id="op-m" type="number" min="0" step="any" value="50"><small class="hint">台指選（TXO）每點 50 元</small></label>
+          </form>
+          <div class="calc-output" aria-live="polite">
+            <div class="out-main">
+              <span>到期損益</span>
+              <strong id="op-pnl">—</strong>
+              <em id="op-desc">—</em>
+            </div>
+            <div class="out-grid">
+              <div><span id="op-prem-l">支付權利金</span><b id="op-prem">—</b></div>
+              <div><span>損益兩平點</span><b id="op-be">—</b></div>
+              <div><span>最大獲利</span><b id="op-max">—</b></div>
+              <div><span>最大虧損</span><b id="op-min">—</b></div>
+            </div>
+            <p class="note" id="op-note">未計入手續費與期交稅。</p>
+          </div>
+        </div>
+        <figure class="figure opt-chart">
+          <figcaption><b>選擇權到期損益圖</b><span id="op-chart-cap"></span></figcaption>
+          <div id="op-chart"></div>
+          <p class="fig-note">縱軸為損益（元），橫軸為到期結算價（點）。紅色圓點為你輸入的結算價；空心圓點為損益兩平點。</p>
+        </figure>
+        </div><!-- /tab-copt -->
       </div>
     </section>
 

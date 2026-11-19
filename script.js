@@ -191,6 +191,99 @@ if ($('calc-form')) {
   calc();
 }
 
+// ===== 選擇權損益試算 + 損益圖 =====
+const OPT = {
+  bc: { name: 'Buy Call', zh: '買進買權', buy: true,  call: true },
+  bp: { name: 'Buy Put',  zh: '買進賣權', buy: true,  call: false },
+  sc: { name: 'Sell Call', zh: '賣出買權', buy: false, call: true },
+  sp: { name: 'Sell Put',  zh: '賣出賣權', buy: false, call: false },
+};
+// 到期時每單位損益（點）
+function optPayoff(pos, K, P, S) {
+  const intrinsic = pos.call ? Math.max(S - K, 0) : Math.max(K - S, 0);
+  return pos.buy ? intrinsic - P : P - intrinsic;
+}
+const money = n => signed(n) + ' 元';
+
+function optCalc() {
+  const pos = OPT[document.querySelector('input[name="opos"]:checked').value];
+  const K = +$('op-k').value, P = Math.max(0, +$('op-p').value), S = +$('op-s').value;
+  const Q = Math.max(1, Math.floor(+$('op-q').value || 1)), M = Math.max(0, +$('op-m').value);
+  const unit = M * Q;
+  const pnl = optPayoff(pos, K, P, S) * unit;
+  const be = pos.call ? K + P : K - P;
+
+  const el = $('op-pnl');
+  el.textContent = money(pnl);
+  el.className = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : '';
+  $('op-desc').textContent = `${pos.name}（${pos.zh}）・履約價 ${fmt(K)}`;
+  $('op-prem-l').textContent = pos.buy ? '支付權利金' : '收取權利金';
+  $('op-prem').textContent = fmt(P * unit) + ' 元';
+  $('op-be').textContent = fmt(be) + ' 點';
+
+  // 最大獲利／最大虧損
+  let maxP, maxL;
+  if (pos.buy) {
+    maxL = '−' + fmt(P * unit) + ' 元';
+    maxP = pos.call ? '理論上無上限' : '+' + fmt(Math.max(K - P, 0) * unit) + ' 元';
+  } else {
+    maxP = '+' + fmt(P * unit) + ' 元';
+    maxL = pos.call ? '理論上無上限' : '−' + fmt(Math.max(K - P, 0) * unit) + ' 元';
+  }
+  $('op-max').textContent = maxP;
+  $('op-min').textContent = maxL;
+  $('op-max').className = 'pos'; $('op-min').className = 'neg';
+  $('op-note').textContent = pos.buy
+    ? '買方最大虧損就是權利金，不需繳保證金。未計入手續費與期交稅。'
+    : '賣方需繳交保證金（依期交所公式與最新 A、B 值計算），最大虧損可能遠大於收取的權利金。未計入手續費與期交稅。';
+
+  drawOptChart(pos, K, P, S, unit, be);
+}
+
+function drawOptChart(pos, K, P, S, unit, be) {
+  // 依實際寬度繪製，手機上文字才不會被縮小
+  const W = Math.round(Math.max(300, $('op-chart').clientWidth || 1000));
+  const H = Math.round(Math.min(340, Math.max(240, W * 0.55))), L = 72, R = 16, T = 24, B = 40;
+  const span = Math.max(P * 4, Math.abs(S - K) * 1.25, K * 0.03, 300);
+  const x0 = K - span, x1 = K + span;
+  const f = s => optPayoff(pos, K, P, s) * unit;
+  const ys = [f(x0), f(x1), f(K), 0, f(S)];
+  let lo = Math.min(...ys), hi = Math.max(...ys);
+  const pad = (hi - lo) * 0.12 || 1000; lo -= pad; hi += pad;
+  const X = s => L + (W - L - R) * (s - x0) / (x1 - x0);
+  const Y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+  const cls = pos.buy === pos.call ? 'ln-long' : 'ln-short'; // 看漲紅、看跌綠
+  const pts = [x0, K, x1].map(s => `${X(s).toFixed(1)},${Y(f(s)).toFixed(1)}`).join(' ');
+  const sIn = S >= x0 && S <= x1;
+  const lab = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v));
+  // 縱軸刻度：上下界與 0
+  const yt = [hi - pad, 0, lo + pad].filter((v, i, a) => a.findIndex(w => Math.abs(Y(w) - Y(v)) < 14) === i);
+  const svg = [
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${pos.zh}到期損益圖">`,
+    `<g class="grid-lines">${yt.map(v => `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/>`).join('')}</g>`,
+    `<line class="axis" x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}"/>`,
+    `<line class="axis" x1="${X(K)}" x2="${X(K)}" y1="${T - 6}" y2="${H - B + 4}" stroke-dasharray="3 4"/>`,
+    `<polyline class="${cls}" fill="none" points="${pts}"/>`,
+    `<g class="tick">${yt.map(v => `<text x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${lab(v)}</text>`).join('')}`,
+    `<text x="${X(x0)}" y="${H - 14}" text-anchor="start">${fmt(x0)}</text>`,
+    `<text x="${X(K)}" y="${H - 14}" text-anchor="middle">履約價 ${fmt(K)}</text>`,
+    `<text x="${X(x1)}" y="${H - 14}" text-anchor="end">${fmt(x1)}</text></g>`,
+    be >= x0 && be <= x1 ? `<circle class="pt" cx="${X(be)}" cy="${Y(0)}" r="5"/><text class="lbl-mute" x="${X(be)}" y="${Y(0) + (pos.buy ? 20 : -12)}" text-anchor="middle">兩平 ${fmt(be)}</text>` : '',
+    sIn ? `<line class="ln-maint" x1="${X(S)}" x2="${X(S)}" y1="${Y(f(S))}" y2="${Y(0)}"/><circle class="pt call" cx="${X(S)}" cy="${Y(f(S))}" r="6"/>` +
+      `<text class="lbl-val" x="${X(S) + (X(S) > W / 2 ? -12 : 12)}" y="${Y(f(S)) + (f(S) >= 0 ? -12 : 24)}" text-anchor="${X(S) > W / 2 ? 'end' : 'start'}">結算 ${fmt(S)}：${lab(f(S))} 元</text>` : '',
+    `</svg>`,
+  ].join('');
+  $('op-chart').innerHTML = svg;
+  $('op-chart-cap').textContent = `${pos.name}・履約價 ${fmt(K)}・權利金 ${fmt(P)} 點 × ${fmt(unit)} 元`;
+}
+if ($('opt-form')) {
+  $('opt-form').addEventListener('input', optCalc);
+  optCalc();
+  // 切到選擇權分頁或視窗改變大小時重畫（隱藏時寬度為 0）
+  document.querySelector('#calc .tab[data-tab="copt"]')?.addEventListener('click', () => requestAnimationFrame(optCalc));
+  let rT; addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(optCalc, 150); });
+}
+
 // 分頁切換（商品分頁、01 期貨／選擇權）：每組 tablist 只控制同一個段落內的面板
 document.querySelectorAll('[role="tablist"]').forEach(list => {
   const tabs = [...list.querySelectorAll('.tab[data-tab]')];
@@ -200,7 +293,7 @@ document.querySelectorAll('[role="tablist"]').forEach(list => {
     const ids = tabs.map(t => 'tab-' + t.dataset.tab);
     scope.querySelectorAll('.tab-panel').forEach(p => { if (ids.includes(p.id)) p.classList.toggle('active', p.id === 'tab-' + tab.dataset.tab); });
     if (tab.dataset.title) {
-      const h = scope.querySelector('#what-title'), s = scope.querySelector('#what-sub');
+      const h = scope.querySelector('.sec-head h2'), s = scope.querySelector('.sec-head p');
       if (h) h.textContent = tab.dataset.title;
       if (s) s.textContent = tab.dataset.sub || '';
     }
