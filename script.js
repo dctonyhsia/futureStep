@@ -191,12 +191,20 @@ if ($('calc-form')) {
   calc();
 }
 
-// 商品分頁
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => { t.classList.toggle('active', t === tab); t.setAttribute('aria-selected', t === tab); });
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab.dataset.tab));
-  });
+// 分頁切換（商品分頁、01 期貨／選擇權）：每組 tablist 只控制同一個段落內的面板
+document.querySelectorAll('[role="tablist"]').forEach(list => {
+  const tabs = [...list.querySelectorAll('.tab[data-tab]')];
+  const scope = list.closest('section') || document;
+  tabs.forEach(tab => tab.addEventListener('click', () => {
+    tabs.forEach(t => { t.classList.toggle('active', t === tab); t.setAttribute('aria-selected', t === tab); });
+    const ids = tabs.map(t => 'tab-' + t.dataset.tab);
+    scope.querySelectorAll('.tab-panel').forEach(p => { if (ids.includes(p.id)) p.classList.toggle('active', p.id === 'tab-' + tab.dataset.tab); });
+    if (tab.dataset.title) {
+      const h = scope.querySelector('#what-title'), s = scope.querySelector('#what-sub');
+      if (h) h.textContent = tab.dataset.title;
+      if (s) s.textContent = tab.dataset.sub || '';
+    }
+  }));
 });
 
 // 名詞搜尋

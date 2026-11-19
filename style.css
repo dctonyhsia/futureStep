@@ -252,6 +252,22 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1p
 .glossary dt { font-weight: 700; color: var(--ink); }
 .glossary dd { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
 
+/* 01 期貨／選擇權切換 */
+.sec-head-switch { align-items: center; flex-wrap: wrap; }
+.sec-head-switch .num { margin-top: 0; align-self: flex-start; margin-top: 8px; }
+.sec-head-text { flex: 1 1 260px; }
+.tabs.switch { margin: 0; }
+.tabs.switch .tab { padding: 9px 24px; font-size: 15px; }
+.quad { min-width: 480px; }
+.quad td { vertical-align: top; font-size: 14px; color: var(--muted); }
+.quad td:first-child { white-space: nowrap; }
+.quad td:first-child small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+.quad td b { display: block; font-family: "IBM Plex Mono", monospace; font-size: 15px; margin-bottom: 2px; }
+.moneyness { min-width: 440px; font-size: 14px; }
+.moneyness td[colspan] { text-align: center; }
+.hl-text { color: var(--up); font-weight: 700; }
+.two-col > *, .mc > *, .calc > * { min-width: 0; }
+
 /* 名詞表獨立頁 */
 .page-hero { padding: 56px 0 40px; border-bottom: 1px solid var(--line); background:
   radial-gradient(1000px 300px at 85% -20%, var(--accent-soft), transparent 70%), var(--bg); }
@@ -278,6 +294,9 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1p
   .g-index-row { grid-template-columns: 1fr; gap: 6px; }
   .g-index-row b { line-height: 1.4; }
   .g-toolbar .search { max-width: none; flex-basis: 100%; }
+  .quad { min-width: 0; }
+  .quad th, .quad td { padding: 10px 10px; }
+  .quad td b { font-size: 13px; }
   .g-filter { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
   .g-filter .tab { text-align: center; }
 }

@@ -76,11 +76,18 @@
     <!-- What -->
     <section id="what" class="section">
       <div class="wrap">
-        <header class="sec-head">
+        <header class="sec-head sec-head-switch">
           <span class="num">01</span>
-          <div><h2>什麼是期貨？</h2><p>從遠期契約到交易所的標準化合約</p></div>
+          <div class="sec-head-text"><h2 id="what-title">什麼是期貨？</h2><p id="what-sub">從遠期契約到交易所的標準化合約</p></div>
+          <div class="tabs switch" role="tablist" aria-label="切換期貨或選擇權介紹">
+            <button role="tab" class="tab active" data-tab="fut" aria-selected="true" aria-controls="tab-fut"
+              data-title="什麼是期貨？" data-sub="從遠期契約到交易所的標準化合約">期貨</button>
+            <button role="tab" class="tab" data-tab="opt" aria-selected="false" aria-controls="tab-opt"
+              data-title="什麼是選擇權？" data-sub="用權利金買一個「可以選擇」的權利">選擇權</button>
+          </div>
         </header>
 
+        <div class="tab-panel active" id="tab-fut" role="tabpanel">
         <div class="two-col">
           <div class="prose">
             <p>想像一位麵包店老闆擔心三個月後麵粉漲價，而一位小麥農夫擔心三個月後價格下跌。兩人現在就約好：<strong>三個月後，以每噸 10,000 元成交</strong>。不管到時市價是多少，雙方都照約定價格交易——這就是期貨最原始的概念。</p>
@@ -147,6 +154,108 @@
             <li>與股票最大的不同在於保證金、到期日與每日結算。</li>
           </ul>
         </div>
+        </div><!-- /tab-fut -->
+
+        <div class="tab-panel" id="tab-opt" role="tabpanel">
+        <div class="two-col">
+          <div class="prose">
+            <p>選擇權是一種<strong>「權利」的買賣</strong>。買方付出<strong>權利金</strong>，換得在到期時以約定的<strong>履約價</strong>買進或賣出標的的權利；賣方收下權利金，必須在買方要求履約時配合。</p>
+            <p>買方可以選擇要不要履約，所以<strong>最多只會虧掉權利金</strong>；賣方沒有選擇權，只能被動履約，因此必須繳交<strong>保證金</strong>，遇到大行情時虧損可能非常大。</p>
+            <p>現代標準化的選擇權始於 1973 年芝加哥選擇權交易所（CBOE）。台灣最主要的是<strong>台指選（TXO）</strong>，以加權指數為標的，每點 50 元，歐式、現金結算。</p>
+
+            <h3 class="sub">四種基本部位</h3>
+            <div class="table-wrap">
+              <table class="quad">
+                <thead><tr><th></th><th>買權（Call）</th><th>賣權（Put）</th></tr></thead>
+                <tbody>
+                  <tr><td>買方<small>付權利金</small></td>
+                    <td><b class="pos">Buy Call</b>看漲。漲越多賺越多，最多虧權利金。</td>
+                    <td><b class="neg">Buy Put</b>看跌。跌越多賺越多，最多虧權利金。</td></tr>
+                  <tr><td>賣方<small>收權利金、繳保證金</small></td>
+                    <td><b class="neg">Sell Call</b>看不漲。最多賺權利金，大漲時虧損可能很大。</td>
+                    <td><b class="pos">Sell Put</b>看不跌。最多賺權利金，大跌時虧損可能很大。</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <figure class="figure">
+            <figcaption><b>圖 1　選擇權買方到期損益圖</b><span>台指選，履約價 22,000、權利金 200 點</span></figcaption>
+            <svg viewBox="0 0 480 320" role="img" aria-label="買進買權與買進賣權的到期損益圖：兩者最大虧損都是權利金一萬元，買權在兩萬兩千兩百點以上獲利，賣權在兩萬一千八百點以下獲利">
+              <g class="grid-lines">
+                <line x1="60" y1="40" x2="460" y2="40"/><line x1="60" y1="120" x2="460" y2="120"/>
+                <line x1="60" y1="240" x2="460" y2="240"/><line x1="60" y1="280" x2="460" y2="280"/>
+              </g>
+              <line class="axis" x1="60" y1="200" x2="460" y2="200"/>
+              <line class="axis" x1="260" y1="30" x2="260" y2="290" stroke-dasharray="3 4"/>
+              <polyline class="ln-long" fill="none" points="60,240 260,240 460,40"/>
+              <polyline class="ln-short" fill="none" points="60,40 260,240 460,240" stroke-dasharray="7 4"/>
+              <circle class="dot" cx="300" cy="200" r="4"/>
+              <circle class="dot" cx="220" cy="200" r="4"/>
+              <g class="tick">
+                <text x="54" y="44" text-anchor="end">+40,000</text>
+                <text x="54" y="124" text-anchor="end">+20,000</text>
+                <text x="54" y="204" text-anchor="end">0</text>
+                <text x="54" y="244" text-anchor="end">−10,000</text>
+                <text x="54" y="284" text-anchor="end">−20,000</text>
+                <text x="60" y="308" text-anchor="middle">21,000</text>
+                <text x="260" y="308" text-anchor="middle">22,000</text>
+                <text x="460" y="308" text-anchor="middle">23,000</text>
+              </g>
+              <text class="lbl-long" x="456" y="122" text-anchor="end">買進買權</text>
+              <text class="lbl-short" x="64" y="122">買進賣權</text>
+              <text class="lbl-mute" x="306" y="217">損益兩平 22,200</text>
+              <text class="lbl-mute" x="214" y="217" text-anchor="end">21,800</text>
+              <text class="lbl-mute" x="268" y="262">最大虧損＝權利金 10,000 元</text>
+            </svg>
+            <p class="fig-note">縱軸為損益（元），橫軸為到期結算價（點）。權利金 200 點 × 50 元 ＝ 10,000 元，這就是買方的最大虧損；買權要漲過 22,200、賣權要跌破 21,800 才開始獲利。</p>
+          </figure>
+        </div>
+
+        <h3 class="sub">權利金是怎麼組成的？</h3>
+        <div class="two-col">
+          <div class="prose">
+            <div class="formula"><span>權利金</span><b>＝</b><span>內含價值 ＋ 時間價值</span></div>
+            <p><strong>內含價值</strong>是「現在立刻履約」能拿到的價值；<strong>時間價值</strong>則是「到期前還可能變化」的價值，越接近到期消失得越快。</p>
+            <p>例如指數 22,300 點時，履約價 22,000 的買權內含價值是 300 點。若權利金報價 380 點，多出的 80 點就是時間價值。內含價值不等於獲利，還要扣掉當初付出的權利金。</p>
+          </div>
+          <div class="table-wrap">
+            <table class="moneyness">
+              <thead><tr><th>狀態</th><th>買權（Call）</th><th>賣權（Put）</th><th>權利金組成</th></tr></thead>
+              <tbody>
+                <tr><td>價內 ITM</td><td>履約價 ＜ 指數</td><td>履約價 ＞ 指數</td><td>內含價值 ＋ 時間價值</td></tr>
+                <tr><td>價平 ATM</td><td colspan="2">履約價 ≈ 指數</td><td>只有時間價值（最高）</td></tr>
+                <tr><td>價外 OTM</td><td>履約價 ＞ 指數</td><td>履約價 ＜ 指數</td><td>只有時間價值</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <h3 class="sub">期貨與選擇權的差異</h3>
+        <div class="table-wrap">
+          <table class="compare">
+            <thead><tr><th>項目</th><th>期貨</th><th>選擇權</th></tr></thead>
+            <tbody>
+              <tr><td>交易的是</td><td>買賣雙方都有履約義務的合約</td><td>買方買到權利、賣方承擔義務</td></tr>
+              <tr><td>需要資金</td><td>多空雙方都繳保證金</td><td>買方付權利金；賣方繳保證金</td></tr>
+              <tr><td>損益型態</td><td>多空對稱，漲跌 1 點損益相同</td><td>買方虧損有限、獲利可能很大；賣方相反</td></tr>
+              <tr><td>時間的影響</td><td>不直接影響損益</td><td>時間價值每天流失，對買方不利、對賣方有利</td></tr>
+              <tr><td>台指商品每點</td><td>大台 200 元、小台 50 元、微台 10 元</td><td>台指選 50 元</td></tr>
+              <tr><td>到期</td><td>每月第三個星期三</td><td>月契約，另有週三、週五到期的週契約</td></tr>
+              <tr><td>最大虧損</td><td class="hl">可能超過保證金</td><td>買方：權利金；<span class="hl-text">賣方：可能超過保證金</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="keypoints">
+          <b>重點整理</b>
+          <ul>
+            <li>選擇權買方付權利金買「權利」，最大虧損就是權利金；賣方收權利金、繳保證金，承擔履約義務。</li>
+            <li>買權看漲、賣權看跌；權利金 ＝ 內含價值 ＋ 時間價值。</li>
+            <li>想看更多選擇權術語，例如 Delta、隱含波動率、價差策略，請見 <a href="glossary.html">名詞表</a>。</li>
+          </ul>
+        </div>
+        </div><!-- /tab-opt -->
       </div>
     </section>
 
