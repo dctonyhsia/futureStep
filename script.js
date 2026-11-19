@@ -240,41 +240,113 @@ function optCalc() {
   drawOptChart(pos, K, P, S, unit, be);
 }
 
+function niceTicks(lo, hi, n) {
+  const raw = (hi - lo) / Math.max(1, n);
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw) || 10 * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(Math.round(v * 1e6) / 1e6);
+  return out;
+}
+// 粗估文字寬度（中日文字較寬）
+const textW = (s, px) => [...s].reduce((w, c) => w + (c.charCodeAt(0) > 0x2E80 ? px : px * 0.62), 0);
+
 function drawOptChart(pos, K, P, S, unit, be) {
-  // 依實際寬度繪製，手機上文字才不會被縮小
-  const W = Math.round(Math.max(300, $('op-chart').clientWidth || 1000));
-  const H = Math.round(Math.min(340, Math.max(240, W * 0.55))), L = 72, R = 16, T = 24, B = 40;
+  const box = $('op-chart');
+  const W = Math.round(Math.max(300, box.clientWidth || 1000));
+  const narrow = W < 520;
+  const H = Math.round(Math.min(360, Math.max(260, W * 0.5))), L = narrow ? 58 : 76, R = 20, T = 34, B = 42;
   const span = Math.max(P * 4, Math.abs(S - K) * 1.25, K * 0.03, 300);
   const x0 = K - span, x1 = K + span;
   const f = s => optPayoff(pos, K, P, s) * unit;
   const ys = [f(x0), f(x1), f(K), 0, f(S)];
   let lo = Math.min(...ys), hi = Math.max(...ys);
-  const pad = (hi - lo) * 0.12 || 1000; lo -= pad; hi += pad;
+  const pad = (hi - lo) * 0.14 || 1000; lo -= pad; hi += pad;
   const X = s => L + (W - L - R) * (s - x0) / (x1 - x0);
   const Y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
-  const cls = pos.buy === pos.call ? 'ln-long' : 'ln-short'; // 看漲紅、看跌綠
-  const pts = [x0, K, x1].map(s => `${X(s).toFixed(1)},${Y(f(s)).toFixed(1)}`).join(' ');
-  const sIn = S >= x0 && S <= x1;
-  const lab = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v));
-  // 縱軸刻度：上下界與 0
-  const yt = [hi - pad, 0, lo + pad].filter((v, i, a) => a.findIndex(w => Math.abs(Y(w) - Y(v)) < 14) === i);
-  const svg = [
-    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${pos.zh}到期損益圖">`,
-    `<g class="grid-lines">${yt.map(v => `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/>`).join('')}</g>`,
-    `<line class="axis" x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}"/>`,
-    `<line class="axis" x1="${X(K)}" x2="${X(K)}" y1="${T - 6}" y2="${H - B + 4}" stroke-dasharray="3 4"/>`,
-    `<polyline class="${cls}" fill="none" points="${pts}"/>`,
-    `<g class="tick">${yt.map(v => `<text x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${lab(v)}</text>`).join('')}`,
-    `<text x="${X(x0)}" y="${H - 14}" text-anchor="start">${fmt(x0)}</text>`,
-    `<text x="${X(K)}" y="${H - 14}" text-anchor="middle">履約價 ${fmt(K)}</text>`,
-    `<text x="${X(x1)}" y="${H - 14}" text-anchor="end">${fmt(x1)}</text></g>`,
-    be >= x0 && be <= x1 ? `<circle class="pt" cx="${X(be)}" cy="${Y(0)}" r="5"/><text class="lbl-mute" x="${X(be)}" y="${Y(0) + (pos.buy ? 20 : -12)}" text-anchor="middle">兩平 ${fmt(be)}</text>` : '',
-    sIn ? `<line class="ln-maint" x1="${X(S)}" x2="${X(S)}" y1="${Y(f(S))}" y2="${Y(0)}"/><circle class="pt call" cx="${X(S)}" cy="${Y(f(S))}" r="6"/>` +
-      `<text class="lbl-val" x="${X(S) + (X(S) > W / 2 ? -12 : 12)}" y="${Y(f(S)) + (f(S) >= 0 ? -12 : 24)}" text-anchor="${X(S) > W / 2 ? 'end' : 'start'}">結算 ${fmt(S)}：${lab(f(S))} 元</text>` : '',
-    `</svg>`,
-  ].join('');
-  $('op-chart').innerHTML = svg;
+  const lab = v => (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v));
+  const short = v => Math.abs(v) >= 10000 && narrow ? (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v) / 10000) + '萬' : lab(v);
+  const y0 = Y(0);
+  const line = [x0, K, x1].map(s => `${X(s).toFixed(1)},${Y(f(s)).toFixed(1)}`).join(' ');
+  const area = `M${X(x0)},${y0} L${line.replace(/ /g, ' L')} L${X(x1)},${y0} Z`;
+  // 刻度：整數刻度 + 平坦段的金額（買方最大虧損／賣方最大獲利），太近的整數刻度拿掉
+  const flat = (pos.buy ? -P : P) * unit;
+  const yt = niceTicks(lo, hi, narrow ? 4 : 5).filter(v => Math.abs(Y(v) - Y(flat)) > 16).concat(flat).sort((a, b) => b - a);
+  const xt = niceTicks(x0, x1, narrow ? 4 : 6).filter(v => Math.abs(X(v) - X(K)) > (narrow ? 46 : 40));
+  const id = 'oc' + Math.random().toString(36).slice(2, 7);
+
+  // 結算價標籤（膠囊）
+  const fS = f(S), sx = X(S), sy = Y(fS), sIn = S >= x0 && S <= x1;
+  const pill = `結算 ${fmt(S)}　${lab(fS)} 元`;
+  const pw = textW(pill, 12.5) + 22, ph = 26;
+  let px = sx + 14, py = sy - ph - 10;
+  if (px + pw > W - R) px = sx - 14 - pw;
+  px = Math.min(Math.max(px, 4), W - R - pw);
+  if (py < T - 8) py = sy + 12;
+
+  const parts = [
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${pos.zh}到期損益圖：損益兩平點 ${fmt(be)}，結算價 ${fmt(S)} 時損益 ${lab(fS)} 元">`,
+    `<defs><clipPath id="${id}-up"><rect x="0" y="0" width="${W}" height="${y0}"/></clipPath>`,
+    `<clipPath id="${id}-dn"><rect x="0" y="${y0}" width="${W}" height="${H - y0}"/></clipPath></defs>`,
+    // 格線與刻度
+    `<g class="oc-grid">${yt.map(v => `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/>`).join('')}</g>`,
+    `<g class="oc-tick">${yt.map(v => `<text x="${L - 10}" y="${Y(v) + 4}" text-anchor="end">${short(v)}</text>`).join('')}`,
+    xt.map(v => `<text x="${X(v)}" y="${H - 14}" text-anchor="middle">${fmt(v)}</text>`).join(''), `</g>`,
+    // 獲利／虧損區塊
+    `<path class="oc-fill-up" d="${area}" clip-path="url(#${id}-up)"/>`,
+    `<path class="oc-fill-dn" d="${area}" clip-path="url(#${id}-dn)"/>`,
+    `<line class="oc-zero" x1="${L}" x2="${W - R}" y1="${y0}" y2="${y0}"/>`,
+    // 履約價
+    `<line class="oc-strike" x1="${X(K)}" x2="${X(K)}" y1="${T - 10}" y2="${H - B}"/>`,
+    `<text class="oc-strike-l" x="${X(K)}" y="${T - 16}" text-anchor="middle">履約價 ${fmt(K)}</text>`,
+    // 損益線
+    `<polyline class="oc-line" points="${line}"/>`,
+    // 區塊文字
+    hi > 0 ? `<text class="oc-zone up" x="${W - R - 8}" y="${Math.min(y0 - 10, T + 16)}" text-anchor="end">獲利區</text>` : '',
+    lo < 0 ? `<text class="oc-zone dn" x="${W - R - 8}" y="${Math.max(y0 + 22, H - B - 10)}" text-anchor="end">虧損區</text>` : '',
+    // 損益兩平
+    be >= x0 && be <= x1 ? `<circle class="oc-be" cx="${X(be)}" cy="${y0}" r="5.5"/>` +
+      (() => { // 標籤放在線的另一側空白處
+        const right = be > K, far = f(right ? x1 : x0);
+        return `<text class="oc-be-l" x="${X(be) + (right ? 10 : -10)}" y="${y0 + (far > 0 ? 20 : -11)}" text-anchor="${right ? 'start' : 'end'}">兩平 ${fmt(be)}</text>`;
+      })() : '',
+    // 結算價
+    sIn ? `<line class="oc-drop" x1="${sx}" x2="${sx}" y1="${sy}" y2="${y0}"/>` +
+      `<circle class="oc-pt ${fS >= 0 ? 'up' : 'dn'}" cx="${sx}" cy="${sy}" r="6.5"/>` +
+      `<g class="oc-pill"><rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="13"/>` +
+      `<text x="${px + pw / 2}" y="${py + 17}" text-anchor="middle">${pill}</text></g>` : '',
+    // 滑鼠游標
+    `<g class="oc-hover" visibility="hidden"><line class="oc-cross" y1="${T}" y2="${H - B}"/><circle class="oc-hdot" r="5"/></g>`,
+    `<rect class="oc-hit" x="${L}" y="${T - 10}" width="${W - L - R}" height="${H - T - B + 10}"/>`,
+    `</svg><div class="oc-tip" hidden></div>`,
+  ];
+  box.innerHTML = parts.join('');
   $('op-chart-cap').textContent = `${pos.name}・履約價 ${fmt(K)}・權利金 ${fmt(P)} 點 × ${fmt(unit)} 元`;
+
+  // 滑鼠／觸控：顯示任一結算價的損益
+  const svg = box.querySelector('svg'), hov = svg.querySelector('.oc-hover'), cross = hov.querySelector('.oc-cross'),
+    dot = hov.querySelector('.oc-hdot'), tip = box.querySelector('.oc-tip'), hit = svg.querySelector('.oc-hit');
+  const move = e => {
+    const r = svg.getBoundingClientRect();
+    const cx = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) * W / r.width;
+    const s = Math.round(x0 + (Math.min(Math.max(cx, L), W - R) - L) / (W - L - R) * (x1 - x0));
+    const v = f(s), hx = X(s), hy = Y(v);
+    cross.setAttribute('x1', hx); cross.setAttribute('x2', hx);
+    dot.setAttribute('cx', hx); dot.setAttribute('cy', hy);
+    dot.setAttribute('class', 'oc-hdot ' + (v >= 0 ? 'up' : 'dn'));
+    hov.setAttribute('visibility', 'visible');
+    tip.innerHTML = `<span>結算價 <b>${fmt(s)}</b></span><span>損益 <b class="${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${lab(v)} 元</b></span>`;
+    tip.hidden = false;
+    const scale = r.width / W, tw = tip.offsetWidth;
+    let left = hx * scale + 14; if (left + tw > r.width) left = hx * scale - 14 - tw;
+    tip.style.left = left + 'px'; tip.style.top = Math.max(0, hy * scale - 52) + 'px';
+  };
+  const leave = () => { hov.setAttribute('visibility', 'hidden'); tip.hidden = true; };
+  hit.addEventListener('mousemove', move);
+  hit.addEventListener('touchmove', e => { move(e); }, { passive: true });
+  hit.addEventListener('touchstart', move, { passive: true });
+  hit.addEventListener('mouseleave', leave);
+  hit.addEventListener('touchend', () => setTimeout(leave, 1200));
 }
 if ($('opt-form')) {
   $('opt-form').addEventListener('input', optCalc);
