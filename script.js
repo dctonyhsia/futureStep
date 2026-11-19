@@ -16,9 +16,13 @@ fill('contact-list', D.contact, c => {
   const ext = /^https?:/.test(c.link || '') ? ' target="_blank" rel="noopener"' : '';
   return c.link ? `<a class="card contact-card" href="${esc(c.link)}"${ext}>${inner}</a>` : `<div class="card contact-card">${inner}</div>`;
 });
-fill('g-list', D.glossary, g => `<div><dt>${esc(g.term)}</dt><dd>${esc(g.desc)}</dd></div>`);
+fill('g-list', D.glossary, (g, i) => `<div id="term-${i + 1}"><dt>${esc(g.term)}</dt><dd>${esc(g.desc)}</dd></div>`);
+fill('g-index', D.glossary, (g, i) => `<a href="#term-${i + 1}">${esc(g.term)}</a>`);
+const gCount = document.getElementById('g-count');
+if (gCount && D.glossary) gCount.textContent = D.glossary.length;
 (function () {
   const sel = document.getElementById('c-product');
+  if (!sel) return;
   const custom = sel.querySelector('option[value="custom"]');
   (D.calcProducts || []).forEach(p => {
     const o = document.createElement('option');
@@ -117,7 +121,7 @@ const links = [...nav.querySelectorAll('a')];
 const io = new IntersectionObserver(entries => {
   entries.forEach(en => {
     if (en.isIntersecting) {
-      links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
+      links.forEach(a => { if (!a.dataset.page) a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id); });
     }
   });
 }, { rootMargin: '-45% 0px -50% 0px' });
@@ -161,8 +165,10 @@ function calc() {
   bar.style.left = roi >= 0 ? '50%' : (50 - pct) + '%';
   bar.style.background = roi >= 0 ? 'var(--up)' : 'var(--down)';
 }
-$('calc-form').addEventListener('input', calc);
-calc();
+if ($('calc-form')) {
+  $('calc-form').addEventListener('input', calc);
+  calc();
+}
 
 // 商品分頁
 document.querySelectorAll('.tab').forEach(tab => {
@@ -174,7 +180,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 
 // 名詞搜尋
 const items = [...document.querySelectorAll('#g-list > div')];
-$('g-search').addEventListener('input', e => {
+if ($('g-search')) $('g-search').addEventListener('input', e => {
   const q = e.target.value.trim().toLowerCase();
   let shown = 0;
   items.forEach(it => {
