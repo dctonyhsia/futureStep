@@ -16,10 +16,31 @@ fill('contact-list', D.contact, c => {
   const ext = /^https?:/.test(c.link || '') ? ' target="_blank" rel="noopener"' : '';
   return c.link ? `<a class="card contact-card" href="${esc(c.link)}"${ext}>${inner}</a>` : `<div class="card contact-card">${inner}</div>`;
 });
-fill('g-list', D.glossary, (g, i) => `<div id="term-${i + 1}"><dt>${esc(g.term)}</dt><dd>${esc(g.desc)}</dd></div>`);
-fill('g-index', D.glossary, (g, i) => `<a href="#term-${i + 1}">${esc(g.term)}</a>`);
+// 名詞表：依分類分組
+const G = (D.glossary || []).map((g, i) => ({ ...g, cat: g.cat || '期貨', id: 'term-' + (i + 1) }));
+const gCats = [...new Set(G.map(g => g.cat))];
+const gList = document.getElementById('g-list');
+if (gList) {
+  gList.innerHTML = gCats.map(c => {
+    const list = G.filter(g => g.cat === c);
+    return `<section class="g-group" data-cat="${esc(c)}"><h2 class="g-group-h">${esc(c)}<span>${list.length}</span></h2>` +
+      `<dl class="glossary">${list.map(g => `<div id="${g.id}"><dt>${esc(g.term)}</dt><dd>${esc(g.desc)}</dd></div>`).join('')}</dl></section>`;
+  }).join('');
+}
+const gIndex = document.getElementById('g-index');
+if (gIndex) {
+  gIndex.innerHTML = gCats.map(c =>
+    `<div class="g-index-row" data-cat="${esc(c)}"><b>${esc(c)}</b>${G.filter(g => g.cat === c).map(g => `<a href="#${g.id}">${esc(g.term)}</a>`).join('')}</div>`).join('');
+}
+const gFilter = document.getElementById('g-filter');
+if (gFilter) {
+  gFilter.innerHTML = ['全部', ...gCats].map((c, i) =>
+    `<button type="button" class="tab${i === 0 ? ' active' : ''}" data-cat="${esc(c)}" aria-pressed="${i === 0}">${esc(c)}<span>${c === '全部' ? G.length : G.filter(g => g.cat === c).length}</span></button>`).join('');
+}
 const gCount = document.getElementById('g-count');
-if (gCount && D.glossary) gCount.textContent = D.glossary.length;
+if (gCount) gCount.textContent = G.length;
+const gCats2 = document.getElementById('g-cats');
+if (gCats2) gCats2.textContent = gCats.join('、');
 (function () {
   const sel = document.getElementById('c-product');
   if (!sel) return;
@@ -179,16 +200,33 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 // 名詞搜尋
-const items = [...document.querySelectorAll('#g-list > div')];
-if ($('g-search')) $('g-search').addEventListener('input', e => {
-  const q = e.target.value.trim().toLowerCase();
+let gCat = '全部';
+function filterGlossary() {
+  const q = ($('g-search').value || '').trim().toLowerCase();
   let shown = 0;
-  items.forEach(it => {
-    const hit = !q || it.textContent.toLowerCase().includes(q);
-    it.hidden = !hit;
-    if (hit) shown++;
+  document.querySelectorAll('.g-group').forEach(sec => {
+    const catOk = gCat === '全部' || sec.dataset.cat === gCat;
+    let n = 0;
+    sec.querySelectorAll('.glossary > div').forEach(it => {
+      const hit = catOk && (!q || it.textContent.toLowerCase().includes(q));
+      it.hidden = !hit;
+      if (hit) n++;
+    });
+    sec.hidden = n === 0;
+    shown += n;
   });
+  document.querySelectorAll('.g-index-row').forEach(r => { r.hidden = !(gCat === '全部' || r.dataset.cat === gCat); });
   $('g-empty').hidden = shown > 0;
-});
+}
+if ($('g-search')) {
+  $('g-search').addEventListener('input', filterGlossary);
+  if (gFilter) gFilter.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    gCat = b.dataset.cat;
+    gFilter.querySelectorAll('button').forEach(x => { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', x === b); });
+    filterGlossary();
+  });
+}
 
 $('year').textContent = new Date().getFullYear();
