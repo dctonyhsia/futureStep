@@ -297,6 +297,7 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1p
 .oc-strike { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; }
 .oc-strike-l { fill: var(--muted); font-size: 12px; }
 .oc-line { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.oc-arrow { fill: var(--ink); }
 .oc-zone { font-size: 12px; font-weight: 700; letter-spacing: .1em; }
 .oc-zone.up { fill: var(--up); } .oc-zone.dn { fill: var(--down); }
 .oc-be { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }

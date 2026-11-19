@@ -323,19 +323,56 @@ function drawOptChart({ legs, S, P, unit, ptot, title, cap }) {
       }).join('')
     : `<text class="oc-strike-l" x="${X(k1)}" y="${T - 16}" text-anchor="middle">履約價 ${fmt(k1)}</text>`;
 
-  // 結算價標籤（膠囊）
+  const hitBox = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+  // 兩平點標籤：放在點的外側空白處，超出圖框時往內收
+  const beItems = bes.filter(b => b >= x0 && b <= x1).map(b => {
+    const right = b >= mid, farV = f(right ? x1 : x0);
+    const t = narrow ? fmt(b) : `兩平 ${fmt(b)}`, tw = textW(t, 12);
+    let tx = right ? X(b) + 10 : X(b) - 10 - tw;
+    tx = Math.min(Math.max(tx, L + 2), W - R - tw - 2);
+    let ty = y0 + (farV > 0 ? 20 : -11);
+    const sDot = [X(S) - 9, Y(f(S)) - 9, X(S) + 9, Y(f(S)) + 9];
+    if (hitBox([tx - 4, ty - 14, tx + tw + 4, ty + 5], sDot)) ty = y0 + (farV > 0 ? -11 : 20);
+    return { b, t, tx, ty, box: [tx - 4, ty - 14, tx + tw + 4, ty + 5] };
+  });
+
+  // 結算價標籤（膠囊）：依序嘗試右上、左上、右下、左下，避開兩平標籤與圖框
   const fS = f(S), sx = X(S), sy = Y(fS), sIn = S >= x0 && S <= x1;
   const pill = `結算 ${fmt(S)}　${lab(fS)} 元`;
   const pw = textW(pill, 12.5) + 22, ph = 26;
-  let px = sx + 14, py = sy - ph - 10;
-  if (px + pw > W - R) px = sx - 14 - pw;
+  const spots = [[sx + 14, sy - ph - 10], [sx - 14 - pw, sy - ph - 10], [sx + 14, sy + 12], [sx - 14 - pw, sy + 12]];
+  const fits = ([x, y]) => x >= 4 && x + pw <= W - R && y >= T - 8 && y + ph <= H - B;
+  const clear = ([x, y]) => beItems.every(it => !hitBox([x, y, x + pw, y + ph], it.box));
+  let [px, py] = spots.find(p => fits(p) && clear(p)) || spots.find(fits) || spots[0];
   px = Math.min(Math.max(px, 4), W - R - pw);
-  if (py < T - 8) py = sy + 12;
+  const pillBox = narrow ? [-9, -9, -9, -9] : [px, py, px + pw, py + ph]; // 手機上不畫膠囊（上方結果框已顯示）
+
+  // 獲利區／虧損區文字：放進實際上色的區塊裡（區塊太小就不放）
+  const xsS = Array.from({ length: 81 }, (_, i) => x0 + (x1 - x0) * i / 80);
+  const zoneLabel = (sign, text, cls) => {
+    const tw = textW(text, 12) + 6;
+    const ok = xsS.filter(s => X(s) >= L + tw / 2 + 24 && X(s) <= W - R - tw / 2 - 24);
+    if (!ok.length) return '';
+    const pick = ok.reduce((best, s) => (sign * f(s) > sign * f(best) ? s : best), ok[0]);
+    const v = f(pick);
+    if (sign * v <= 0 || Math.abs(Y(v) - y0) < 34) return '';
+    const zx = X(pick);
+    // 在該處的線與零軸之間取中點，避免壓到線
+    const zy = (y0 + Y(v)) / 2 + 4;
+    const box = [zx - tw / 2, zy - 13, zx + tw / 2, zy + 4];
+    if (hitBox(box, pillBox) || beItems.some(it => hitBox(box, it.box))) return '';
+    return `<text class="oc-zone ${cls}" x="${zx}" y="${zy}" text-anchor="middle">${text}</text>`;
+  };
+
+  // 線的兩端若還在延伸（不是水平），加箭頭表示損益會繼續擴大
+  const dx = (x1 - x0) * 0.01;
+  const goesOnL = Math.abs(f(x0) - f(x0 + dx)) > 1e-6, goesOnR = Math.abs(f(x1) - f(x1 - dx)) > 1e-6;
 
   const parts = [
     `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}到期損益圖：損益兩平點 ${bes.map(fmt).join('、') || '無'}，結算價 ${fmt(S)} 時損益 ${lab(fS)} 元">`,
     `<defs><clipPath id="${id}-up"><rect x="0" y="0" width="${W}" height="${Math.max(0, y0)}"/></clipPath>`,
-    `<clipPath id="${id}-dn"><rect x="0" y="${y0}" width="${W}" height="${Math.max(0, H - y0)}"/></clipPath></defs>`,
+    `<clipPath id="${id}-dn"><rect x="0" y="${y0}" width="${W}" height="${Math.max(0, H - y0)}"/></clipPath>`,
+    `<marker id="${id}-ar" viewBox="0 0 10 10" refX="6" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path class="oc-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs>`,
     `<g class="oc-grid">${yt.map(v => `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/>`).join('')}</g>`,
     `<g class="oc-tick">${yt.map(v => `<text x="${L - 10}" y="${Y(v) + 4}" text-anchor="end">${short(v)}</text>`).join('')}`,
     xt.map(v => `<text x="${X(v)}" y="${H - 14}" text-anchor="middle">${fmt(v)}</text>`).join(''), `</g>`,
@@ -344,23 +381,14 @@ function drawOptChart({ legs, S, P, unit, ptot, title, cap }) {
     `<line class="oc-zero" x1="${L}" x2="${W - R}" y1="${y0}" y2="${y0}"/>`,
     kinks.map(k => `<line class="oc-strike" x1="${X(k)}" x2="${X(k)}" y1="${T - 10}" y2="${H - B}"/>`).join(''),
     strikeLabels,
-    `<polyline class="oc-line" points="${line}"/>`,
-    hi > 0 ? `<text class="oc-zone up" x="${W - R - 8}" y="${Math.min(y0 - 10, T + 16)}" text-anchor="end">獲利區</text>` : '',
-    lo < 0 ? `<text class="oc-zone dn" x="${W - R - 8}" y="${Math.max(y0 + 22, H - B - 10)}" text-anchor="end">虧損區</text>` : '',
-    // 損益兩平：標籤放在線的外側空白處
-    bes.filter(b => b >= x0 && b <= x1).map(b => {
-      const right = b >= mid, farV = f(right ? x1 : x0);
-      const t = `兩平 ${fmt(b)}`, tw = textW(t, 12);
-      // 預設放在點的外側；超出圖框時往內收
-      let tx = right ? X(b) + 10 : X(b) - 10 - tw;
-      tx = Math.min(Math.max(tx, L + 2), W - R - tw - 2);
-      return `<circle class="oc-be" cx="${X(b)}" cy="${y0}" r="5.5"/>` +
-        `<text class="oc-be-l" x="${tx}" y="${y0 + (farV > 0 ? 20 : -11)}">${t}</text>`;
-    }).join(''),
+    `<polyline class="oc-line" points="${line}"${goesOnL ? ` marker-start="url(#${id}-ar)"` : ''}${goesOnR ? ` marker-end="url(#${id}-ar)"` : ''}/>`,
+    zoneLabel(1, '獲利區', 'up'),
+    zoneLabel(-1, '虧損區', 'dn'),
+    beItems.map(it => `<circle class="oc-be" cx="${X(it.b)}" cy="${y0}" r="5.5"/><text class="oc-be-l" x="${it.tx}" y="${it.ty}">${it.t}</text>`).join(''),
     sIn ? `<line class="oc-drop" x1="${sx}" x2="${sx}" y1="${sy}" y2="${y0}"/>` +
       `<circle class="oc-pt ${fS >= 0 ? 'up' : 'dn'}" cx="${sx}" cy="${sy}" r="6.5"/>` +
-      `<g class="oc-pill"><rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="13"/>` +
-      `<text x="${px + pw / 2}" y="${py + 17}" text-anchor="middle">${pill}</text></g>` : '',
+      (narrow ? '' : `<g class="oc-pill"><rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="13"/>` +
+      `<text x="${px + pw / 2}" y="${py + 17}" text-anchor="middle">${pill}</text></g>`) : '',
     `<g class="oc-hover" visibility="hidden"><line class="oc-cross" y1="${T}" y2="${H - B}"/><circle class="oc-hdot" r="5"/></g>`,
     `<rect class="oc-hit" x="${L}" y="${T - 10}" width="${W - L - R}" height="${H - T - B + 10}"/>`,
     `</svg><div class="oc-tip" hidden></div>`,
