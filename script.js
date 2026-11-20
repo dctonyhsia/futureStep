@@ -158,6 +158,14 @@ fill('settle-list', D.settlement, cardTpl);
   ].map(t => `<li>${esc(t)}</li>`).join('');
 })();
 
+// ===== settlement.html：小 Tips（豁免代為沖銷商品）=====
+(function () {
+  const box = document.getElementById('exempt-tips'), T = D.exemptTips;
+  if (!box || !T) return;
+  box.innerHTML = `<b class="tips-h"><span aria-hidden="true">💡</span>${esc(T.title)}</b><p>${esc(T.text)}</p>` +
+    (T.points && T.points.length ? `<ul>${T.points.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : '');
+})();
+
 const upd = document.getElementById('updated');
 if (upd) upd.textContent = D.updated || '';
 
