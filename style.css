@@ -437,7 +437,7 @@ a.contact-card:hover { border-color: var(--accent); }
 }
 /* 手機：規格表改為一筆一張卡片 */
 @media (max-width: 640px) {
-  #tab-intl .table-wrap { border: 0; background: transparent; overflow: visible; }
+  .os-wrap { border: 0; background: transparent; overflow: visible; }
   .os-table { min-width: 0; }
   .os-table thead { display: none; }
   .os-table, .os-table tbody, .os-table tr, .os-table td { display: block; width: 100%; }
@@ -450,5 +450,8 @@ a.contact-card:hover { border-color: var(--accent); }
   .os-table td.os-empty { display: block; text-align: center; }
   .os-table td.os-empty::before { content: none; }
 }
-/* 海外期貨分頁：規格表標題在最上方時不需要大間距 */
-#tab-intl h3.sub.os-title { margin-top: 8px; }
+
+/* 05 海外期貨分頁：前往規格表的入口卡片 */
+.os-link { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; margin-top: 16px; text-decoration: none; color: inherit; border-left: 4px solid var(--accent); }
+.os-link:hover { border-color: var(--accent); }
+.os-link p { max-width: 680px; }

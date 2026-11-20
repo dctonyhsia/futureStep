@@ -448,21 +448,14 @@
           <p class="note">台指期貨類多於每月第三個星期三到期。規格可能調整，請以臺灣期貨交易所官網為準。</p>
         </div>
         <div class="tab-panel" id="tab-intl">
-          <h3 class="sub os-title">海外期貨商品合約規格表</h3>
-          <div class="os-filters" role="search" aria-label="篩選海外期貨商品">
-            <label>交易所<select id="os-ex"><option value="">全部交易所</option></select></label>
-            <label>類別<select id="os-cat"><option value="">全部類別</option></select></label>
-            <label class="os-q">商品名稱<input id="os-q" type="search" placeholder="例如：日經、原油、ES"></label>
-          </div>
-          <p class="os-count" id="os-count" aria-live="polite"></p>
-          <div class="table-wrap">
-            <table class="os-table">
-              <thead><tr><th>交易所</th><th>類別</th><th>商品名稱</th><th>代碼</th><th>幣別</th><th>合約規格</th><th>跳動點</th><th>跳動值</th><th>熱門月份</th><th>台灣交易時間</th></tr></thead>
-              <tbody id="os-body"></tbody>
-            </table>
-          </div>
-          <nav class="os-pager" id="os-pager" aria-label="規格表分頁"></nav>
-          <p class="note" id="os-note"></p>
+          <div class="grid" id="products-intl"></div>
+          <a class="card os-link" href="overseas.html">
+            <div>
+              <h3>海外期貨商品合約規格表</h3>
+              <p>收錄 SGX、HKEX、JPX、CME 共 <b id="os-total"></b> 項商品的合約規格、跳動點、跳動值與台灣交易時間，可依交易所、類別、商品名稱篩選。</p>
+            </div>
+            <span class="btn primary">查看完整規格表 →</span>
+          </a>
         </div>
       </div>
     </section>
