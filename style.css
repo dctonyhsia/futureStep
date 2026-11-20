@@ -182,6 +182,10 @@ tbody td:first-child { font-weight: 500; color: var(--ink); }
 .num-table td:first-child { font-family: "Noto Sans TC", sans-serif; }
 .tag { display: inline-block; font-family: "Noto Sans TC", sans-serif; font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--bg-alt); color: var(--muted); }
 .tag.call { background: var(--up); color: #fff; font-weight: 700; }
+.tag.cut { background: var(--ink); color: var(--bg); font-weight: 700; }
+#settle-list { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.settle-formula { margin-top: 18px; }
+.mr-table th, .mr-table td { white-space: nowrap; }
 .pos { color: var(--up); } .neg { color: var(--down); }
 
 /* 重點整理 */
