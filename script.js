@@ -12,11 +12,27 @@ fill('risk-list', D.risks, cardTpl);
 fill('rules-list', D.rules, r => `<li>${esc(r)}</li>`);
 fill('products-tw', D.productsTW, p =>
   `<tr><td>${esc(p.name)}</td><td class="mono">${esc(p.code)}</td><td>${esc(p.underlying)}</td><td>${esc(p.pointValue)}</td><td>${esc(p.settle)}</td></tr>`);
-fill('contact-list', D.contact, c => {
-  const inner = `<h3>${esc(c.title)}</h3><p>${esc(c.desc || '')}</p><b>${esc(c.value)}</b>`;
-  const ext = /^https?:/.test(c.link || '') ? ' target="_blank" rel="noopener"' : '';
-  return c.link ? `<a class="card contact-card" href="${esc(c.link)}"${ext}>${inner}</a>` : `<div class="card contact-card">${inner}</div>`;
-});
+// 聯絡我們：hide: true 的項目先遮住，點擊（手機碰觸）後才把資訊放進頁面
+(function () {
+  const box = document.getElementById('contact-list');
+  if (!box || !D.contact) return;
+  const ext = l => (/^https?:/.test(l || '') ? ' target="_blank" rel="noopener"' : '');
+  const shown = c => (c.link ? `<a href="${esc(c.link)}"${ext(c.link)}>${esc(c.value)}</a>` : esc(c.value));
+  box.innerHTML = D.contact.map((c, i) => c.hide
+    ? `<button type="button" class="card contact-card masked" data-i="${i}" aria-label="顯示${esc(c.title)}">` +
+      `<h3>${esc(c.title)}</h3><b class="mask" aria-hidden="true">●●●●●●●●</b><span class="contact-hint">點擊顯示</span></button>`
+    : `<div class="card contact-card"><h3>${esc(c.title)}</h3><b>${shown(c)}</b></div>`).join('');
+  const reveal = el => {
+    if (!el.classList.contains('masked')) return;
+    const c = D.contact[+el.dataset.i];
+    const card = document.createElement('div');
+    card.className = 'card contact-card revealed';
+    card.innerHTML = `<h3>${esc(c.title)}</h3><b>${shown(c)}</b>` + (c.link && c.action ? `<span class="contact-hint">點上方文字即可${esc(c.action)}</span>` : '');
+    el.replaceWith(card);
+  };
+  box.addEventListener('click', e => { const el = e.target.closest('.masked'); if (el) reveal(el); });
+  box.addEventListener('touchstart', e => { const el = e.target.closest('.masked'); if (el) reveal(el); }, { passive: true });
+})();
 // 名詞表：依分類分組
 const G = (D.glossary || []).map((g, i) => ({ ...g, cat: g.cat || '期貨', id: 'term-' + (i + 1) }));
 const gCats = [...new Set(G.map(g => g.cat))];

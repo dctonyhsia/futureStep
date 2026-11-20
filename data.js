@@ -224,12 +224,13 @@ const SITE_DATA = {
   ],
 
   // ---------- 08 聯絡我們 ----------
-  // link 可以填：mailto:信箱、https://網址；不想要連結就留 ""
-  // 不需要的項目整行刪掉即可
+  // 聯絡我們頁（contact.html）。hide: true 的項目會先遮住，點一下（手機碰一下）才顯示
+  // link 可以填：tel:電話、mailto:信箱、https://網址；不想要連結就不填 link。action 是顯示後的提示文字
   contact: [
-    // 要顯示信箱：把下一行開頭的 // 刪掉，並改成你的信箱
-    // { icon: "✉️", title: "電子郵件", value: "you@example.com", link: "mailto:you@example.com" },
-    { icon: "💬", title: "意見回饋", value: "在 GitHub 提出問題或建議", link: "https://github.com/dctonyhsia/futureStep/issues" },
+    { title: "聯絡人",   value: "夏偉紘" },
+    { title: "手機",     value: "0922-366-581",           link: "tel:0922366581",                     hide: true, action: "撥打電話" },
+    { title: "LINE ID",  value: "y645228921",             link: "https://line.me/ti/p/~y645228921",   hide: true, action: "加入 LINE 好友" },
+    { title: "電子信箱", value: "cat645228921@gmail.com", link: "mailto:cat645228921@gmail.com",       hide: true, action: "寄信" },
   ],
 
   // ---------- 07 名詞表 ----------

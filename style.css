@@ -371,9 +371,17 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1p
 .glossary-teaser p { max-width: 640px; }
 
 /* ============ 聯絡 ============ */
+.contact-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 .contact-card { text-decoration: none; color: inherit; display: block; }
 a.contact-card:hover { border-color: var(--accent); }
-.contact-card b { display: block; word-break: break-all; color: var(--accent); margin-top: 4px; }
+.contact-card b { display: block; word-break: break-all; color: var(--accent); margin-top: 4px; font-size: 18px; }
+.contact-card b a { color: inherit; }
+button.contact-card { font: inherit; text-align: left; width: 100%; cursor: pointer; }
+button.contact-card:hover, button.contact-card:focus-visible { border-color: var(--accent); }
+.contact-card .mask { letter-spacing: 3px; color: var(--muted); user-select: none; }
+.contact-hint { display: block; margin-top: 8px; font-size: 13px; color: var(--muted); }
+.contact-card.revealed { animation: reveal .25s ease; }
+@keyframes reveal { from { opacity: .3; } to { opacity: 1; } }
 
 /* ============ 頁尾 ============ */
 .footer { background: var(--ink); color: color-mix(in srgb, var(--bg) 75%, transparent); padding: 48px 0 24px; font-size: 14px; }
