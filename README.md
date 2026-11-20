@@ -10,7 +10,7 @@
 | `index.html` | 首頁架構與段落文字（標題、說明段落、表格標題） | 要改段落文字或新增整個章節 |
 | `glossary.html` | 名詞表獨立頁（名詞內容在 `data.js` 的 `glossary`） | 要改名詞表頁的標題或說明 |
 | `analysis.html` | 數據分析頁（目前為「內容準備中」） | 要放上數據分析內容時 |
-| `overseas.html` | 海外期貨商品合約規格表（資料在 `data.js` 的 `overseasSpecs`） | 要改規格表頁的標題或說明 |
+| `overseas.html` | 海外期貨規格與保證金（資料在 `data.js` 的 `overseasSpecs`、`overseasMargins`） | 要改這一頁的標題或說明 |
 | `style.css` | 顏色、字體、版面 | 想換配色或樣式 |
 | `script.js` | 互動功能（試算、分頁、搜尋、深色模式） | 通常不用動 |
 

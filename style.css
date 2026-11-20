@@ -455,3 +455,24 @@ a.contact-card:hover { border-color: var(--accent); }
 .os-link { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; margin-top: 16px; text-decoration: none; color: inherit; border-left: 4px solid var(--accent); }
 .os-link:hover { border-color: var(--accent); }
 .os-link p { max-width: 680px; }
+
+/* 海外期貨：合約規格／保證金 切換與保證金表 */
+.os-view { margin-bottom: 18px; }
+.os-chg { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); margin: 0 0 10px; cursor: pointer; }
+.os-chg input { width: 16px; height: 16px; accent-color: var(--accent); }
+.os-table.os-margin { min-width: 860px; }
+.os-table td.num, .os-table.os-margin th:nth-child(n+6) { text-align: right; }
+.mg-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: var(--gold); color: #fff; vertical-align: 2px; margin-left: 4px; }
+.os-table td.mg-new { font-weight: 600; color: var(--ink); }
+.os-table td.mg-same { color: var(--muted); }
+.mg-up { color: var(--up); font-size: 11px; }
+.mg-dn { color: var(--down); font-size: 11px; }
+.os-table tr.mg-changed td { background: color-mix(in srgb, var(--gold) 9%, transparent); }
+.margin-link { margin-top: 16px; font-size: 15px; }
+.margin-link a { font-weight: 700; }
+@media (max-width: 640px) {
+  .os-table.os-margin { min-width: 0; }
+  .os-table td.num { text-align: right; }
+  .os-table tr.mg-changed { border-color: var(--gold); }
+  .os-table tr.mg-changed td { background: transparent; }
+}
