@@ -10,8 +10,7 @@ fill('products-intl', D.productsIntl, cardTpl);
 document.querySelectorAll('#os-total').forEach(e => { e.textContent = (D.overseasSpecs || []).length; });
 fill('risk-list', D.risks, cardTpl);
 fill('rules-list', D.rules, r => `<li>${esc(r)}</li>`);
-fill('products-tw', D.productsTW, p =>
-  `<tr><td>${esc(p.name)}</td><td class="mono">${esc(p.code)}</td><td>${esc(p.underlying)}</td><td>${esc(p.pointValue)}</td><td>${esc(p.settle)}</td></tr>`);
+fill('products-tw', D.productsTW, cardTpl);
 fill('contact-list', D.contact, c => {
   const inner = `<h3>${esc(c.title)}</h3><p>${esc(c.desc || '')}</p><b>${esc(c.value)}</b>`;
   const ext = /^https?:/.test(c.link || '') ? ' target="_blank" rel="noopener"' : '';

@@ -37,14 +37,14 @@ const SITE_DATA = {
     { icon: "⏰", title: "交易時間",   text: "各商品不同。台灣期交所多數商品有日盤與夜盤（盤後交易）時段。" },
   ],
 
-  // ---------- 05 常見商品：台灣期交所（表格）----------
+  // ---------- 05 常見商品：台灣期交所（卡片）----------
   productsTW: [
-    { name: "臺股期貨（大台）",     code: "TX",  underlying: "臺灣加權股價指數",   pointValue: "200 元",       settle: "現金" },
-    { name: "小型臺指期貨（小台）", code: "MTX", underlying: "臺灣加權股價指數",   pointValue: "50 元",        settle: "現金" },
-    { name: "微型臺指期貨",         code: "TMF", underlying: "臺灣加權股價指數",   pointValue: "10 元",        settle: "現金" },
-    { name: "電子期貨",             code: "TE",  underlying: "電子類股價指數",     pointValue: "4,000 元",     settle: "現金" },
-    { name: "金融期貨",             code: "TF",  underlying: "金融保險類股價指數", pointValue: "1,000 元",     settle: "現金" },
-    { name: "股票期貨",             code: "—",   underlying: "個別上市櫃股票",     pointValue: "一口 2,000 股", settle: "現金／實物" },
+    { title: "臺股期貨（大台）TX",     text: "以臺灣加權股價指數為標的，每點 200 元，現金結算。" },
+    { title: "小型臺指期貨（小台）MTX", text: "以臺灣加權股價指數為標的，每點 50 元，現金結算。" },
+    { title: "微型臺指期貨 TMF",       text: "以臺灣加權股價指數為標的，每點 10 元，現金結算。" },
+    { title: "電子期貨 TE",            text: "以電子類股價指數為標的，每點 4,000 元，現金結算。" },
+    { title: "金融期貨 TF",            text: "以金融保險類股價指數為標的，每點 1,000 元，現金結算。" },
+    { title: "股票期貨",               text: "以個別上市櫃股票為標的，一口 2,000 股，現金或實物交割。" },
   ],
 
   // ---------- 05 常見商品：海外期貨（卡片）----------
