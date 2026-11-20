@@ -475,4 +475,72 @@ if ($('g-search')) {
   });
 }
 
+// ===== 05 海外期貨：商品合約規格表（篩選 + 分頁）=====
+(function () {
+  const body = document.getElementById('os-body');
+  if (!body || !D.overseasSpecs) return;
+  const mq = matchMedia('(max-width: 640px)');
+  const perPage = () => (mq.matches ? 5 : 10);   // 每頁筆數：手機 5 筆、電腦 10 筆
+  const EXN = D.exchangeNames || {};
+  const rows = D.overseasSpecs.map(r => ({
+    ex: r[0], cat: r[1], name: r[2], code: r[3], cur: r[4], size: r[5], tick: r[6], tv: r[7], months: r[8], hours: r[9],
+  }));
+  const exSel = document.getElementById('os-ex'), catSel = document.getElementById('os-cat'), q = document.getElementById('os-q');
+  const pager = document.getElementById('os-pager'), count = document.getElementById('os-count');
+  const uniq = a => [...new Set(a)];
+  exSel.insertAdjacentHTML('beforeend', uniq(rows.map(r => r.ex)).map(e => `<option value="${esc(e)}">${esc(EXN[e] || e)}</option>`).join(''));
+  const fillCats = () => {
+    const keep = catSel.value;
+    const cats = uniq(rows.filter(r => !exSel.value || r.ex === exSel.value).map(r => r.cat));
+    catSel.innerHTML = '<option value="">全部類別</option>' + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    catSel.value = cats.includes(keep) ? keep : '';
+  };
+  fillCats();
+  const note = document.getElementById('os-note');
+  if (note) note.textContent = `資料日期：${D.overseasSpecsDate || ''}。${D.overseasSpecsNote || ''}規格可能調整，實際以各交易所及期貨商公告為準。`;
+
+  let page = 1;
+  function render() {
+    const kw = q.value.trim().toLowerCase();
+    const list = rows.filter(r => (!exSel.value || r.ex === exSel.value) && (!catSel.value || r.cat === catSel.value) &&
+      (!kw || (r.name + ' ' + r.code).toLowerCase().includes(kw)));
+    const PER = perPage();
+    const pages = Math.max(1, Math.ceil(list.length / PER));
+    page = Math.min(Math.max(1, page), pages);
+    const shown = list.slice((page - 1) * PER, page * PER);
+    body.innerHTML = shown.length ? shown.map(r =>
+      `<tr><td data-l="交易所"><span class="ex-tag">${esc(r.ex)}</span></td><td data-l="類別">${esc(r.cat)}</td><td class="os-name" data-l="商品名稱">${esc(r.name)}</td>` +
+      `<td class="mono" data-l="代碼">${esc(r.code)}</td><td class="mono" data-l="幣別">${esc(r.cur)}</td><td data-l="合約規格">${esc(r.size)}</td><td class="mono" data-l="跳動點">${esc(r.tick)}</td>` +
+      `<td class="mono" data-l="跳動值">${esc(r.tv)}</td><td data-l="熱門月份">${esc(r.months)}</td><td class="os-hours" data-l="台灣交易時間">${esc(r.hours)}</td></tr>`).join('')
+      : '<tr><td colspan="10" class="os-empty">找不到符合條件的商品。</td></tr>';
+    count.textContent = list.length
+      ? `共 ${list.length} 項商品，第 ${(page - 1) * PER + 1}–${Math.min(page * PER, list.length)} 項`
+      : '共 0 項商品';
+    // 分頁按鈕：上一頁、頁碼（頁數多時以 … 省略）、下一頁
+    const nums = [];
+    for (let i = 1; i <= pages; i++) {
+      if (pages <= 9 || i === 1 || i === pages || Math.abs(i - page) <= 1) nums.push(i);
+      else if (nums[nums.length - 1] !== '…') nums.push('…');
+    }
+    pager.innerHTML = pages <= 1 ? '' :
+      `<button type="button" data-p="${page - 1}" ${page === 1 ? 'disabled' : ''} aria-label="上一頁">‹</button>` +
+      nums.map(n => n === '…' ? '<span class="os-gap">…</span>'
+        : `<button type="button" data-p="${n}" class="${n === page ? 'active' : ''}" ${n === page ? 'aria-current="page"' : ''}>${n}</button>`).join('') +
+      `<button type="button" data-p="${page + 1}" ${page === pages ? 'disabled' : ''} aria-label="下一頁">›</button>`;
+  }
+  pager.addEventListener('click', e => {
+    const b = e.target.closest('button[data-p]');
+    if (!b || b.disabled) return;
+    page = +b.dataset.p;
+    render();
+    const top = document.querySelector('.os-filters').getBoundingClientRect().top;
+    if (top < 0) window.scrollBy({ top: top - 90, behavior: 'smooth' });
+  });
+  exSel.addEventListener('change', () => { fillCats(); page = 1; render(); });
+  catSel.addEventListener('change', () => { page = 1; render(); });
+  q.addEventListener('input', () => { page = 1; render(); });
+  mq.addEventListener('change', () => { page = 1; render(); });
+  render();
+})();
+
 $('year').textContent = new Date().getFullYear();

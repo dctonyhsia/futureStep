@@ -410,3 +410,43 @@ a.contact-card:hover { border-color: var(--accent); }
   .roles li { grid-template-columns: 1fr; gap: 2px; }
   .spec-sheet dl div { font-size: 14px; }
 }
+
+/* ============ 05 海外期貨規格表 ============ */
+.os-filters { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 12px; margin-bottom: 10px; }
+.os-filters label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 500; color: var(--ink); }
+.os-count { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+.os-table { min-width: 980px; font-size: 14px; }
+.os-table th, .os-table td { padding: 10px 12px; white-space: nowrap; }
+.os-table td.os-name { font-weight: 700; color: var(--ink); }
+.os-table td.os-hours { white-space: normal; min-width: 210px; font-size: 13px; color: var(--muted); }
+.os-table td.mono { font-family: "IBM Plex Mono", monospace; }
+.os-table td.os-empty { text-align: center; color: var(--muted); padding: 28px; }
+.ex-tag { display: inline-block; font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); }
+.os-pager { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin-top: 16px; }
+.os-pager button { font: inherit; font-family: "IBM Plex Mono", monospace; font-size: 14px; min-width: 38px; height: 38px; padding: 0 10px;
+  border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+.os-pager button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.os-pager button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+:root[data-theme="dark"] .os-pager button.active { color: #0c1420; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .os-pager button.active { color: #0c1420; } }
+.os-pager button:disabled { opacity: .4; cursor: default; }
+.os-gap { color: var(--muted); padding: 0 4px; }
+@media (max-width: 640px) {
+  .os-filters { grid-template-columns: 1fr 1fr; }
+  .os-filters .os-q { grid-column: 1 / -1; }
+}
+/* 手機：規格表改為一筆一張卡片 */
+@media (max-width: 640px) {
+  #tab-intl .table-wrap { border: 0; background: transparent; overflow: visible; }
+  .os-table { min-width: 0; }
+  .os-table thead { display: none; }
+  .os-table, .os-table tbody, .os-table tr, .os-table td { display: block; width: 100%; }
+  .os-table tr { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
+  .os-table tbody tr:nth-child(even) td { background: transparent; }
+  .os-table td { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; border: 0; padding: 5px 0; white-space: normal; text-align: right; }
+  .os-table td::before { content: attr(data-l); flex: none; color: var(--muted); font-size: 12px; font-family: "Noto Sans TC", sans-serif; font-weight: 400; text-align: left; }
+  .os-table td.os-name { font-size: 16px; border-bottom: 1px dashed var(--line); padding-bottom: 8px; margin-bottom: 4px; }
+  .os-table td.os-hours { min-width: 0; }
+  .os-table td.os-empty { display: block; text-align: center; }
+  .os-table td.os-empty::before { content: none; }
+}
