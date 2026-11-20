@@ -440,7 +440,12 @@
           <button role="tab" class="tab" data-tab="intl" aria-selected="false">海外期貨</button>
         </div>
         <div class="tab-panel active" id="tab-tw">
-          <div class="grid" id="products-tw"></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>商品</th><th>代號</th><th>標的</th><th>每點價值</th><th>結算</th></tr></thead>
+              <tbody id="products-tw"></tbody>
+            </table>
+          </div>
           <a class="card os-link" href="taifex.html">
             <div>
               <h3>台灣期交所商品介紹</h3>
