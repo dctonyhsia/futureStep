@@ -125,7 +125,7 @@ if (gCats2) gCats2.textContent = gCats.join('、');
   }
 })();
 
-// ===== 05 結算價卡片 + 維持率與砍倉實例 =====
+// ===== settlement.html：結算價卡片 + 維持率與砍倉實例 =====
 fill('settle-list', D.settlement, cardTpl);
 (function () {
   const R = D.riskExample;

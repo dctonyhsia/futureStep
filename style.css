@@ -185,6 +185,8 @@ tbody td:first-child { font-weight: 500; color: var(--ink); }
 .tag.cut { background: var(--ink); color: var(--bg); font-weight: 700; }
 #settle-list { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
 .settle-formula { margin-top: 18px; }
+.wrap > h3.sub:first-child { margin-top: 0; }
+.settle-link { margin-top: 28px; }
 .mr-table th, .mr-table td { white-space: nowrap; }
 .pos { color: var(--up); } .neg { color: var(--down); }
 
