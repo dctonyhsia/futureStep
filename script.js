@@ -6,7 +6,6 @@ const D = typeof SITE_DATA !== 'undefined' ? SITE_DATA : {};
 const fmtN = n => Math.round(n).toLocaleString('zh-TW');
 
 fill('terms-list', D.terms, cardTpl);
-fill('products-intl', D.productsIntl, cardTpl);
 fill('risk-list', D.risks, cardTpl);
 fill('rules-list', D.rules, r => `<li>${esc(r)}</li>`);
 fill('products-tw', D.productsTW, p =>

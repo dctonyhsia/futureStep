@@ -450,3 +450,5 @@ a.contact-card:hover { border-color: var(--accent); }
   .os-table td.os-empty { display: block; text-align: center; }
   .os-table td.os-empty::before { content: none; }
 }
+/* 海外期貨分頁：規格表標題在最上方時不需要大間距 */
+#tab-intl h3.sub.os-title { margin-top: 8px; }
