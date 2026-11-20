@@ -371,17 +371,24 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1p
 .glossary-teaser p { max-width: 640px; }
 
 /* ============ 聯絡 ============ */
-.contact-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-.contact-card { text-decoration: none; color: inherit; display: block; }
-a.contact-card:hover { border-color: var(--accent); }
-.contact-card b { display: block; word-break: break-all; color: var(--accent); margin-top: 4px; font-size: 18px; }
-.contact-card b a { color: inherit; }
-button.contact-card { font: inherit; text-align: left; width: 100%; cursor: pointer; }
-button.contact-card:hover, button.contact-card:focus-visible { border-color: var(--accent); }
-.contact-card .mask { letter-spacing: 3px; color: var(--muted); user-select: none; }
-.contact-hint { display: block; margin-top: 8px; font-size: 13px; color: var(--muted); }
-.contact-card.revealed { animation: reveal .25s ease; }
-@keyframes reveal { from { opacity: .3; } to { opacity: 1; } }
+.ct-card { max-width: 640px; padding: 0; overflow: hidden; }
+.ct-who { display: flex; align-items: center; gap: 16px; padding: 22px 24px; border-bottom: 1px solid var(--line); }
+.ct-who b { display: block; font-size: 22px; color: var(--ink); }
+.ct-avatar { flex: none; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; font-size: 22px; font-weight: 700; font-family: "Noto Serif TC", serif; }
+.ct-list { list-style: none; margin: 0; padding: 0; }
+.ct-row { display: grid; grid-template-columns: 84px 1fr auto; align-items: center; gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--line); }
+.ct-row:last-child { border-bottom: 0; }
+.ct-label { font-size: 13px; color: var(--muted); }
+.ct-value { font-size: 17px; color: var(--ink); word-break: break-all; }
+.ct-value.is-masked { color: var(--muted); }
+button.ct-btn { font-family: inherit; cursor: pointer; }
+.ct-btn { padding: 8px 16px; font-size: 14px; white-space: nowrap; min-width: 92px; text-align: center; }
+@media (max-width: 520px) {
+  .ct-who { padding: 18px; }
+  .ct-row { grid-template-columns: 1fr auto; grid-template-areas: "l b" "v b"; row-gap: 2px; padding: 14px 18px; }
+  .ct-value { font-size: 14.5px; } .ct-btn { min-width: 76px; padding: 8px 12px; }
+  .ct-row .ct-label { grid-area: l; } .ct-row .ct-value { grid-area: v; } .ct-row .ct-btn { grid-area: b; }
+}
 
 /* ============ 頁尾 ============ */
 .footer { background: var(--ink); color: color-mix(in srgb, var(--bg) 75%, transparent); padding: 48px 0 24px; font-size: 14px; }

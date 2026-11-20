@@ -224,13 +224,13 @@ const SITE_DATA = {
   ],
 
   // ---------- 08 聯絡我們 ----------
-  // 聯絡我們頁（contact.html）。hide: true 的項目會先遮住，點一下（手機碰一下）才顯示
+  // 聯絡我們頁（contact.html）。hide: true 的項目先顯示 mask（部分遮住），按「顯示」才看到完整資訊
   // link 可以填：tel:電話、mailto:信箱、https://網址；不想要連結就不填 link。action 是顯示後的提示文字
   contact: [
     { title: "聯絡人",   value: "夏偉紘" },
-    { title: "手機",     value: "0922-366-581",           link: "tel:0922366581",                     hide: true, action: "撥打電話" },
-    { title: "LINE ID",  value: "y645228921",             link: "https://line.me/ti/p/~y645228921",   hide: true, action: "加入 LINE 好友" },
-    { title: "電子信箱", value: "cat645228921@gmail.com", link: "mailto:cat645228921@gmail.com",       hide: true, action: "寄信" },
+    { title: "手機",     value: "0922-366-581",           mask: "0922-•••-•••",       link: "tel:0922366581",                   hide: true, action: "撥打電話" },
+    { title: "LINE ID",  value: "y645228921",             mask: "y64•••••••",         link: "https://line.me/ti/p/~y645228921", hide: true, action: "加入好友" },
+    { title: "電子信箱", value: "cat645228921@gmail.com", mask: "cat•••••••@gmail.com", link: "mailto:cat645228921@gmail.com",     hide: true, action: "寄信" },
   ],
 
   // ---------- 07 名詞表 ----------

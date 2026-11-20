@@ -12,26 +12,25 @@ fill('risk-list', D.risks, cardTpl);
 fill('rules-list', D.rules, r => `<li>${esc(r)}</li>`);
 fill('products-tw', D.productsTW, p =>
   `<tr><td>${esc(p.name)}</td><td class="mono">${esc(p.code)}</td><td>${esc(p.underlying)}</td><td>${esc(p.pointValue)}</td><td>${esc(p.settle)}</td></tr>`);
-// 聯絡我們：hide: true 的項目先遮住，點擊（手機碰觸）後才把資訊放進頁面
+// 聯絡我們：第一項（聯絡人）當標題，其餘一行一項；hide: true 的先部分遮住，按「顯示」才顯示完整資訊
 (function () {
   const box = document.getElementById('contact-list');
   if (!box || !D.contact) return;
+  const [who, ...items] = D.contact;
   const ext = l => (/^https?:/.test(l || '') ? ' target="_blank" rel="noopener"' : '');
-  const shown = c => (c.link ? `<a href="${esc(c.link)}"${ext(c.link)}>${esc(c.value)}</a>` : esc(c.value));
-  box.innerHTML = D.contact.map((c, i) => c.hide
-    ? `<button type="button" class="card contact-card masked" data-i="${i}" aria-label="顯示${esc(c.title)}">` +
-      `<h3>${esc(c.title)}</h3><b class="mask" aria-hidden="true">●●●●●●●●</b><span class="contact-hint">點擊顯示</span></button>`
-    : `<div class="card contact-card"><h3>${esc(c.title)}</h3><b>${shown(c)}</b></div>`).join('');
-  const reveal = el => {
-    if (!el.classList.contains('masked')) return;
-    const c = D.contact[+el.dataset.i];
-    const card = document.createElement('div');
-    card.className = 'card contact-card revealed';
-    card.innerHTML = `<h3>${esc(c.title)}</h3><b>${shown(c)}</b>` + (c.link && c.action ? `<span class="contact-hint">點上方文字即可${esc(c.action)}</span>` : '');
-    el.replaceWith(card);
+  const act = c => (c.link ? `<a class="btn primary ct-btn" href="${esc(c.link)}"${ext(c.link)}>${esc(c.action || '開啟')}</a>` : '');
+  const row = (c, i) => `<li class="ct-row" data-i="${i}"><span class="ct-label">${esc(c.title)}</span>` +
+    (c.hide ? `<span class="ct-value mono is-masked">${esc(c.mask || '••••••••')}</span><button type="button" class="btn ghost ct-btn ct-show">顯示</button>`
+            : `<span class="ct-value mono">${esc(c.value)}</span>${act(c)}`) + '</li>';
+  box.innerHTML = `<div class="card ct-card"><div class="ct-who"><span class="ct-avatar" aria-hidden="true">${esc((who.value || '').slice(0, 1))}</span>` +
+    `<div><span class="ct-label">${esc(who.title)}</span><b>${esc(who.value)}</b></div></div><ul class="ct-list">${items.map(row).join('')}</ul></div>`;
+  const reveal = btn => {
+    const li = btn.closest('.ct-row'), c = items[+li.dataset.i];
+    const v = li.querySelector('.ct-value');
+    v.textContent = c.value; v.classList.remove('is-masked');
+    btn.outerHTML = act(c);
   };
-  box.addEventListener('click', e => { const el = e.target.closest('.masked'); if (el) reveal(el); });
-  box.addEventListener('touchstart', e => { const el = e.target.closest('.masked'); if (el) reveal(el); }, { passive: true });
+  box.addEventListener('click', e => { const b = e.target.closest('.ct-show'); if (b) reveal(b); });
 })();
 // 名詞表：依分類分組
 const G = (D.glossary || []).map((g, i) => ({ ...g, cat: g.cat || '期貨', id: 'term-' + (i + 1) }));
