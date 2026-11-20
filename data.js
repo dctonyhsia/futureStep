@@ -47,7 +47,7 @@ const SITE_DATA = {
     { name: "股票期貨",             code: "—",   underlying: "個別上市櫃股票",     pointValue: "一口 2,000 股", settle: "現金／實物" },
   ],
 
-  // ---------- 05 常見商品：國外期貨（卡片）----------
+  // ---------- 05 常見商品：海外期貨（卡片）----------
   productsIntl: [
     { icon: "📈", title: "股價指數", text: "S&P 500（E-mini / Micro E-mini）、Nasdaq 100、日經 225 等。" },
     { icon: "🛢️", title: "能源",     text: "WTI 原油、布蘭特原油、天然氣，價格受地緣政治與庫存影響大。" },
