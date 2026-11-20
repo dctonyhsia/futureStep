@@ -488,16 +488,14 @@ if ($('g-search')) {
   }));
   const exSel = document.getElementById('os-ex'), catSel = document.getElementById('os-cat'), q = document.getElementById('os-q');
   const pager = document.getElementById('os-pager'), count = document.getElementById('os-count');
-  const head = document.getElementById('os-head'), chg = document.getElementById('os-chg'), chgWrap = document.getElementById('os-chg-wrap');
+  const head = document.getElementById('os-head');
   const MG = D.overseasMargins || {};
-  const hasChange = r => { const m = MG[r.code]; return !!m && (m[0] !== m[2] || m[1] !== m[3]); };
   // 檢視：合約規格 spec ／ 保證金 margin（網址可帶 ?view=margin 直接開保證金）
   let view = new URLSearchParams(location.search).get('view') === 'margin' ? 'margin' : 'spec';
   const viewBtns = [...document.querySelectorAll('.os-view .tab')];
   const SPEC_H = ['交易所', '類別', '商品名稱', '代碼', '幣別', '合約規格', '跳動點', '跳動值', '熱門月份', '台灣交易時間'];
-  const MARGIN_H = ['交易所', '類別', '商品名稱', '代碼', '幣別', '原始保證金', '維持保證金', '調整後原始', '調整後維持'];
+  const MARGIN_H = ['交易所', '類別', '商品名稱', '代碼', '幣別', '原始保證金', '維持保證金'];
   const n0 = v => (v == null ? '—' : Number(v).toLocaleString('en-US'));
-  const arrow = (nv, ov) => (nv > ov ? ' <span class="mg-up" aria-label="調高">▲</span>' : nv < ov ? ' <span class="mg-dn" aria-label="調降">▼</span>' : '');
   const uniq = a => [...new Set(a)];
   exSel.insertAdjacentHTML('beforeend', uniq(rows.map(r => r.ex)).map(e => `<option value="${esc(e)}">${esc(EXN[e] || e)}</option>`).join(''));
   const fillCats = () => {
@@ -513,7 +511,7 @@ if ($('g-search')) {
   function render() {
     const kw = q.value.trim().toLowerCase();
     const list = rows.filter(r => (!exSel.value || r.ex === exSel.value) && (!catSel.value || r.cat === catSel.value) &&
-      (!kw || (r.name + ' ' + r.code).toLowerCase().includes(kw)) && (view !== 'margin' || !chg.checked || hasChange(r)));
+      (!kw || (r.name + ' ' + r.code).toLowerCase().includes(kw)));
     const cols = view === 'margin' ? MARGIN_H : SPEC_H;
     head.innerHTML = '<tr>' + cols.map(h => `<th>${h}</th>`).join('') + '</tr>';
     document.querySelector('.os-table').classList.toggle('os-margin', view === 'margin');
@@ -522,12 +520,10 @@ if ($('g-search')) {
     page = Math.min(Math.max(1, page), pages);
     const shown = list.slice((page - 1) * PER, page * PER);
     const marginRow = r => {
-      const m = MG[r.code] || [null, null, null, null], c = hasChange(r);
-      return `<tr${c ? ' class="mg-changed"' : ''}><td data-l="交易所"><span class="ex-tag">${esc(r.ex)}</span></td><td data-l="類別">${esc(r.cat)}</td>` +
-        `<td class="os-name" data-l="商品名稱"><span>${esc(r.name)}${c ? ' <span class="mg-tag">調整</span>' : ''}</span></td><td class="mono" data-l="代碼">${esc(r.code)}</td>` +
-        `<td class="mono" data-l="幣別">${esc(r.cur)}</td><td class="mono num" data-l="原始保證金">${n0(m[2])}</td><td class="mono num" data-l="維持保證金">${n0(m[3])}</td>` +
-        `<td class="mono num${c ? ' mg-new' : ' mg-same'}" data-l="調整後原始"><span>${c ? n0(m[0]) + arrow(m[0], m[2]) : '—'}</span></td>` +
-        `<td class="mono num${c ? ' mg-new' : ' mg-same'}" data-l="調整後維持"><span>${c ? n0(m[1]) + arrow(m[1], m[3]) : '—'}</span></td></tr>`;
+      const m = MG[r.code] || [null, null];
+      return `<tr><td data-l="交易所"><span class="ex-tag">${esc(r.ex)}</span></td><td data-l="類別">${esc(r.cat)}</td>` +
+        `<td class="os-name" data-l="商品名稱">${esc(r.name)}</td><td class="mono" data-l="代碼">${esc(r.code)}</td>` +
+        `<td class="mono" data-l="幣別">${esc(r.cur)}</td><td class="mono num" data-l="原始保證金">${n0(m[0])}</td><td class="mono num" data-l="維持保證金">${n0(m[1])}</td></tr>`;
     };
     body.innerHTML = !shown.length ? `<tr><td colspan="${cols.length}" class="os-empty">找不到符合條件的商品。</td></tr>`
       : view === 'margin' ? shown.map(marginRow).join('') : shown.map(r =>
@@ -535,7 +531,7 @@ if ($('g-search')) {
       `<td class="mono" data-l="代碼">${esc(r.code)}</td><td class="mono" data-l="幣別">${esc(r.cur)}</td><td data-l="合約規格">${esc(r.size)}</td><td class="mono" data-l="跳動點">${esc(r.tick)}</td>` +
       `<td class="mono" data-l="跳動值">${esc(r.tv)}</td><td data-l="熱門月份">${esc(r.months)}</td><td class="os-hours" data-l="台灣交易時間">${esc(r.hours)}</td></tr>`).join('');
     if (note) note.textContent = view === 'margin'
-      ? `保證金資料日期：${D.overseasMarginsDate || ''}。標示「調整」的商品將改用調整後的保證金。${D.overseasMarginsNote || ''}保證金會依市況調整，實際以期貨商最新公告為準。`
+      ? `保證金資料日期：${D.overseasMarginsDate || ''}。${D.overseasMarginsNote || ''}保證金會依市況變動，實際以期貨商最新公告為準。`
       : `規格資料日期：${D.overseasSpecsDate || ''}。${D.overseasSpecsNote || ''}規格可能調整，實際以各交易所及期貨商公告為準。`;
     count.textContent = list.length
       ? `共 ${list.length} 項商品，第 ${(page - 1) * PER + 1}–${Math.min(page * PER, list.length)} 項`
@@ -563,12 +559,9 @@ if ($('g-search')) {
   exSel.addEventListener('change', () => { fillCats(); page = 1; render(); });
   catSel.addEventListener('change', () => { page = 1; render(); });
   q.addEventListener('input', () => { page = 1; render(); });
-  chg.addEventListener('change', () => { page = 1; render(); });
   const setView = v => {
     view = v;
     viewBtns.forEach(b => { b.classList.toggle('active', b.dataset.view === v); b.setAttribute('aria-selected', b.dataset.view === v); });
-    chgWrap.hidden = v !== 'margin';
-    if (v !== 'margin') chg.checked = false;
     try { history.replaceState(null, '', v === 'margin' ? '?view=margin' : location.pathname); } catch (e) {}
   };
   viewBtns.forEach(b => b.addEventListener('click', () => { setView(b.dataset.view); page = 1; render(); }));
