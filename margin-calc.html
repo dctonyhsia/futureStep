@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>維持率計算機｜期貨・選擇權入門指南</title>
+  <meta name="description" content="輸入大台、小台、微台的進場價與目前價格，計算維持率、追繳價位與砍倉價位。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"></span>期貨・選擇權入門指南</a>
+      <button class="menu-btn" aria-label="開啟選單" aria-expanded="false">☰</button>
+      <nav class="nav">
+        <a href="index.html#what">基本概念</a>
+        <a href="index.html#terms">合約規格</a>
+        <a href="index.html#margin">保證金</a>
+        <a href="index.html#calc" class="active" aria-current="page">損益試算</a>
+        <a href="index.html#products">商品</a>
+        <a href="index.html#risk">風險</a>
+        <a href="glossary.html" data-page="glossary">名詞表</a>
+        <a href="analysis.html" data-page="analysis" class="nav-cta nav-cta-alt">數據分析</a>
+        <a href="contact.html" data-page="contact" class="nav-cta">聯絡我們</a>
+      </nav>
+      <button class="theme-btn" aria-label="切換深淺色">◐</button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="page-hero">
+      <div class="wrap">
+        <nav class="crumbs" aria-label="麵包屑"><a href="index.html">首頁</a><span>/</span><a href="index.html#calc">損益試算</a><span>/</span>維持率計算機</nav>
+        <h1>維持率計算機</h1>
+        <p class="lead">選擇大台、小台或微台，輸入進場價與目前價格，馬上算出維持率，以及會被追繳、砍倉的價位。</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="calc">
+          <form id="rc-form" class="calc-inputs" autocomplete="off">
+            <div class="seg seg3" role="radiogroup" aria-label="商品" id="rc-products"></div>
+            <div class="seg" role="radiogroup" aria-label="方向">
+              <label><input type="radio" name="rcdir" value="1" checked><span>做多（買進）</span></label>
+              <label><input type="radio" name="rcdir" value="-1"><span>做空（賣出）</span></label>
+            </div>
+            <label>進場價（點）<input id="rc-entry" type="number" step="any" value="22000"></label>
+            <label>目前價格（點）<input id="rc-now" type="number" step="any" value="21800"></label>
+            <label>口數<input id="rc-qty" type="number" min="1" step="1" value="1"></label>
+            <label>帳戶權益（進場時，元）<input id="rc-dep" type="number" min="0" step="any"></label>
+            <label>每口原始保證金（元）<input id="rc-init" type="number" min="0" step="any"></label>
+            <label>每口維持保證金（元）<input id="rc-maint" type="number" min="0" step="any"></label>
+            <p class="hint span2" id="rc-hint"></p>
+          </form>
+          <div class="calc-output" aria-live="polite">
+            <div class="out-main">
+              <span>目前維持率</span>
+              <strong id="rc-ratio">—</strong>
+              <em id="rc-status">—</em>
+            </div>
+            <div class="rc-gauge" aria-hidden="true">
+              <div class="rc-fill" id="rc-fill"></div>
+              <i class="rc-mark cut" id="rc-mark-cut"></i>
+              <i class="rc-mark call" id="rc-mark-call"></i>
+            </div>
+            <div class="rc-scale" aria-hidden="true"><span>0%</span><span id="rc-scale-cut"></span><span id="rc-scale-call"></span><span>150%</span></div>
+            <div class="out-grid">
+              <div><span>目前損益</span><b id="rc-pnl">—</b></div>
+              <div><span>目前權益數</span><b id="rc-eq">—</b></div>
+              <div><span>追繳價位</span><b id="rc-call">—</b></div>
+              <div><span>砍倉價位</span><b id="rc-cut">—</b></div>
+              <div><span>距離追繳</span><b id="rc-call-d">—</b></div>
+              <div><span>距離砍倉</span><b id="rc-cut-d">—</b></div>
+            </div>
+            <p class="note" id="rc-note"></p>
+          </div>
+        </div>
+
+        <div class="keypoints">
+          <b>怎麼算</b>
+          <ul>
+            <li>維持率 = 目前權益數 ÷（每口原始保證金 × 口數）× 100%。</li>
+            <li>目前權益數 = 進場時帳戶權益 +（目前價格 − 進場價）× 每點價值 × 口數；做空時漲跌方向相反。</li>
+            <li>權益數低於維持保證金會被追繳，需補足至原始保證金；維持率低於 <span id="rc-cut-pct"></span>% 時，期貨商會代為沖銷（砍倉）。</li>
+          </ul>
+        </div>
+        <div class="back-row"><a class="btn ghost" href="index.html#calc">← 回到損益試算</a> <a class="btn ghost" href="settlement.html">結算價與維持率說明 →</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-grid">
+      <div>
+        <p class="footer-brand">期貨・選擇權入門指南</p>
+        <p><strong>免責聲明：</strong>本網站內容僅供教育與知識分享，不構成任何投資建議。期貨與選擇權交易具高度風險，商品規格、保證金與稅費請以臺灣期貨交易所及您的期貨商最新公告為準。</p>
+      </div>
+      <div>
+        <p class="footer-h">資料來源</p>
+        <ul class="sources">
+          <li><a href="https://www.taifex.com.tw/" target="_blank" rel="noopener">臺灣期貨交易所（商品規格、保證金公告）</a></li>
+        </ul>
+        <p class="small">內容更新：<span id="updated"></span></p>
+      </div>
+    </div>
+    <div class="wrap"><p class="small copy">© <span id="year"></span> 期貨・選擇權入門指南</p></div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

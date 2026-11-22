@@ -188,6 +188,22 @@ tbody td:first-child { font-weight: 500; color: var(--ink); }
 .wrap > h3.sub:first-child { margin-top: 0; }
 .settle-link { margin-top: 28px; }
 .ct-open { max-width: 640px; margin-top: 20px; }
+.sec-head-link { white-space: nowrap; padding: 9px 18px; }
+#rc-products label input:checked + span { background: var(--accent); color: #fff; }
+:root[data-theme="dark"] #rc-products label input:checked + span { color: #0c1420; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #rc-products label input:checked + span { color: #0c1420; } }
+.rc-gauge { position: relative; height: 12px; background: color-mix(in srgb, var(--bg) 15%, transparent); border-radius: 99px; }
+.rc-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; transition: width .25s ease; background: color-mix(in srgb, var(--bg) 80%, transparent); }
+.rc-fill.call { background: var(--gold); } .rc-fill.cut { background: #ff6b5e; }
+.rc-mark { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--bg); opacity: .8; }
+.rc-mark.cut { background: #ff6b5e; opacity: 1; } .rc-mark.call { background: var(--gold); opacity: 1; }
+.rc-scale { position: relative; height: 16px; margin-top: -10px; font-size: 11px; opacity: .7; font-family: "IBM Plex Mono", "Noto Sans TC", monospace; }
+.rc-scale span { position: absolute; top: 0; white-space: nowrap; transform: translateX(-50%); }
+.rc-scale span:first-child { left: 0; transform: none; } .rc-scale span:last-child { right: 0; transform: none; }
+#rc-scale-cut { color: #ff8a80; } #rc-scale-call { color: var(--gold); }
+.out-main strong.rc-call { color: var(--gold); } .out-main strong.rc-cut { color: #ff8a80; }
+.out-main .rc-tag { display: inline-block; opacity: 1; font-size: 13px; font-weight: 700; padding: 2px 10px; border-radius: 99px; background: color-mix(in srgb, var(--bg) 18%, transparent); }
+.rc-tag.call { background: var(--gold); color: #1a1a1a; } .rc-tag.cut { background: #ff6b5e; color: #fff; }
 .tips { margin-top: 24px; background: color-mix(in srgb, var(--gold) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent); border-left: 4px solid var(--gold); border-radius: 10px; padding: 18px 24px; }
 .tips-h { display: flex; align-items: center; gap: 8px; font-size: 16px; color: var(--ink); }
 .tips p { margin: 8px 0 0; }

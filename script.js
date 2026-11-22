@@ -166,6 +166,75 @@ fill('settle-list', D.settlement, cardTpl);
     (T.points && T.points.length ? `<ul>${T.points.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : '');
 })();
 
+// ===== margin-calc.html：維持率計算機 =====
+(function () {
+  const C = D.ratioCalc, form = document.getElementById('rc-form');
+  if (!C || !form) return;
+  const g = id => document.getElementById(id);
+  const P = C.products, cut = C.cutPct;
+  const def = Math.max(0, P.findIndex(p => p.name === '微台'));
+  g('rc-products').innerHTML = P.map((p, i) =>
+    `<label><input type="radio" name="rcprod" value="${i}"${i === def ? ' checked' : ''}><span>${esc(p.name)}<small>每點 ${fmtN(p.pointValue)} 元</small></span></label>`).join('');
+  g('rc-cut-pct').textContent = cut;
+  g('rc-hint').textContent = `選擇商品後，會自動帶入期交所 ${C.marginDate} 公告的保證金；帳戶權益預設為原始保證金 × 口數。三個金額都可以自行修改。`;
+  const sgn = n => (n > 0 ? '+' : n < 0 ? '−' : '') + fmtN(Math.abs(n));
+  const fmtP = n => n.toLocaleString('zh-TW', { maximumFractionDigits: 1 });
+  let depEdited = false;
+  const prod = () => P[+form.querySelector('input[name="rcprod"]:checked').value];
+  const qty = () => Math.max(1, Math.floor(+g('rc-qty').value || 1));
+  const loadDefaults = () => { const p = prod(); g('rc-init').value = p.initial; g('rc-maint').value = p.maintenance; };
+  const syncDep = () => { if (!depEdited) g('rc-dep').value = (+g('rc-init').value || 0) * qty(); };
+
+  function run() {
+    const p = prod(), pv = p.pointValue, n = qty();
+    const d = +form.querySelector('input[name="rcdir"]:checked').value;
+    const entry = +g('rc-entry').value, now = +g('rc-now').value;
+    const dep = +g('rc-dep').value || 0, req = (+g('rc-init').value || 0) * n, maint = (+g('rc-maint').value || 0) * n;
+    const pnl = (now - entry) * d * pv * n, eq = dep + pnl;
+    const ratio = req > 0 ? eq / req * 100 : NaN, maintPct = req > 0 ? maint / req * 100 : NaN;
+    const callP = entry + d * (maint - dep) / (pv * n), cutP = entry + d * (req * cut / 100 - dep) / (pv * n);
+    const status = ratio < cut ? 'cut' : eq < maint ? 'call' : 'ok';
+
+    g('rc-ratio').textContent = isFinite(ratio) ? ratio.toFixed(1) + '%' : '—';
+    g('rc-ratio').className = 'rc-' + status;
+    g('rc-status').innerHTML = { ok: '<span class="rc-tag ok">正常</span>', call: '<span class="rc-tag call">追繳</span>', cut: '<span class="rc-tag cut">砍倉</span>' }[status];
+    g('rc-pnl').textContent = sgn(pnl) + ' 元';
+    g('rc-pnl').className = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : '';
+    g('rc-eq').textContent = fmtN(eq) + ' 元';
+    const lvl = v => (v > 0 ? fmtP(v) + ' 點' : '不會觸發');
+    g('rc-call').textContent = lvl(callP);
+    g('rc-cut').textContent = lvl(cutP);
+    const dist = (lv, hit) => (lv <= 0 ? '—' : hit ? '已觸發' : `還有 ${fmtP(d * (now - lv))} 點`);
+    g('rc-call-d').textContent = dist(callP, status !== 'ok');
+    g('rc-cut-d').textContent = dist(cutP, status === 'cut');
+
+    const pos = v => Math.max(0, Math.min(v, 150)) / 150 * 100 + '%';
+    g('rc-fill').style.width = isFinite(ratio) ? pos(ratio) : '0';
+    g('rc-fill').className = 'rc-fill ' + status;
+    g('rc-mark-cut').style.left = g('rc-scale-cut').style.left = pos(cut);
+    g('rc-mark-call').style.left = g('rc-scale-call').style.left = isFinite(maintPct) ? pos(maintPct) : '0';
+    g('rc-scale-cut').textContent = `砍倉 ${cut}%`;
+    g('rc-scale-call').textContent = isFinite(maintPct) ? `追繳 ${maintPct.toFixed(1)}%` : '';
+
+    const way = d > 0 ? '跌' : '漲';
+    g('rc-note').textContent = (status === 'cut'
+      ? `維持率已低於 ${cut}%，期貨商會代為沖銷（砍倉）。`
+      : status === 'call'
+        ? `權益數已低於維持保證金，需補繳 ${fmtN(req - eq)} 元，使權益回到原始保證金 ${fmtN(req)} 元；若價格再${way} ${fmtP(d * (now - cutP))} 點，維持率將低於 ${cut}% 而被砍倉。`
+        : `價格再${way} ${fmtP(d * (now - callP))} 點會被追繳，再${way} ${fmtP(d * (now - cutP))} 點會被砍倉。`) +
+      '未計入手續費與期交稅；保證金請以期交所與期貨商最新公告為準。';
+  }
+
+  form.addEventListener('input', e => {
+    const t = e.target;
+    if (t.name === 'rcprod') { loadDefaults(); syncDep(); }
+    else if (t.id === 'rc-dep') depEdited = t.value !== '';
+    else if (t.id === 'rc-qty' || t.id === 'rc-init') syncDep();
+    run();
+  });
+  loadDefaults(); syncDep(); run();
+})();
+
 const upd = document.getElementById('updated');
 if (upd) upd.textContent = D.updated || '';
 

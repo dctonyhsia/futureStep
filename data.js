@@ -234,6 +234,18 @@ const SITE_DATA = {
     { label: "微型台指（每點 10 元）",  pointValue: 10 },
   ],
 
+  // ---------- 維持率計算機 margin-calc.html：商品與保證金預設值 ----------
+  // 保證金預設為期交所公告（日期見 marginDate），使用者也可以在頁面上自行修改
+  ratioCalc: {
+    cutPct: 25,                 // 維持率低於此百分比會被砍倉
+    marginDate: "2026/08/12",   // 保證金公告日期
+    products: [
+      { name: "大台", full: "臺股期貨", pointValue: 200, initial: 701000, maintenance: 538000 },
+      { name: "小台", full: "小型臺指", pointValue: 50,  initial: 175250, maintenance: 134500 },
+      { name: "微台", full: "微型臺指", pointValue: 10,  initial: 35050,  maintenance: 26900 },
+    ],
+  },
+
   // ---------- 06 風險（卡片）----------
   risks: [
     { icon: "📉", title: "槓桿風險",   text: "10 倍槓桿下，價格反向 10% 就可能虧光保證金。" },
