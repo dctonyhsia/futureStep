@@ -190,6 +190,7 @@ tbody td:first-child { font-weight: 500; color: var(--ink); }
 .ct-open { max-width: 640px; margin-top: 20px; }
 .sec-head-link { white-space: nowrap; padding: 9px 18px; }
 .seg.seg3.seg-prod label input:checked + span { background: var(--accent); color: #fff; }
+form .seg.seg-mode label input:checked + span { background: var(--ink); color: var(--bg); }
 :root[data-theme="dark"] .seg.seg3.seg-prod label input:checked + span { color: #0c1420; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg.seg3.seg-prod label input:checked + span { color: #0c1420; } }
 .rc-gauge { position: relative; height: 12px; background: color-mix(in srgb, var(--bg) 15%, transparent); border-radius: 99px; }

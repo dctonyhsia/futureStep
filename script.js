@@ -176,7 +176,8 @@ fill('settle-list', D.settlement, cardTpl);
   g('rc-products').innerHTML = P.map((p, i) =>
     `<label><input type="radio" name="rcprod" value="${i}"${i === def ? ' checked' : ''}><span>${esc(p.name)}<small>每點 ${fmtN(p.pointValue)} 元</small></span></label>`).join('');
   g('rc-cut-pct').textContent = cut;
-  g('rc-hint').textContent = `選擇商品後，會自動帶入期交所 ${C.marginDate} 公告的保證金；帳戶權益預設為原始保證金 × 口數。三個金額都可以自行修改。`;
+  const hintP = `選擇商品後，會自動帶入期交所 ${C.marginDate} 公告的保證金；帳戶權益預設為原始保證金 × 口數。三個金額都可以自行修改。`;
+  const hintR = `進場點請填「這個維持率」對應的點位：剛進場就填進場價；若填的是今天看到的維持率，就填現在的點位。帳戶只有同一種商品時，口數多寡不影響結果。保證金預設為期交所 ${C.marginDate} 公告。`;
   const sgn = n => (n > 0 ? '+' : n < 0 ? '−' : '') + fmtN(Math.abs(n));
   const fmtP = n => n.toLocaleString('zh-TW', { maximumFractionDigits: 1 });
   let depEdited = false;
@@ -186,10 +187,16 @@ fill('settle-list', D.settlement, cardTpl);
   const syncDep = () => { if (!depEdited) g('rc-dep').value = (+g('rc-init').value || 0) * qty(); };
 
   function run() {
-    const p = prod(), pv = p.pointValue, n = qty();
+    const byRatio = form.querySelector('input[name="rcmode"]:checked').value === 'ratio';
+    form.querySelectorAll('.rc-pm').forEach(e => { e.hidden = byRatio; });
+    form.querySelectorAll('.rc-rm').forEach(e => { e.hidden = !byRatio; });
+    g('rc-entry-l').textContent = byRatio ? '進場點（點）' : '進場價（點）';
+    g('rc-hint').textContent = byRatio ? hintR : hintP;
+    const p = prod(), pv = p.pointValue, n = byRatio ? 1 : qty();
     const d = +form.querySelector('input[name="rcdir"]:checked').value;
-    const entry = +g('rc-entry').value, now = +g('rc-now').value;
-    const dep = +g('rc-dep').value || 0, req = (+g('rc-init').value || 0) * n, maint = (+g('rc-maint').value || 0) * n;
+    const entry = +g('rc-entry').value, now = byRatio ? entry : +g('rc-now').value;
+    const req = (+g('rc-init').value || 0) * n, maint = (+g('rc-maint').value || 0) * n;
+    const dep = byRatio ? (+g('rc-ratio-in').value || 0) / 100 * req : +g('rc-dep').value || 0;
     const pnl = (now - entry) * d * pv * n, eq = dep + pnl;
     const ratio = req > 0 ? eq / req * 100 : NaN, maintPct = req > 0 ? maint / req * 100 : NaN;
     const callP = entry + d * (maint - dep) / (pv * n), cutP = entry + d * (req * cut / 100 - dep) / (pv * n);
@@ -198,9 +205,9 @@ fill('settle-list', D.settlement, cardTpl);
     g('rc-ratio').textContent = isFinite(ratio) ? ratio.toFixed(1) + '%' : '—';
     g('rc-ratio').className = 'rc-' + status;
     g('rc-status').innerHTML = { ok: '<span class="rc-tag ok">正常</span>', call: '<span class="rc-tag call">追繳</span>', cut: '<span class="rc-tag cut">砍倉</span>' }[status];
-    g('rc-pnl').textContent = sgn(pnl) + ' 元';
-    g('rc-pnl').className = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : '';
-    g('rc-eq').textContent = fmtN(eq) + ' 元';
+    g('rc-pnl').textContent = byRatio ? '—' : sgn(pnl) + ' 元';
+    g('rc-pnl').className = !byRatio && pnl > 0 ? 'pos' : !byRatio && pnl < 0 ? 'neg' : '';
+    g('rc-eq').textContent = fmtN(eq) + (byRatio ? ' 元（每口）' : ' 元');
     const lvl = v => (v > 0 ? fmtP(v) + ' 點' : '不會觸發');
     g('rc-call').textContent = lvl(callP);
     g('rc-cut').textContent = lvl(cutP);
@@ -220,7 +227,7 @@ fill('settle-list', D.settlement, cardTpl);
     g('rc-note').textContent = (status === 'cut'
       ? `維持率已低於 ${cut}%，期貨商會代為沖銷（砍倉）。`
       : status === 'call'
-        ? `權益數已低於維持保證金，需補繳 ${fmtN(req - eq)} 元，使權益回到原始保證金 ${fmtN(req)} 元；若價格再${way} ${fmtP(d * (now - cutP))} 點，維持率將低於 ${cut}% 而被砍倉。`
+        ? (byRatio ? '權益數已低於維持保證金，會收到追繳通知，需補足至原始保證金' : `權益數已低於維持保證金，需補繳 ${fmtN(req - eq)} 元，使權益回到原始保證金 ${fmtN(req)} 元`) + `；若價格再${way} ${fmtP(d * (now - cutP))} 點，維持率將低於 ${cut}% 而被砍倉。`
         : `價格再${way} ${fmtP(d * (now - callP))} 點會被追繳，再${way} ${fmtP(d * (now - cutP))} 點會被砍倉。`) +
       '未計入手續費與期交稅；保證金請以期交所與期貨商最新公告為準。';
   }
@@ -233,49 +240,6 @@ fill('settle-list', D.settlement, cardTpl);
     run();
   });
   loadDefaults(); syncDep(); run();
-})();
-
-// ===== margin-calc.html：用維持率反推砍倉點位 =====
-(function () {
-  const C = D.ratioCalc, form = document.getElementById('rv-form');
-  if (!C || !form) return;
-  const g = id => document.getElementById(id);
-  const P = C.products, cut = C.cutPct;
-  const fmtP = n => n.toLocaleString('zh-TW', { maximumFractionDigits: 1 });
-  const def = Math.max(0, P.findIndex(p => p.name === '微台'));
-  g('rv-products').innerHTML = P.map((p, i) =>
-    `<label><input type="radio" name="rvprod" value="${i}"${i === def ? ' checked' : ''}><span>${esc(p.name)}<small>每點 ${fmtN(p.pointValue)} 元</small></span></label>`).join('');
-  document.querySelectorAll('.rv-cut-pct').forEach(e => { e.textContent = cut; });
-  g('rv-main-l').textContent = `維持率低於 ${cut}% 的點位`;
-  const prod = () => P[+form.querySelector('input[name="rvprod"]:checked').value];
-  const loadDefaults = () => { const p = prod(); g('rv-init').value = p.initial; g('rv-maint').value = p.maintenance; };
-
-  function run() {
-    const p = prod(), pv = p.pointValue;
-    const d = +form.querySelector('input[name="rvdir"]:checked').value;
-    const r = +g('rv-ratio').value, price = +g('rv-price').value;
-    const init = +g('rv-init').value || 0, maint = +g('rv-maint').value || 0;
-    const mPct = init > 0 ? maint / init * 100 : NaN;
-    const step = init / 100 / pv;                       // 維持率每變動 1%，約等於幾點
-    const cutPts = (r - cut) * step, callPts = (r - mPct) * step;
-    const cutP = price - d * cutPts, callP = price - d * callPts;
-    const way = d > 0 ? '跌' : '漲', dirWord = d > 0 ? '跌破' : '漲破';
-    const ok = init > 0 && pv > 0 && isFinite(r) && isFinite(price);
-
-    g('rv-cut').textContent = ok ? (cutPts > 0 ? `${dirWord} ${fmtP(cutP)} 點` : '已低於 ' + cut + '%') : '—';
-    g('rv-cut').className = ok && cutPts <= 0 ? 'rc-cut' : '';
-    g('rv-cut-d').textContent = ok ? (cutPts > 0 ? `距離進場點再${way} ${fmtP(cutPts)} 點` : '期貨商會代為沖銷（砍倉）') : '請輸入維持率與點位';
-    g('rv-call').textContent = ok ? (callPts > 0 ? `${fmtP(callP)} 點` : '已觸發') : '—';
-    g('rv-call-d').textContent = ok ? (callPts > 0 ? `再${way} ${fmtP(callPts)} 點` : '—') : '—';
-    g('rv-mpct').textContent = isFinite(mPct) ? mPct.toFixed(1) + '%' : '—';
-    g('rv-step').textContent = ok ? `${fmtP(step)} 點` : '—';
-    g('rv-note').textContent = ok && cutPts > 0
-      ? `維持率從 ${fmtP(r)}% 降到 ${cut}%，差 ${fmtP(r - cut)}%；每 1% 約 ${fmtP(step)} 點（每口原始保證金 ${fmtN(init)} 元 ÷ 100 ÷ 每點 ${fmtN(pv)} 元），所以約再${way} ${fmtP(cutPts)} 點。實際砍倉為盤中即時計算，跳空時成交價可能更差。`
-      : '未計入手續費與期交稅；保證金請以期交所與期貨商最新公告為準。';
-  }
-
-  form.addEventListener('input', e => { if (e.target.name === 'rvprod') loadDefaults(); run(); });
-  loadDefaults(); run();
 })();
 
 const upd = document.getElementById('updated');

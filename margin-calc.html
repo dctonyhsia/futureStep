@@ -35,7 +35,7 @@
       <div class="wrap">
         <nav class="crumbs" aria-label="麵包屑"><a href="index.html">首頁</a><span>/</span><a href="index.html#calc">損益試算</a><span>/</span>維持率計算機</nav>
         <h1>維持率計算機</h1>
-        <p class="lead">選擇大台、小台或微台，輸入進場價與目前價格，馬上算出維持率，以及會被追繳、砍倉的價位。</p>
+        <p class="lead">選擇大台、小台或微台，輸入進場價與目前價格，或直接輸入目前維持率，馬上算出會被追繳、砍倉（維持率低於 25%）的價位。</p>
       </div>
     </section>
 
@@ -48,10 +48,15 @@
               <label><input type="radio" name="rcdir" value="1" checked><span>做多（買進）</span></label>
               <label><input type="radio" name="rcdir" value="-1"><span>做空（賣出）</span></label>
             </div>
-            <label>進場價（點）<input id="rc-entry" type="number" step="any" value="22000"></label>
-            <label>目前價格（點）<input id="rc-now" type="number" step="any" value="21800"></label>
-            <label>口數<input id="rc-qty" type="number" min="1" step="1" value="1"></label>
-            <label>帳戶權益（進場時，元）<input id="rc-dep" type="number" min="0" step="any"></label>
+            <div class="seg seg-mode" role="radiogroup" aria-label="輸入方式">
+              <label><input type="radio" name="rcmode" value="price" checked><span>輸入目前價格</span></label>
+              <label><input type="radio" name="rcmode" value="ratio"><span>輸入目前維持率</span></label>
+            </div>
+            <label><span id="rc-entry-l">進場價（點）</span><input id="rc-entry" type="number" step="any" value="22000"></label>
+            <label class="rc-pm">目前價格（點）<input id="rc-now" type="number" step="any" value="21800"></label>
+            <label class="rc-rm" hidden>目前維持率（%）<input id="rc-ratio-in" type="number" min="0" step="any" value="100"></label>
+            <label class="rc-pm">口數<input id="rc-qty" type="number" min="1" step="1" value="1"></label>
+            <label class="rc-pm">帳戶權益（進場時，元）<input id="rc-dep" type="number" min="0" step="any"></label>
             <label>每口原始保證金（元）<input id="rc-init" type="number" min="0" step="any"></label>
             <label>每口維持保證金（元）<input id="rc-maint" type="number" min="0" step="any"></label>
             <p class="hint span2" id="rc-hint"></p>
@@ -77,37 +82,6 @@
               <div><span>距離砍倉</span><b id="rc-cut-d">—</b></div>
             </div>
             <p class="note" id="rc-note"></p>
-          </div>
-        </div>
-
-        <h3 class="sub">用維持率反推：幾點會低於 <span class="rv-cut-pct"></span>%？</h3>
-        <p class="intro">已經知道帳戶目前的維持率？輸入維持率和當時的點位，就能估算指數到幾點時維持率會低於 <span class="rv-cut-pct"></span>%、被期貨商砍倉。</p>
-        <div class="calc">
-          <form id="rv-form" class="calc-inputs" autocomplete="off">
-            <div class="seg seg3 seg-prod" role="radiogroup" aria-label="商品" id="rv-products"></div>
-            <div class="seg" role="radiogroup" aria-label="方向">
-              <label><input type="radio" name="rvdir" value="1" checked><span>做多（買進）</span></label>
-              <label><input type="radio" name="rvdir" value="-1"><span>做空（賣出）</span></label>
-            </div>
-            <label>目前維持率（%）<input id="rv-ratio" type="number" min="0" step="any" value="100"></label>
-            <label>進場點（點）<input id="rv-price" type="number" step="any" value="22000"></label>
-            <label>每口原始保證金（元）<input id="rv-init" type="number" min="0" step="any"></label>
-            <label>每口維持保證金（元）<input id="rv-maint" type="number" min="0" step="any"></label>
-            <p class="hint span2">進場點請填「這個維持率」對應的點位：剛進場就填進場價；若填的是今天看到的維持率，就填現在的點位。帳戶只有同一種商品時，口數多寡不影響結果。</p>
-          </form>
-          <div class="calc-output" aria-live="polite">
-            <div class="out-main">
-              <span id="rv-main-l">維持率低於 25% 的點位</span>
-              <strong id="rv-cut">—</strong>
-              <em id="rv-cut-d">—</em>
-            </div>
-            <div class="out-grid">
-              <div><span>追繳價位</span><b id="rv-call">—</b></div>
-              <div><span>距離追繳</span><b id="rv-call-d">—</b></div>
-              <div><span>追繳時維持率</span><b id="rv-mpct">—</b></div>
-              <div><span>每 1% 維持率約等於</span><b id="rv-step">—</b></div>
-            </div>
-            <p class="note" id="rv-note"></p>
           </div>
         </div>
 
