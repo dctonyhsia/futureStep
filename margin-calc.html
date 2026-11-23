@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>維持率計算機｜期貨・選擇權入門指南</title>
-  <meta name="description" content="輸入大台、小台、微台的進場價與目前價格，計算維持率、追繳價位與砍倉價位。">
+  <meta name="description" content="輸入大台、小台、微台的進場價，算出做多與做空的追繳價格與 25% 強制砍倉價格。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@
       <div class="wrap">
         <nav class="crumbs" aria-label="麵包屑"><a href="index.html">首頁</a><span>/</span><a href="index.html#calc">損益試算</a><span>/</span>維持率計算機</nav>
         <h1>維持率計算機</h1>
-        <p class="lead">選擇大台、小台或微台，輸入進場價與目前價格，或直接輸入目前維持率，馬上算出會被追繳、砍倉（維持率低於 25%）的價位。</p>
+        <p class="lead">選擇大台、小台或微台並輸入進場價，同時算出做多與做空時，跌破維持保證金（追繳）與維持率低於 25%（強制砍倉）的價格。</p>
       </div>
     </section>
 
@@ -44,54 +44,21 @@
         <div class="calc">
           <form id="rc-form" class="calc-inputs" autocomplete="off">
             <div class="seg seg3 seg-prod" role="radiogroup" aria-label="商品" id="rc-products"></div>
-            <div class="seg" role="radiogroup" aria-label="方向">
-              <label><input type="radio" name="rcdir" value="1" checked><span>做多（買進）</span></label>
-              <label><input type="radio" name="rcdir" value="-1"><span>做空（賣出）</span></label>
-            </div>
-            <div class="seg seg-mode" role="radiogroup" aria-label="輸入方式">
-              <label><input type="radio" name="rcmode" value="price" checked><span>輸入目前價格</span></label>
-              <label><input type="radio" name="rcmode" value="ratio"><span>輸入目前維持率</span></label>
-            </div>
-            <label><span id="rc-entry-l">進場價（點）</span><input id="rc-entry" type="number" step="any" value="22000"></label>
-            <label class="rc-pm">目前價格（點）<input id="rc-now" type="number" step="any" value="21800"></label>
-            <label class="rc-rm" hidden>目前維持率（%）<input id="rc-ratio-in" type="number" min="0" step="any" value="100"></label>
-            <label class="rc-pm">口數<input id="rc-qty" type="number" min="1" step="1" value="1"></label>
-            <label class="rc-pm">帳戶權益（進場時，元）<input id="rc-dep" type="number" min="0" step="any"></label>
+            <label class="span2">進場價（點）<input id="rc-entry" type="number" step="any" value="22000"></label>
             <label>每口原始保證金（元）<input id="rc-init" type="number" min="0" step="any"></label>
             <label>每口維持保證金（元）<input id="rc-maint" type="number" min="0" step="any"></label>
             <p class="hint span2" id="rc-hint"></p>
           </form>
           <div class="calc-output" aria-live="polite">
-            <div class="out-main">
-              <span>目前維持率</span>
-              <strong id="rc-ratio">—</strong>
-              <em id="rc-status">—</em>
-            </div>
-            <div class="rc-gauge" aria-hidden="true">
-              <div class="rc-fill" id="rc-fill"></div>
-              <i class="rc-mark cut" id="rc-mark-cut"></i>
-              <i class="rc-mark call" id="rc-mark-call"></i>
-            </div>
-            <div class="rc-scale" aria-hidden="true"><span>0%</span><span id="rc-scale-cut"></span><span id="rc-scale-call"></span><span>150%</span></div>
-            <div class="out-grid">
-              <div><span>目前損益</span><b id="rc-pnl">—</b></div>
-              <div><span>目前權益數</span><b id="rc-eq">—</b></div>
-              <div><span>追繳價位</span><b id="rc-call">—</b></div>
-              <div><span>砍倉價位</span><b id="rc-cut">—</b></div>
-              <div><span>距離追繳</span><b id="rc-call-d">—</b></div>
-              <div><span>距離砍倉</span><b id="rc-cut-d">—</b></div>
-            </div>
+            <p class="rc-head" id="rc-head"></p>
+            <div class="rc-dirs" id="rc-dirs"></div>
             <p class="note" id="rc-note"></p>
           </div>
         </div>
 
         <div class="keypoints">
           <b>怎麼算</b>
-          <ul>
-            <li>維持率 = 目前權益數 ÷（每口原始保證金 × 口數）× 100%。</li>
-            <li>目前權益數 = 進場時帳戶權益 +（目前價格 − 進場價）× 每點價值 × 口數；做空時漲跌方向相反。</li>
-            <li>權益數低於維持保證金會被追繳，需補足至原始保證金；維持率低於 <span id="rc-cut-pct"></span>% 時，期貨商會代為沖銷（砍倉）。</li>
-          </ul>
+          <ul id="rc-points"></ul>
         </div>
         <div class="back-row"><a class="btn ghost" href="index.html#calc">← 回到損益試算</a> <a class="btn ghost" href="settlement.html">結算價與維持率說明 →</a></div>
       </div>

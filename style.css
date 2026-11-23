@@ -190,21 +190,22 @@ tbody td:first-child { font-weight: 500; color: var(--ink); }
 .ct-open { max-width: 640px; margin-top: 20px; }
 .sec-head-link { white-space: nowrap; padding: 9px 18px; }
 .seg.seg3.seg-prod label input:checked + span { background: var(--accent); color: #fff; }
-form .seg.seg-mode label input:checked + span { background: var(--ink); color: var(--bg); }
+.rc-head { margin: 0; font-size: 14px; opacity: .8; }
+.rc-head b { font-size: 16px; opacity: 1; }
+.rc-dirs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.rc-dir { background: color-mix(in srgb, var(--bg) 7%, transparent); border: 1px solid color-mix(in srgb, var(--bg) 14%, transparent); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.rc-dir-h { align-self: flex-start; font-size: 14px; font-weight: 700; padding: 3px 12px; border-radius: 99px; color: #fff; }
+.rc-dir.long .rc-dir-h { background: var(--up); } .rc-dir.short .rc-dir-h { background: var(--down); }
+.rc-row { display: flex; flex-direction: column; gap: 2px; padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--bg) 14%, transparent); }
+.rc-lbl { font-size: 13px; font-weight: 700; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.rc-lbl small { font-weight: 400; opacity: .65; font-size: 12px; }
+.rc-row.call .rc-lbl { color: var(--gold); } .rc-row.cut .rc-lbl { color: #ff8a80; }
+.rc-price { font-family: "IBM Plex Mono", "Noto Sans TC", monospace; font-size: clamp(18px, 1.9vw, 22px); font-weight: 600; }
+.rc-price small { font-size: 13px; font-weight: 400; opacity: .75; }
+.rc-pts { font-size: 12px; opacity: .65; font-family: "IBM Plex Mono", "Noto Sans TC", monospace; }
+@media (max-width: 520px) { .rc-dirs { grid-template-columns: 1fr; } }
 :root[data-theme="dark"] .seg.seg3.seg-prod label input:checked + span { color: #0c1420; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg.seg3.seg-prod label input:checked + span { color: #0c1420; } }
-.rc-gauge { position: relative; height: 12px; background: color-mix(in srgb, var(--bg) 15%, transparent); border-radius: 99px; }
-.rc-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; transition: width .25s ease; background: color-mix(in srgb, var(--bg) 80%, transparent); }
-.rc-fill.call { background: var(--gold); } .rc-fill.cut { background: #ff6b5e; }
-.rc-mark { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--bg); opacity: .8; }
-.rc-mark.cut { background: #ff6b5e; opacity: 1; } .rc-mark.call { background: var(--gold); opacity: 1; }
-.rc-scale { position: relative; height: 16px; margin-top: -10px; font-size: 11px; opacity: .7; font-family: "IBM Plex Mono", "Noto Sans TC", monospace; }
-.rc-scale span { position: absolute; top: 0; white-space: nowrap; transform: translateX(-50%); }
-.rc-scale span:first-child { left: 0; transform: none; } .rc-scale span:last-child { right: 0; transform: none; }
-#rc-scale-cut { color: #ff8a80; } #rc-scale-call { color: var(--gold); }
-.out-main strong.rc-call { color: var(--gold); } .out-main strong.rc-cut { color: #ff8a80; }
-.out-main .rc-tag { display: inline-block; opacity: 1; font-size: 13px; font-weight: 700; padding: 2px 10px; border-radius: 99px; background: color-mix(in srgb, var(--bg) 18%, transparent); }
-.rc-tag.call { background: var(--gold); color: #1a1a1a; } .rc-tag.cut { background: #ff6b5e; color: #fff; }
 .tips { margin-top: 24px; background: color-mix(in srgb, var(--gold) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent); border-left: 4px solid var(--gold); border-radius: 10px; padding: 18px 24px; }
 .tips-h { display: flex; align-items: center; gap: 8px; font-size: 16px; color: var(--ink); }
 .tips p { margin: 8px 0 0; }
