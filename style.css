@@ -189,9 +189,9 @@ tbody td:first-child { font-weight: 500; color: var(--ink); }
 .settle-link { margin-top: 28px; }
 .ct-open { max-width: 640px; margin-top: 20px; }
 .sec-head-link { white-space: nowrap; padding: 9px 18px; }
-#rc-products label input:checked + span { background: var(--accent); color: #fff; }
-:root[data-theme="dark"] #rc-products label input:checked + span { color: #0c1420; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #rc-products label input:checked + span { color: #0c1420; } }
+.seg.seg3.seg-prod label input:checked + span { background: var(--accent); color: #fff; }
+:root[data-theme="dark"] .seg.seg3.seg-prod label input:checked + span { color: #0c1420; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg.seg3.seg-prod label input:checked + span { color: #0c1420; } }
 .rc-gauge { position: relative; height: 12px; background: color-mix(in srgb, var(--bg) 15%, transparent); border-radius: 99px; }
 .rc-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; transition: width .25s ease; background: color-mix(in srgb, var(--bg) 80%, transparent); }
 .rc-fill.call { background: var(--gold); } .rc-fill.cut { background: #ff6b5e; }
