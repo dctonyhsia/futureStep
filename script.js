@@ -707,7 +707,7 @@ if ($('g-search')) {
   };
 
   const chart = (s, a) => {
-    const W = 480, H = 190, P = { l: 12, r: 12, t: 14, b: 26 }, x0 = idx - 1000, x1 = idx + 1000;
+    const W = 480, H = 190, P = { l: 12, r: 12, t: 14, b: 26 }, x0 = idx - span, x1 = idx + span;
     const xsS = Array.from({ length: 201 }, (_, i) => x0 + (x1 - x0) * i / 200).concat(a.ks).sort((p, q) => p - q);
     const ys = xsS.map(x => pay(a.L, x));
     let yMax = Math.max(...ys, 0), yMin = Math.min(...ys, 0);
@@ -715,7 +715,7 @@ if ($('g-search')) {
     const X = x => P.l + (x - x0) / (x1 - x0) * (W - P.l - P.r), Y = y => P.t + (yMax - y) / (yMax - yMin) * (H - P.t - P.b);
     const y0 = Y(0), line = xsS.map((x, i) => `${X(x).toFixed(1)},${Y(ys[i]).toFixed(1)}`).join(' ');
     const area = `M${X(x0)},${y0} L${line.replace(/ /g, ' L')} L${X(x1)},${y0} Z`, id = 'st' + Math.random().toString(36).slice(2, 7);
-    const ticks = [x0, idx - 500, idx, idx + 500, x1];
+    const ticks = [x0, idx - span / 2, idx, idx + span / 2, x1];
     return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.name)}到期損益圖">` +
       `<defs><clipPath id="${id}u"><rect x="0" y="0" width="${W}" height="${y0}"/></clipPath><clipPath id="${id}d"><rect x="0" y="${y0}" width="${W}" height="${H - y0}"/></clipPath></defs>` +
       `<path class="oc-fill-up" d="${area}" clip-path="url(#${id}u)"/><path class="oc-fill-dn" d="${area}" clip-path="url(#${id}d)"/>` +
@@ -726,8 +726,12 @@ if ($('g-search')) {
       `<g class="oc-tick">${ticks.map((t, i) => `<text x="${X(t)}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === ticks.length - 1 ? 'end' : 'middle'}">${t.toLocaleString('zh-TW')}</text>`).join('')}</g></svg>`;
   };
 
-  list.innerHTML = D.optStrategies.map(s => {
-    const a = analyse(s), v = vcls[s.view] || 'flat';
+  // 所有損益圖共用同一個橫軸範圍：涵蓋每個策略的履約價與兩平點，再往外留 400 點，以 500 點為單位
+  const all = D.optStrategies.map(analyse);
+  const far = Math.max(...all.flatMap(a => [...a.ks, ...a.bes].map(x => Math.abs(x - idx))));
+  const span = Math.max(1000, Math.ceil((far + 400) / 500) * 500);
+  list.innerHTML = D.optStrategies.map((s, i) => {
+    const a = all[i], v = vcls[s.view] || 'flat';
     const legs = a.L.map(l => `<li><b class="${l.sg > 0 ? 'buy' : 'sell'}">${l.sg > 0 ? '買進' : '賣出'}</b><span class="mono">${l.k.toLocaleString('zh-TW')}</span> ${l.call ? 'Call' : 'Put'}` +
       `${l.q > 1 ? ` × ${l.q} 口` : ''}<em class="mono">權利金 ${num(l.p)}</em></li>`).join('');
     const cost = a.net >= 0 ? `付出 ${pts(a.net)}` : `收取 ${pts(-a.net)}`;
