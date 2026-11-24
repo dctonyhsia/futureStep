@@ -561,4 +561,4 @@ button.ct-btn { font-family: inherit; cursor: pointer; }
 :root[data-theme="dark"] .st-view.vol, :root[data-theme="dark"] .st-view.flat { color: #0c1420; }
 @media (max-width: 860px) { .st-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 480px) { .st-bar .tabs { width: 100%; } .st-filter .tab { padding: 8px 12px; } .st-stats dd { font-size: 14px; } }
-.st-key { background: linear-gradient(transparent 55%, color-mix(in srgb, var(--gold) 45%, transparent) 55%); color: var(--ink); font-weight: 700; padding: 0 2px; border-radius: 2px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.st-key { background: color-mix(in srgb, var(--gold) 30%, transparent); color: var(--ink); font-weight: 700; padding: 1px 4px; border-radius: 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
