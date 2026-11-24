@@ -523,3 +523,41 @@ button.ct-btn { font-family: inherit; cursor: pointer; }
   .os-table.os-margin { min-width: 0; }
   .os-table td.num { text-align: right; }
 }
+
+/* ============ 選擇權策略 options-strategy.html ============ */
+.st-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 20px; }
+.st-bar .tabs { margin-bottom: 0; flex-wrap: wrap; }
+.st-filter .tab small { font-family: "IBM Plex Mono", monospace; font-size: 12px; opacity: .7; margin-left: 2px; }
+.st-note { margin: 0; color: var(--muted); font-size: 14px; max-width: 520px; }
+.st-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.st-card { display: flex; flex-direction: column; gap: 14px; }
+.st-card[hidden] { display: none; }
+.st-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.st-h h3 { margin: 0; font-size: 20px; color: var(--ink); }
+.st-h h3 small { font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 500; color: var(--muted); margin-left: 4px; }
+.st-view { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px; color: #fff; }
+.st-view.up { background: var(--up); } .st-view.dn { background: var(--down); }
+.st-view.flat { background: var(--gold); } .st-view.vol { background: var(--accent); }
+.card p.st-sum { color: var(--text); }
+.st-chart { background: var(--bg-alt); border-radius: 10px; padding: 8px 6px 2px; }
+.st-chart svg { display: block; width: 100%; height: auto; }
+.st-chart .oc-tick text { font-size: 13px; }
+.st-legs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.st-legs li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; color: var(--ink); }
+.st-legs b { font-size: 12px; padding: 2px 8px; border-radius: 6px; color: #fff; }
+.st-legs b.buy { background: var(--up); } .st-legs b.sell { background: var(--down); }
+.st-legs em { font-style: normal; font-size: 13px; color: var(--muted); margin-left: auto; }
+.st-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin: 0; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.st-stats > div { background: var(--surface); padding: 10px 14px; }
+.st-stats .span2 { grid-column: 1 / -1; }
+.st-stats dt { font-size: 12px; color: var(--muted); }
+.st-stats dd { margin: 2px 0 0; font-weight: 700; color: var(--ink); font-size: 15px; }
+.st-stats dd.pos { color: var(--up); } .st-stats dd.neg { color: var(--down); }
+.st-stats dd small { font-weight: 400; font-size: 12px; color: var(--muted); }
+.card p.st-when, .card p.st-watch { font-size: 14.5px; }
+.st-when b, .st-watch b { display: block; font-size: 12px; letter-spacing: .05em; margin-bottom: 2px; }
+.st-when b { color: var(--accent); } .st-watch b { color: var(--gold); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .st-view.vol, :root:not([data-theme="light"]) .st-view.flat { color: #0c1420; } }
+:root[data-theme="dark"] .st-view.vol, :root[data-theme="dark"] .st-view.flat { color: #0c1420; }
+@media (max-width: 860px) { .st-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 480px) { .st-bar .tabs { width: 100%; } .st-filter .tab { padding: 8px 12px; } .st-stats dd { font-size: 14px; } }

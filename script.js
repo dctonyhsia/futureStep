@@ -674,4 +674,86 @@ if ($('g-search')) {
   render();
 })();
 
+// options-strategy.html：選擇權策略（由 data.js 的 legs 自動算出損益、兩平點並畫到期損益圖）
+(function () {
+  const list = document.getElementById('st-list');
+  if (!list || !D.optStrategies) return;
+  const cfg = D.optStrategyIntro || {}, idx = cfg.index || 22000, pv = cfg.pointValue || 50;
+  const num = n => (Math.round(n * 100) / 100).toLocaleString('zh-TW');
+  const views = ['看漲', '看跌', '盤整', '大波動'], vcls = { 看漲: 'up', 看跌: 'dn', 盤整: 'flat', 大波動: 'vol' };
+  const legsOf = s => s.legs.map(([side, type, k, p, q]) => ({ sg: side === '買' ? 1 : -1, call: /call/i.test(type), k, p, q: q || 1 }));
+  const pay = (L, S) => L.reduce((a, l) => a + l.sg * l.q * (Math.max(l.call ? S - l.k : l.k - S, 0) - l.p), 0);
+  const pts = v => `${num(v)} 點<small>（${fmtN(v * pv)} 元）</small>`;
+
+  const analyse = s => {
+    const L = legsOf(s), ks = [...new Set(L.map(l => l.k))].sort((a, b) => a - b);
+    const slopeR = L.filter(l => l.call).reduce((a, l) => a + l.sg * l.q, 0);   // 往上漲每點的損益變化
+    const slopeL = L.filter(l => !l.call).reduce((a, l) => a + l.sg * l.q, 0);  // 往下跌每點的損益變化
+    const vals = ks.map(k => pay(L, k));
+    const hi = Math.max(...vals), lo = Math.min(...vals);
+    const maxP = slopeR > 0 ? '無上限<small>（漲越多賺越多）</small>' : slopeL > 0 ? '可能很大<small>（跌越多賺越多）</small>' : pts(hi);
+    const maxL = slopeR < 0 ? '無上限<small>（漲越多虧越多）</small>' : slopeL < 0 ? '可能很大<small>（跌越多虧越多）</small>' : pts(-lo);
+    const xs = [ks[0] - 5000, ...ks, ks[ks.length - 1] + 5000], bes = [];
+    for (let i = 0; i < xs.length - 1; i++) {
+      const a = xs[i], b = xs[i + 1], fa = pay(L, a), fb = pay(L, b);
+      if (fa === 0 && !bes.includes(a)) bes.push(a);
+      if (fa * fb < 0) bes.push(a + (b - a) * (-fa) / (fb - fa));
+    }
+    const net = L.reduce((a, l) => a + l.sg * l.q * l.p, 0);
+    const hasShort = L.some(l => l.sg < 0), limited = !(slopeR < 0 || slopeL < 0);
+    const margin = !hasShort ? '不需要<small>（只付權利金）</small>' : limited ? '需要<small>（組合單可減收）</small>' : '需要<small>（賣方部位）</small>';
+    return { L, ks, bes, net, maxP, maxL, margin };
+  };
+
+  const chart = (s, a) => {
+    const W = 480, H = 190, P = { l: 12, r: 12, t: 14, b: 26 }, x0 = idx - 1000, x1 = idx + 1000;
+    const xsS = Array.from({ length: 201 }, (_, i) => x0 + (x1 - x0) * i / 200).concat(a.ks).sort((p, q) => p - q);
+    const ys = xsS.map(x => pay(a.L, x));
+    let yMax = Math.max(...ys, 0), yMin = Math.min(...ys, 0);
+    const pad = (yMax - yMin) * 0.12 || 50; yMax += pad; yMin -= pad;
+    const X = x => P.l + (x - x0) / (x1 - x0) * (W - P.l - P.r), Y = y => P.t + (yMax - y) / (yMax - yMin) * (H - P.t - P.b);
+    const y0 = Y(0), line = xsS.map((x, i) => `${X(x).toFixed(1)},${Y(ys[i]).toFixed(1)}`).join(' ');
+    const area = `M${X(x0)},${y0} L${line.replace(/ /g, ' L')} L${X(x1)},${y0} Z`, id = 'st' + Math.random().toString(36).slice(2, 7);
+    const ticks = [x0, idx - 500, idx, idx + 500, x1];
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.name)}到期損益圖">` +
+      `<defs><clipPath id="${id}u"><rect x="0" y="0" width="${W}" height="${y0}"/></clipPath><clipPath id="${id}d"><rect x="0" y="${y0}" width="${W}" height="${H - y0}"/></clipPath></defs>` +
+      `<path class="oc-fill-up" d="${area}" clip-path="url(#${id}u)"/><path class="oc-fill-dn" d="${area}" clip-path="url(#${id}d)"/>` +
+      a.ks.map(k => `<line class="oc-strike" x1="${X(k)}" x2="${X(k)}" y1="${P.t - 6}" y2="${H - P.b}"/>`).join('') +
+      `<line class="oc-zero" x1="${P.l}" x2="${W - P.r}" y1="${y0}" y2="${y0}"/>` +
+      `<polyline class="oc-line" points="${line}"/>` +
+      a.bes.filter(b => b > x0 && b < x1).map(b => `<circle class="oc-be" cx="${X(b)}" cy="${y0}" r="4.5"/>`).join('') +
+      `<g class="oc-tick">${ticks.map((t, i) => `<text x="${X(t)}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === ticks.length - 1 ? 'end' : 'middle'}">${t.toLocaleString('zh-TW')}</text>`).join('')}</g></svg>`;
+  };
+
+  list.innerHTML = D.optStrategies.map(s => {
+    const a = analyse(s), v = vcls[s.view] || 'flat';
+    const legs = a.L.map(l => `<li><b class="${l.sg > 0 ? 'buy' : 'sell'}">${l.sg > 0 ? '買進' : '賣出'}</b><span class="mono">${l.k.toLocaleString('zh-TW')}</span> ${l.call ? 'Call' : 'Put'}` +
+      `${l.q > 1 ? ` × ${l.q} 口` : ''}<em class="mono">權利金 ${num(l.p)}</em></li>`).join('');
+    const cost = a.net >= 0 ? `付出 ${pts(a.net)}` : `收取 ${pts(-a.net)}`;
+    const be = a.bes.length ? a.bes.map(b => `<span class="mono">${num(b)}</span>`).join('、') : '—';
+    return `<article class="card st-card" data-view="${esc(s.view)}">` +
+      `<header class="st-h"><span class="st-view ${v}">${esc(s.view)}</span><h3>${esc(s.name)} <small>${esc(s.en)}</small></h3></header>` +
+      `<p class="st-sum">${esc(s.summary)}</p>` +
+      `<div class="st-chart">${chart(s, a)}</div>` +
+      `<ul class="st-legs">${legs}</ul>` +
+      `<dl class="st-stats"><div><dt>${a.net >= 0 ? '建立成本' : '先收權利金'}</dt><dd>${cost}</dd></div>` +
+      `<div><dt>損益兩平點</dt><dd>${be}</dd></div>` +
+      `<div><dt>最大獲利</dt><dd class="pos">${a.maxP}</dd></div><div><dt>最大虧損</dt><dd class="neg">${a.maxL}</dd></div>` +
+      `<div class="span2"><dt>保證金</dt><dd>${a.margin}</dd></div></dl>` +
+      `<p class="st-when"><b>適用時機</b>${esc(s.when)}</p><p class="st-watch"><b>注意</b>${esc(s.watch)}</p></article>`;
+  }).join('');
+
+  const note = document.getElementById('st-note');
+  if (note) note.textContent = cfg.note || '';
+  const bar = document.getElementById('st-filter');
+  const count = v => D.optStrategies.filter(s => !v || s.view === v).length;
+  bar.innerHTML = ['', ...views].map(v => `<button type="button" class="tab${v ? '' : ' active'}" data-view="${v}" aria-pressed="${!v}">${v || '全部'} <small>${count(v)}</small></button>`).join('');
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const v = b.dataset.view;
+    bar.querySelectorAll('button').forEach(x => { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', x === b); });
+    list.querySelectorAll('.st-card').forEach(c => { c.hidden = !!v && c.dataset.view !== v; });
+  });
+})();
+
 $('year').textContent = new Date().getFullYear();

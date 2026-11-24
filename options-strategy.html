@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>選擇權策略｜期貨・選擇權入門指南</title>
+  <meta name="description" content="看漲、看跌、盤整、大波動四種行情下常見的選擇權策略：組成方式、到期損益圖、最大獲利、最大虧損與損益兩平點。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"></span>期貨・選擇權入門指南</a>
+      <button class="menu-btn" aria-label="開啟選單" aria-expanded="false">☰</button>
+      <nav class="nav">
+        <a href="index.html#what" class="active" aria-current="page">基本概念</a>
+        <a href="index.html#terms">合約規格</a>
+        <a href="index.html#margin">保證金</a>
+        <a href="index.html#calc">損益試算</a>
+        <a href="index.html#products">商品</a>
+        <a href="index.html#risk">風險</a>
+        <a href="glossary.html" data-page="glossary">名詞表</a>
+        <a href="analysis.html" data-page="analysis" class="nav-cta nav-cta-alt">數據分析</a>
+        <a href="contact.html" data-page="contact" class="nav-cta">聯絡我們</a>
+      </nav>
+      <button class="theme-btn" aria-label="切換深淺色">◐</button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="page-hero">
+      <div class="wrap">
+        <nav class="crumbs" aria-label="麵包屑"><a href="index.html">首頁</a><span>/</span><a href="index.html#what">基本概念</a><span>/</span>選擇權策略</nav>
+        <h1>選擇權策略</h1>
+        <p class="lead">先判斷行情方向，再挑選適合的組合。每個策略都附到期損益圖，以及最大獲利、最大虧損與損益兩平點。</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="st-bar">
+          <div class="tabs st-filter" role="group" aria-label="依行情看法篩選策略" id="st-filter"></div>
+          <p class="st-note" id="st-note"></p>
+        </div>
+        <div class="st-grid" id="st-list"></div>
+
+        <div class="keypoints">
+          <b>怎麼看這頁</b>
+          <ul>
+            <li>損益圖的橫軸是到期結算價、縱軸是到期損益；紅色區塊是獲利、綠色區塊是虧損，虛線是履約價，圓點是損益兩平點。</li>
+            <li>損益都是「持有到到期」的結果。到期前平倉時，權利金還包含時間價值，損益會和圖上不同。</li>
+            <li>只有買方的策略不需繳保證金，最大虧損就是付出的權利金；有賣出部位就要繳保證金，價差類策略用組合單下單可享保證金減收。</li>
+            <li>金額以台指選每點 50 元、1 口計算，未計入手續費與期交稅。</li>
+          </ul>
+        </div>
+        <div class="back-row"><a class="btn ghost" href="index.html#what">← 回到基本概念</a> <a class="btn ghost" href="index.html#calc">選擇權損益試算器 →</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-grid">
+      <div>
+        <p class="footer-brand">期貨・選擇權入門指南</p>
+        <p><strong>免責聲明：</strong>本網站內容僅供教育與知識分享，不構成任何投資建議。期貨與選擇權交易具高度風險，商品規格、保證金與稅費請以臺灣期貨交易所及您的期貨商最新公告為準。</p>
+      </div>
+      <div>
+        <p class="footer-h">資料來源</p>
+        <ul class="sources">
+          <li><a href="https://www.taifex.com.tw/" target="_blank" rel="noopener">臺灣期貨交易所（商品規格、保證金公告）</a></li>
+        </ul>
+        <p class="small">內容更新：<span id="updated"></span></p>
+      </div>
+    </div>
+    <div class="wrap"><p class="small copy">© <span id="year"></span> 期貨・選擇權入門指南</p></div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
