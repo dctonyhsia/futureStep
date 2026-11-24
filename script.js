@@ -684,6 +684,7 @@ if ($('g-search')) {
   const legsOf = s => s.legs.map(([side, type, k, p, q]) => ({ sg: side === '買' ? 1 : -1, call: /call/i.test(type), k, p, q: q || 1 }));
   const pay = (L, S) => L.reduce((a, l) => a + l.sg * l.q * (Math.max(l.call ? S - l.k : l.k - S, 0) - l.p), 0);
   const pts = v => `${num(v)} 點<small>（${fmtN(v * pv)} 元）</small>`;
+  const rich = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<mark class="st-key">$1</mark>'); // **文字** → 重點標示
 
   const analyse = s => {
     const L = legsOf(s), ks = [...new Set(L.map(l => l.k))].sort((a, b) => a - b);
@@ -733,14 +734,14 @@ if ($('g-search')) {
     const be = a.bes.length ? a.bes.map(b => `<span class="mono">${num(b)}</span>`).join('、') : '—';
     return `<article class="card st-card" data-view="${esc(s.view)}">` +
       `<header class="st-h"><span class="st-view ${v}">${esc(s.view)}</span><h3>${esc(s.name)} <small>${esc(s.en)}</small></h3></header>` +
-      `<p class="st-sum">${esc(s.summary)}</p>` +
+      `<p class="st-sum">${rich(s.summary)}</p>` +
       `<div class="st-chart">${chart(s, a)}</div>` +
       `<ul class="st-legs">${legs}</ul>` +
       `<dl class="st-stats"><div><dt>${a.net >= 0 ? '建立成本' : '先收權利金'}</dt><dd>${cost}</dd></div>` +
       `<div><dt>損益兩平點</dt><dd>${be}</dd></div>` +
       `<div><dt>最大獲利</dt><dd class="pos">${a.maxP}</dd></div><div><dt>最大虧損</dt><dd class="neg">${a.maxL}</dd></div>` +
       `<div class="span2"><dt>保證金</dt><dd>${a.margin}</dd></div></dl>` +
-      `<p class="st-when"><b>適用時機</b>${esc(s.when)}</p><p class="st-watch"><b>注意</b>${esc(s.watch)}</p></article>`;
+      `<p class="st-when"><b>適用時機</b>${rich(s.when)}</p><p class="st-watch"><b>注意</b>${rich(s.watch)}</p></article>`;
   }).join('');
 
   const note = document.getElementById('st-note');
