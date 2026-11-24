@@ -702,7 +702,17 @@ if ($('g-search')) {
     }
     const net = L.reduce((a, l) => a + l.sg * l.q * l.p, 0);
     const hasShort = L.some(l => l.sg < 0), limited = !(slopeR < 0 || slopeL < 0);
-    const margin = !hasShort ? '不需要<small>（只付權利金）</small>' : limited ? '需要<small>（組合單可減收）</small>' : '需要<small>（賣方部位）</small>';
+    // 保證金（依期交所組合部位規定的簡化說明）
+    const [l1, l2] = L, two = L.length === 2;
+    const vertical = two && l1.call === l2.call && l1.sg !== l2.sg && l1.q === l2.q;
+    const shortPair = two && l1.call !== l2.call && l1.sg < 0 && l2.sg < 0;
+    const width = vertical ? Math.abs(l1.k - l2.k) * l1.q : 0;
+    const margin = !hasShort ? '不需要<small>（只付權利金）</small>'
+      : vertical && net > 0 ? '不需要<small>（用組合單下單，只付權利金）</small>'
+      : vertical ? `需要 ${fmtN(width * pv)} 元<small>（組合單：履約價差 ${fmtN(width)} 點 × ${pv} 元）</small>`
+      : shortPair ? '需要<small>（組合單：取兩邊保證金較高者，再加另一邊的權利金）</small>'
+      : limited ? '需要<small>（拆成價差用組合單下單，可大幅減收）</small>'
+      : '需要<small>（賣方部位，依期交所公告計算）</small>';
     return { L, ks, bes, net, maxP, maxL, margin };
   };
 
