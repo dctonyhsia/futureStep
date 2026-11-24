@@ -692,9 +692,13 @@ if ($('g-search')) {
     const slopeL = L.filter(l => !l.call).reduce((a, l) => a + l.sg * l.q, 0);  // 往下跌每點的損益變化
     const vals = ks.map(k => pay(L, k));
     const hi = Math.max(...vals), lo = Math.min(...vals);
-    const maxP = slopeR > 0 ? '無上限<small>（漲越多賺越多）</small>' : slopeL > 0 ? '可能很大<small>（跌越多賺越多）</small>' : pts(hi);
-    const maxL = slopeR < 0 ? '無上限<small>（漲越多虧越多）</small>' : slopeL < 0 ? '可能很大<small>（跌越多虧越多）</small>' : pts(-lo);
-    const xs = [ks[0] - 5000, ...ks, ks[ks.length - 1] + 5000], bes = [];
+    // 兩端都朝同方向延伸（如跨式、勒式）時，說明要同時涵蓋大漲與大跌
+    const maxP = slopeR > 0 && slopeL > 0 ? '無上限<small>（大漲或大跌越多賺越多）</small>'
+      : slopeR > 0 ? '無上限<small>（漲越多賺越多）</small>' : slopeL > 0 ? '可能很大<small>（跌越多賺越多）</small>' : pts(hi);
+    const maxL = slopeR < 0 && slopeL < 0 ? '無上限<small>（大漲或大跌越多虧越多）</small>'
+      : slopeR < 0 ? '無上限<small>（漲越多虧越多）</small>' : slopeL < 0 ? '可能很大<small>（跌越多虧越多）</small>' : pts(-lo);
+    // 找兩平點：左端取到指數 0，右端取到最高履約價的兩倍，確保遠離現價的兩平點也找得到
+    const xs = [0, ...ks.filter(k => k > 0), ks[ks.length - 1] * 2], bes = [];
     for (let i = 0; i < xs.length - 1; i++) {
       const a = xs[i], b = xs[i + 1], fa = pay(L, a), fb = pay(L, b);
       if (fa === 0 && !bes.includes(a)) bes.push(a);
@@ -710,7 +714,7 @@ if ($('g-search')) {
     const margin = !hasShort ? '不需要<small>（只付權利金）</small>'
       : vertical && net > 0 ? '不需要<small>（用組合單下單，只付權利金）</small>'
       : vertical ? `需要 ${fmtN(width * pv)} 元<small>（組合單：履約價差 ${fmtN(width)} 點 × ${pv} 元）</small>`
-      : shortPair ? '需要<small>（組合單：取兩邊保證金較高者，再加另一邊的權利金）</small>'
+      : shortPair ? '需要<small>（組合單：兩邊保證金較高者 ＋ 另一邊權利金市值 ＋ C 值）</small>'
       : limited ? '需要<small>（拆成價差用組合單下單，可大幅減收）</small>'
       : '需要<small>（賣方部位，依期交所公告計算）</small>';
     return { L, ks, bes, net, maxP, maxL, margin };
