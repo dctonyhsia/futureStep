@@ -192,6 +192,9 @@ tbody td:first-child { font-weight: 500; color: var(--ink); }
 .ct-layout .ct-flyer { order: -1; }
 .ct-main { position: sticky; top: 88px; max-width: 640px; }
 .ct-flyer { margin: 0; }
+.ct-flyer[hidden] { display: none; }
+.ct-layout:has(> .ct-flyer[hidden]) { grid-template-columns: minmax(0, 640px); }
+.ct-layout:has(> .ct-flyer[hidden]) .ct-main { position: static; }
 .ct-flyer a { display: block; border-radius: 12px; }
 .ct-flyer img { display: block; width: 100%; height: auto; border-radius: 12px; box-shadow: var(--shadow); transition: transform .2s ease, box-shadow .2s ease; }
 .ct-flyer a:hover img { transform: translateY(-2px); }
