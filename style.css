@@ -188,10 +188,11 @@ tbody td:first-child { font-weight: 500; color: var(--ink); }
 .wrap > h3.sub:first-child { margin-top: 0; }
 .settle-link { margin-top: 28px; }
 .ct-open { max-width: 640px; margin-top: 20px; }
-.ct-layout { display: grid; grid-template-columns: minmax(0, 640px) minmax(0, 460px); gap: 28px; align-items: start; }
+.ct-layout { display: grid; grid-template-columns: minmax(0, 460px) minmax(0, 640px); gap: 28px; align-items: start; }
+.ct-layout .ct-flyer { order: -1; }
 .ct-flyer { margin: 0; }
 .ct-flyer img { display: block; width: 100%; height: auto; border-radius: 12px; box-shadow: var(--shadow); }
-@media (max-width: 900px) { .ct-layout { grid-template-columns: minmax(0, 640px); } }
+@media (max-width: 900px) { .ct-layout { grid-template-columns: minmax(0, 640px); } .ct-layout .ct-flyer { order: 0; } }
 .sec-head-link { white-space: nowrap; padding: 9px 18px; }
 .seg.seg3.seg-prod label input:checked + span { background: var(--accent); color: #fff; }
 .rc-head { margin: 0; font-size: 14px; opacity: .8; }
