@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>選擇權策略｜期貨・選擇權入門指南</title>
-  <meta name="description" content="看漲、看跌、盤整、大波動四種行情下常見的選擇權策略：組成方式、到期損益圖、最大獲利、最大虧損與損益兩平點。">
+  <meta name="description" content="30 種選擇權策略：看漲、看跌、盤整、大波動與套利，包含價差、跨式、蝴蝶、比率價差、搭配期貨與跨月份價差，附損益圖、最大獲利、最大虧損與損益兩平點。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@
       <div class="wrap">
         <nav class="crumbs" aria-label="麵包屑"><a href="index.html">首頁</a><span>/</span><a href="index.html#what">基本概念</a><span>/</span>選擇權策略</nav>
         <h1>選擇權策略</h1>
-        <p class="lead">先判斷行情方向，再挑選適合的組合。每個策略都附到期損益圖，以及最大獲利、最大虧損與損益兩平點。</p>
+        <p class="lead">先判斷行情方向，再挑選適合的組合。30 種策略分成 9 類，每個都附損益圖，以及最大獲利、最大虧損與損益兩平點。</p>
       </div>
     </section>
 
@@ -45,7 +45,11 @@
           <div class="tabs st-filter" role="group" aria-label="依行情看法篩選策略" id="st-filter"></div>
           <p class="st-note" id="st-note"></p>
         </div>
-        <div class="st-grid" id="st-list"></div>
+        <div class="card st-ixbox">
+          <p class="st-ix-h"><b>策略速查</b>先想好你對行情的看法，再點策略名稱直接跳過去。</p>
+          <div class="st-index" id="st-index"></div>
+        </div>
+        <div id="st-list"></div>
 
         <div class="keypoints">
           <b>怎麼看這頁</b>
@@ -54,7 +58,9 @@
             <li>損益都是「持有到到期」的結果。到期前平倉時，權利金還包含時間價值，損益會和圖上不同。</li>
             <li>只有買方的策略不需繳保證金，最大虧損就是付出的權利金；有賣出部位就要繳保證金。</li>
             <li>價差用<b>組合單</b>下單：付權利金的價差（多頭買權價差、空頭賣權價差）不需保證金；收權利金的價差（多頭賣權價差、空頭買權價差）保證金為履約價差 × 50 元；賣出勒式、跨式為兩邊保證金較高者，加上另一邊的權利金市值，再加期交所公告的 C 值。實際金額以期交所最新公告為準。</li>
-            <li>金額以台指選每點 50 元、1 口計算，未計入手續費與期交稅。</li>
+            <li>標籤「入門／進階／高階」是學習順序的參考：建議先看懂單一部位與垂直價差，再看其他組合。</li>
+            <li>「跨月份價差」的損益圖是近月到期當天的估計值（遠月還沒到期、仍有時間價值），所以是曲線，數字前面標「約」。</li>
+            <li>金額以台指選每點 50 元、1 口計算（搭配期貨的範例用每點 50 元的小台），未計入手續費與期交稅。</li>
           </ul>
         </div>
         <div class="back-row"><a class="btn ghost" href="index.html#what">← 回到基本概念</a> <a class="btn ghost" href="index.html#calc">選擇權損益試算器 →</a></div>

@@ -677,101 +677,165 @@ if ($('g-search')) {
 // options-strategy.html：選擇權策略（由 data.js 的 legs 自動算出損益、兩平點並畫到期損益圖）
 (function () {
   const list = document.getElementById('st-list');
-  if (!list || !D.optStrategies) return;
-  const cfg = D.optStrategyIntro || {}, idx = cfg.index || 22000, pv = cfg.pointValue || 50;
+  if (!list || !D.optStrategyGroups) return;
+  const cfg = D.optStrategyIntro || {}, idx = cfg.index || 40000, pv = cfg.pointValue || 50;
+  const iv = cfg.iv || 0.18, farT = (cfg.farDaysLeft || 28) / 365;
+  const groups = D.optStrategyGroups, items = groups.flatMap(g => g.items);
   const num = n => (Math.round(n * 100) / 100).toLocaleString('zh-TW');
-  const views = ['看漲', '看跌', '盤整', '大波動'], vcls = { 看漲: 'up', 看跌: 'dn', 盤整: 'flat', 大波動: 'vol' };
-  const legsOf = s => s.legs.map(([side, type, k, p, q]) => ({ sg: side === '買' ? 1 : -1, call: /call/i.test(type), k, p, q: q || 1 }));
-  const pay = (L, S) => L.reduce((a, l) => a + l.sg * l.q * (Math.max(l.call ? S - l.k : l.k - S, 0) - l.p), 0);
+  const views = ['看漲', '看跌', '盤整', '大波動', '套利'], vcls = { 看漲: 'up', 看跌: 'dn', 盤整: 'flat', 大波動: 'vol', 套利: 'arb' };
+  const slug = s => 'st-' + s.en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const legsOf = s => s.legs.map(([side, type, k, p, q, mo]) => ({
+    sg: side === '買' ? 1 : -1, fut: type === '期貨', call: /call/i.test(type), k, p: p || 0, q: q || 1, far: mo === '遠月' }));
+
+  // 遠月部位：近月到期當天用 Black-76 估算剩餘價值
+  const erf = x => { const t = 1 / (1 + 0.3275911 * Math.abs(x)), y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); return x >= 0 ? y : -y; };
+  const cnd = x => 0.5 * (1 + erf(x / Math.SQRT2));
+  const black = (F, K, call) => {
+    if (F <= 0) return call ? 0 : K;
+    const sd = iv * Math.sqrt(farT), d1 = (Math.log(F / K) + sd * sd / 2) / sd, c = F * cnd(d1) - K * cnd(d1 - sd);
+    return call ? c : c - (F - K);
+  };
+  const legPay = (l, S) => l.fut ? S - l.k
+    : (l.far ? black(S, l.k, l.call) : Math.max(l.call ? S - l.k : l.k - S, 0)) - l.p;
+  const pay = (L, S) => L.reduce((a, l) => a + l.sg * l.q * legPay(l, S), 0);
   const pts = v => `${num(v)} 點<small>（${fmtN(v * pv)} 元）</small>`;
   const rich = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<mark class="st-key">$1</mark>'); // **文字** → 重點標示
 
   const analyse = s => {
-    const L = legsOf(s), ks = [...new Set(L.map(l => l.k))].sort((a, b) => a - b);
-    const slopeR = L.filter(l => l.call).reduce((a, l) => a + l.sg * l.q, 0);   // 往上漲每點的損益變化
-    const slopeL = L.filter(l => !l.call).reduce((a, l) => a + l.sg * l.q, 0);  // 往下跌每點的損益變化
-    const vals = ks.map(k => pay(L, k));
-    const hi = Math.max(...vals), lo = Math.min(...vals);
-    // 兩端都朝同方向延伸（如跨式、勒式）時，說明要同時涵蓋大漲與大跌
-    const maxP = slopeR > 0 && slopeL > 0 ? '無上限<small>（大漲或大跌越多賺越多）</small>'
-      : slopeR > 0 ? '無上限<small>（漲越多賺越多）</small>' : slopeL > 0 ? '可能很大<small>（跌越多賺越多）</small>' : pts(hi);
-    const maxL = slopeR < 0 && slopeL < 0 ? '無上限<small>（大漲或大跌越多虧越多）</small>'
-      : slopeR < 0 ? '無上限<small>（漲越多虧越多）</small>' : slopeL < 0 ? '可能很大<small>（跌越多虧越多）</small>' : pts(-lo);
-    // 找兩平點：左端取到指數 0，右端取到最高履約價的兩倍，確保遠離現價的兩平點也找得到
-    const xs = [0, ...ks.filter(k => k > 0), ks[ks.length - 1] * 2], bes = [];
-    for (let i = 0; i < xs.length - 1; i++) {
-      const a = xs[i], b = xs[i + 1], fa = pay(L, a), fb = pay(L, b);
-      if (fa === 0 && !bes.includes(a)) bes.push(a);
-      if (fa * fb < 0) bes.push(a + (b - a) * (-fa) / (fb - fa));
+    const L = legsOf(s), opts = L.filter(l => !l.fut), curved = L.some(l => l.far);
+    const ks = [...new Set(opts.map(l => l.k))].sort((a, b) => a - b);
+    let bes = [], hi, lo, slopeR = 0, slopeL = 0;
+    if (curved) {
+      // 有遠月部位時損益是曲線：逐點取樣找極值與兩平點
+      let prev = null;
+      hi = -Infinity; lo = Infinity;
+      for (let S = idx - 8000; S <= idx + 8000; S++) {
+        const v = pay(L, S);
+        hi = Math.max(hi, v); lo = Math.min(lo, v);
+        if (prev !== null && (prev < 0) !== (v < 0)) bes.push(S - (v / (v - prev)));
+        prev = v;
+      }
+    } else {
+      // 到期損益是分段直線：兩端斜率決定「無上限」，極值一定在履約價上
+      slopeR = L.reduce((a, l) => a + (l.fut || l.call ? l.sg * l.q : 0), 0);   // 往上漲每點的損益變化
+      slopeL = L.reduce((a, l) => a + (l.fut ? -l.sg * l.q : !l.call ? l.sg * l.q : 0), 0);  // 往下跌每點的損益變化
+      const vals = ks.map(k => pay(L, k));
+      hi = Math.max(...vals); lo = Math.min(...vals);
+      // 找兩平點：左端取到指數 0，右端取到最高履約價的兩倍，確保遠離現價的兩平點也找得到
+      const xs = [0, ...ks.filter(k => k > 0), ks[ks.length - 1] * 2];
+      for (let i = 0; i < xs.length - 1; i++) {
+        const a = xs[i], b = xs[i + 1], fa = pay(L, a), fb = pay(L, b);
+        if (fa === 0 && !bes.includes(a)) bes.push(a);
+        if (fa * fb < 0) bes.push(a + (b - a) * (-fa) / (fb - fa));
+      }
     }
-    const net = L.reduce((a, l) => a + l.sg * l.q * l.p, 0);
-    const hasShort = L.some(l => l.sg < 0), limited = !(slopeR < 0 || slopeL < 0);
+    if (curved) { hi = Math.round(hi); lo = Math.round(lo); }   // 估算值取整數點
+    const about = curved ? '約 ' : '', est = '';   // 跨月份價差的估算說明放在分組說明裡，卡片只標「約」
+    const maxP = slopeR > 0 && slopeL > 0 ? '無上限<small>（大漲或大跌越多賺越多）</small>'
+      : slopeR > 0 ? '無上限<small>（漲越多賺越多）</small>' : slopeL > 0 ? '可能很大<small>（跌越多賺越多）</small>'
+      : hi <= 0 ? '無' : about + pts(hi) + est;
+    const maxL = slopeR < 0 && slopeL < 0 ? '無上限<small>（大漲或大跌越多虧越多）</small>'
+      : slopeR < 0 ? '無上限<small>（漲越多虧越多）</small>' : slopeL < 0 ? '可能很大<small>（跌越多虧越多）</small>'
+      : lo >= 0 ? '不會虧損<small>（損益已鎖定，未計手續費與稅）</small>' : about + pts(-lo) + est;
+    const net = opts.reduce((a, l) => a + l.sg * l.q * l.p, 0);
+    const hasShort = opts.some(l => l.sg < 0), hasFut = L.some(l => l.fut), limited = !(slopeR < 0 || slopeL < 0);
     // 保證金（依期交所組合部位規定的簡化說明）
-    const [l1, l2] = L, two = L.length === 2;
+    const [l1, l2] = L, two = L.length === 2 && !hasFut && !curved;
     const vertical = two && l1.call === l2.call && l1.sg !== l2.sg && l1.q === l2.q;
     const shortPair = two && l1.call !== l2.call && l1.sg < 0 && l2.sg < 0;
     const width = vertical ? Math.abs(l1.k - l2.k) * l1.q : 0;
-    const margin = !hasShort ? '不需要<small>（只付權利金）</small>'
+    const margin = hasFut ? `需要<small>（小台期貨保證金${hasShort ? '，加上賣出選擇權的保證金' : ''}，依期交所公告）</small>`
+      : !hasShort ? '不需要<small>（只付權利金）</small>'
+      : curved ? '需要<small>（時間價差用組合單下單可減收，依期交所公告）</small>'
       : vertical && net > 0 ? '不需要<small>（用組合單下單，只付權利金）</small>'
       : vertical ? `需要 ${fmtN(width * pv)} 元<small>（組合單：履約價差 ${fmtN(width)} 點 × ${pv} 元）</small>`
       : shortPair ? '需要<small>（組合單：兩邊保證金較高者 ＋ 另一邊權利金市值 ＋ C 值）</small>'
       : limited ? '需要<small>（拆成價差用組合單下單，可大幅減收）</small>'
       : '需要<small>（賣方部位，依期交所公告計算）</small>';
-    return { L, ks, bes, net, maxP, maxL, margin };
+    return { L, ks, bes: bes.map(b => Math.round(b)), net, maxP, maxL, margin, curved };
   };
 
   const chart = (s, a) => {
     const W = 480, H = 190, P = { l: 12, r: 12, t: 14, b: 26 }, x0 = idx - span, x1 = idx + span;
-    const xsS = Array.from({ length: 201 }, (_, i) => x0 + (x1 - x0) * i / 200).concat(a.ks).sort((p, q) => p - q);
+    const xsS = Array.from({ length: 201 }, (_, i) => x0 + (x1 - x0) * i / 200).concat(a.ks.filter(k => k > x0 && k < x1)).sort((p, q) => p - q);
     const ys = xsS.map(x => pay(a.L, x));
     let yMax = Math.max(...ys, 0), yMin = Math.min(...ys, 0);
-    const pad = (yMax - yMin) * 0.12 || 50; yMax += pad; yMin -= pad;
+    const pad = (yMax - yMin) * 0.12; yMax += pad; yMin -= pad;
+    // 損益幅度很小（如套利只賺幾點）時，縱軸至少留 ±200 點，線才不會被放大成整片
+    if (yMax - yMin < 400) { yMax = Math.max(yMax, 200); yMin = Math.min(yMin, -200); }
     const X = x => P.l + (x - x0) / (x1 - x0) * (W - P.l - P.r), Y = y => P.t + (yMax - y) / (yMax - yMin) * (H - P.t - P.b);
     const y0 = Y(0), line = xsS.map((x, i) => `${X(x).toFixed(1)},${Y(ys[i]).toFixed(1)}`).join(' ');
     const area = `M${X(x0)},${y0} L${line.replace(/ /g, ' L')} L${X(x1)},${y0} Z`, id = 'st' + Math.random().toString(36).slice(2, 7);
-    const ticks = [x0, idx - span / 2, idx, idx + span / 2, x1];
-    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.name)}到期損益圖">` +
+    // 橫軸刻度取整千點（範圍小時取 500 點）
+    const step = span >= 2000 ? 1000 : 500, ticks = [];
+    for (let t = Math.ceil(x0 / step) * step; t <= x1; t += step) ticks.push(t);
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.name)}${a.curved ? '近月到期' : '到期'}損益圖">` +
       `<defs><clipPath id="${id}u"><rect x="0" y="0" width="${W}" height="${y0}"/></clipPath><clipPath id="${id}d"><rect x="0" y="${y0}" width="${W}" height="${H - y0}"/></clipPath></defs>` +
       `<path class="oc-fill-up" d="${area}" clip-path="url(#${id}u)"/><path class="oc-fill-dn" d="${area}" clip-path="url(#${id}d)"/>` +
       a.ks.map(k => `<line class="oc-strike" x1="${X(k)}" x2="${X(k)}" y1="${P.t - 6}" y2="${H - P.b}"/>`).join('') +
       `<line class="oc-zero" x1="${P.l}" x2="${W - P.r}" y1="${y0}" y2="${y0}"/>` +
       `<polyline class="oc-line" points="${line}"/>` +
       a.bes.filter(b => b > x0 && b < x1).map(b => `<circle class="oc-be" cx="${X(b)}" cy="${y0}" r="4.5"/>`).join('') +
-      `<g class="oc-tick">${ticks.map((t, i) => `<text x="${X(t)}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === ticks.length - 1 ? 'end' : 'middle'}">${t.toLocaleString('zh-TW')}</text>`).join('')}</g></svg>`;
+      `<g class="oc-tick">${ticks.map(t => `<text x="${X(t)}" y="${H - 6}" text-anchor="${t === x0 ? 'start' : t === x1 ? 'end' : 'middle'}">${t.toLocaleString('zh-TW')}</text>`).join('')}</g></svg>`;
   };
 
-  // 所有損益圖共用同一個橫軸範圍：涵蓋每個策略的履約價與兩平點，再往外留 400 點，以 500 點為單位
-  const all = D.optStrategies.map(analyse);
-  const far = Math.max(...all.flatMap(a => [...a.ks, ...a.bes].map(x => Math.abs(x - idx))));
-  const span = Math.max(1000, Math.ceil((far + 400) / 500) * 500);
-  list.innerHTML = D.optStrategies.map((s, i) => {
-    const a = all[i], v = vcls[s.view] || 'flat';
-    const legs = a.L.map(l => `<li><b class="${l.sg > 0 ? 'buy' : 'sell'}">${l.sg > 0 ? '買進' : '賣出'}</b><span class="mono">${l.k.toLocaleString('zh-TW')}</span> ${l.call ? 'Call' : 'Put'}` +
-      `${l.q > 1 ? ` × ${l.q} 口` : ''}<em class="mono">權利金 ${num(l.p)}</em></li>`).join('');
-    const cost = a.net >= 0 ? `付出 ${pts(a.net)}` : `收取 ${pts(-a.net)}`;
-    const be = a.bes.length ? a.bes.map(b => `<span class="mono">${num(b)}</span>`).join('、') : '—';
-    return `<article class="card st-card" data-view="${esc(s.view)}">` +
-      `<header class="st-h"><span class="st-view ${v}">${esc(s.view)}</span><h3>${esc(s.name)} <small>${esc(s.en)}</small></h3></header>` +
+  const legRow = (l, showMo) => {
+    const side = `<b class="${l.sg > 0 ? 'buy' : 'sell'}">${l.sg > 0 ? '買進' : '賣出'}</b>`;
+    if (l.fut) return `<li>${side}<span class="mono">${l.k.toLocaleString('zh-TW')}</span> 小台期貨<em>期貨成交點數</em></li>`;
+    const mo = showMo ? `<span class="st-mo${l.far ? ' far' : ''}">${l.far ? '遠月' : '近月'}</span>` : '';
+    return `<li>${side}${mo}<span class="mono">${l.k.toLocaleString('zh-TW')}</span> ${l.call ? 'Call' : 'Put'}` +
+      `${l.q > 1 ? ` × ${l.q} 口` : ''}<em class="mono">權利金 ${num(l.p)}</em></li>`;
+  };
+
+  const card = (s, a) => {
+    const v = vcls[s.view] || 'flat';
+    const cost = a.net > 0 ? `付出 ${pts(a.net)}` : a.net < 0 ? `收取 ${pts(-a.net)}` : '0 點<small>（一收一付，剛好相抵）</small>';
+    const be = a.bes.length ? a.bes.map(b => `<span class="mono">${num(b)}</span>`).join('、') + (a.curved ? '<small>（約）</small>' : '')
+      : a.maxL.startsWith('不會') ? '無<small>（損益固定）</small>' : '—';
+    return `<article class="card st-card" id="${slug(s)}" data-view="${esc(s.view)}">` +
+      `<header class="st-h"><span class="st-view ${v}">${esc(s.view)}</span>${s.level ? `<span class="st-lv">${esc(s.level)}</span>` : ''}<h3>${esc(s.name)} <small>${esc(s.en)}</small></h3></header>` +
       `<p class="st-sum">${rich(s.summary)}</p>` +
       `<div class="st-chart">${chart(s, a)}</div>` +
-      `<ul class="st-legs">${legs}</ul>` +
-      `<dl class="st-stats"><div><dt>${a.net >= 0 ? '建立成本' : '先收權利金'}</dt><dd>${cost}</dd></div>` +
+      `<ul class="st-legs">${a.L.map(l => legRow(l, a.curved)).join('')}</ul>` +
+      `<dl class="st-stats"><div><dt>${a.net > 0 ? '建立成本' : a.net < 0 ? '先收權利金' : '權利金淨額'}</dt><dd>${cost}</dd></div>` +
       `<div><dt>損益兩平點</dt><dd>${be}</dd></div>` +
       `<div><dt>最大獲利</dt><dd class="pos">${a.maxP}</dd></div><div><dt>最大虧損</dt><dd class="neg">${a.maxL}</dd></div>` +
       `<div class="span2"><dt>保證金</dt><dd>${a.margin}</dd></div></dl>` +
       `<p class="st-when"><b>適用時機</b>${rich(s.when)}</p><p class="st-watch"><b>注意</b>${rich(s.watch)}</p></article>`;
-  }).join('');
+  };
+
+  // 所有損益圖共用同一個橫軸範圍：涵蓋每個策略的履約價與兩平點，再往外留 400 點，以 500 點為單位
+  const all = new Map(items.map(s => [s, analyse(s)]));
+  const far = Math.max(...[...all.values()].flatMap(a => [...a.ks, ...a.bes].map(x => Math.abs(x - idx))));
+  const span = Math.max(1000, Math.ceil((far + 400) / 500) * 500);
+
+  list.innerHTML = groups.map((g, gi) =>
+    `<section class="st-group" id="st-g${gi + 1}"><div class="st-gh"><h2><span class="st-gn">${gi + 1}</span>${esc(g.name)}<small>${g.items.length} 種</small></h2><p>${rich(g.desc)}</p></div>` +
+    `<div class="st-grid">${g.items.map(s => card(s, all.get(s))).join('')}</div></section>`).join('');
+
+  // 速查表：依行情看法列出所有策略，點名稱跳到該張卡片
+  const index = document.getElementById('st-index');
+  if (index) index.innerHTML = views.filter(v => items.some(s => s.view === v)).map(v =>
+    `<div class="st-ix-col"><span class="st-view ${vcls[v]}">${v}</span><ul>` +
+    items.filter(s => s.view === v).map(s => `<li><a href="#${slug(s)}">${esc(s.name)}</a></li>`).join('') + `</ul></div>`).join('');
 
   const note = document.getElementById('st-note');
   if (note) note.textContent = cfg.note || '';
   const bar = document.getElementById('st-filter');
-  const count = v => D.optStrategies.filter(s => !v || s.view === v).length;
-  bar.innerHTML = ['', ...views].map(v => `<button type="button" class="tab${v ? '' : ' active'}" data-view="${v}" aria-pressed="${!v}">${v || '全部'} <small>${count(v)}</small></button>`).join('');
-  bar.addEventListener('click', e => {
-    const b = e.target.closest('button'); if (!b) return;
-    const v = b.dataset.view;
-    bar.querySelectorAll('button').forEach(x => { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', x === b); });
+  const count = v => items.filter(s => !v || s.view === v).length;
+  const setView = v => {
+    bar.querySelectorAll('button').forEach(x => { const on = x.dataset.view === v; x.classList.toggle('active', on); x.setAttribute('aria-pressed', on); });
     list.querySelectorAll('.st-card').forEach(c => { c.hidden = !!v && c.dataset.view !== v; });
+    list.querySelectorAll('.st-group').forEach(g => { g.hidden = !g.querySelector('.st-card:not([hidden])'); });
+  };
+  bar.innerHTML = ['', ...views].map(v => `<button type="button" class="tab${v ? '' : ' active'}" data-view="${v}" aria-pressed="${!v}">${v || '全部'} <small>${count(v)}</small></button>`).join('');
+  bar.addEventListener('click', e => { const b = e.target.closest('button'); if (b) setView(b.dataset.view); });
+  // 從速查表點到被篩選隱藏的卡片時，先切回「全部」
+  index?.addEventListener('click', e => {
+    const a = e.target.closest('a'); if (!a) return;
+    const c = document.getElementById(a.hash.slice(1));
+    if (c?.hidden) setView('');
+    c?.classList.remove('st-flash'); void c?.offsetWidth; c?.classList.add('st-flash');
   });
 })();
 

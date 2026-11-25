@@ -562,3 +562,27 @@ button.ct-btn { font-family: inherit; cursor: pointer; }
 @media (max-width: 860px) { .st-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 480px) { .st-bar .tabs { width: 100%; } .st-filter .tab { padding: 8px 12px; } .st-stats dd { font-size: 14px; } }
 .st-key { background: color-mix(in srgb, var(--gold) 30%, transparent); color: var(--ink); font-weight: 700; padding: 1px 4px; border-radius: 4px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+/* 選擇權策略：分組標題、速查表、難度與月份標籤 */
+.st-ixbox { margin-bottom: 36px; }
+.card p.st-ix-h { margin: 0 0 14px; font-size: 14.5px; color: var(--muted); }
+.st-ix-h b { color: var(--ink); margin-right: 10px; font-size: 16px; }
+.st-index { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px 20px; }
+.st-ix-col ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; }
+.st-ix-col a { color: var(--ink); text-decoration: none; font-size: 15px; border-bottom: 1px dashed var(--line); }
+.st-ix-col a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.st-group { margin-bottom: 44px; }
+.st-group[hidden] { display: none; }
+.st-gh { margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.st-gh h2 { margin: 0 0 6px; font-size: 24px; color: var(--ink); display: flex; align-items: center; gap: 10px; }
+.st-gh h2 small { font-size: 13px; font-weight: 500; color: var(--muted); font-family: "Noto Sans TC", sans-serif; }
+.st-gn { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: var(--surface); font: 600 15px "IBM Plex Mono", monospace; }
+.st-gh p { margin: 0; color: var(--muted); font-size: 15px; max-width: 760px; }
+.st-view.arb { background: var(--muted); }
+.st-lv { font-size: 12px; padding: 2px 9px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.st-mo { font-size: 12px; padding: 1px 7px; border-radius: 6px; background: var(--bg-alt); color: var(--muted); border: 1px solid var(--line); }
+.st-mo.far { color: var(--accent); border-color: var(--accent); }
+.st-card { scroll-margin-top: 88px; }
+.st-card.st-flash { animation: st-flash 1.6s ease-out; }
+@keyframes st-flash { 0%, 30% { box-shadow: 0 0 0 3px var(--gold); } 100% { box-shadow: 0 0 0 3px transparent; } }
+@media (max-width: 980px) { .st-index { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .st-index { grid-template-columns: repeat(2, minmax(0, 1fr)); } .st-gh h2 { font-size: 21px; } }
