@@ -837,7 +837,22 @@ if ($('g-search')) {
     list.querySelectorAll('.st-group').forEach(g => { g.hidden = !g.querySelector('.st-card:not([hidden])'); });
   };
   bar.innerHTML = ['', ...views].map(v => `<button type="button" class="tab${v ? '' : ' active'}" data-view="${v}" aria-pressed="${!v}">${v || '全部'} <small>${count(v)}</small></button>`).join('');
-  bar.addEventListener('click', e => { const b = e.target.closest('button'); if (b) setView(b.dataset.view); });
+  // 點篩選按鈕：篩選後捲動到第一個符合的分類（扣掉上方黏住的選單列與篩選列高度）
+  // 篩選列黏在選單列正下方（選單列高度在手機上可能不同）
+  const stick = () => { bar.closest('.st-bar').style.top = (document.querySelector('.topbar')?.offsetHeight || 0) + 'px'; };
+  stick(); addEventListener('resize', stick);
+  const jumpTo = el => {
+    const top = (document.querySelector('.topbar')?.offsetHeight || 0) + bar.closest('.st-bar').offsetHeight + 12;
+    window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - top, behavior: 'smooth' });
+  };
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    setView(b.dataset.view);
+    // 手機上篩選列可左右滑動：把按下的按鈕捲到中間
+    if (bar.scrollWidth > bar.clientWidth) bar.scrollTo({ left: b.offsetLeft - (bar.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' });
+    const first = list.querySelector('.st-group:not([hidden])');
+    if (first) jumpTo(first);
+  });
   // 從速查表點到被篩選隱藏的卡片時，先切回「全部」
   index?.addEventListener('click', e => {
     const a = e.target.closest('a'); if (!a) return;

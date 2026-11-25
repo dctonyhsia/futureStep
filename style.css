@@ -605,3 +605,12 @@ button.ct-btn { font-family: inherit; cursor: pointer; }
 .st-hold.e { color: var(--accent); border-color: var(--accent); }
 .st-hold.n { color: var(--muted); border-color: var(--muted); }
 .st-lv.st-lv-settle { color: var(--gold); border-color: var(--gold); font-weight: 700; }
+/* 選擇權策略：篩選列黏在選單下方，捲到哪裡都能切換 */
+.st-bar { position: sticky; top: 65px; z-index: 5; background: var(--bg); padding: 10px 0; margin: 0 0 16px; box-shadow: 0 8px 12px -12px rgba(0, 0, 0, .25); }
+.st-note { margin: 0 0 8px; }
+@media (max-width: 560px) {
+  .st-bar { padding: 8px 0; }
+  .st-bar .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .st-bar .tabs::-webkit-scrollbar { display: none; }
+  .st-filter .tab { flex: none; white-space: nowrap; padding: 7px 10px; font-size: 13.5px; }
+}
