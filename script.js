@@ -744,8 +744,16 @@ if ($('g-search')) {
     const vertical = two && l1.call === l2.call && l1.sg !== l2.sg && l1.q === l2.q;
     const shortPair = two && l1.call !== l2.call && l1.sg < 0 && l2.sg < 0;
     const width = vertical ? Math.abs(l1.k - l2.k) * l1.q : 0;
+    // 四隻腳剛好拆成「Call 一組、Put 一組」付權利金的價差（如反向鐵兀鷹、盒式價差）：組合單免保證金
+    const debitPair = g => {
+      if (g.length !== 2 || g[0].sg === g[1].sg || g[0].q !== g[1].q) return false;
+      const b = g.find(l => l.sg > 0), sl = g.find(l => l.sg < 0);
+      return b.call ? b.k < sl.k : b.k > sl.k;
+    };
+    const twoDebit = !hasFut && !curved && opts.length === 4 && debitPair(opts.filter(l => l.call)) && debitPair(opts.filter(l => !l.call));
     const margin = hasFut ? `需要<small>（小台期貨保證金${hasShort ? '，加上賣出選擇權的保證金' : ''}，依期交所公告）</small>`
       : !hasShort ? '不需要<small>（只付權利金）</small>'
+      : twoDebit ? '不需要<small>（拆成兩組付權利金的價差，用組合單下單）</small>'
       : curved ? '需要<small>（時間價差用組合單下單可減收，依期交所公告）</small>'
       : vertical && net > 0 ? '不需要<small>（用組合單下單，只付權利金）</small>'
       : vertical ? `需要 ${fmtN(width * pv)} 元<small>（組合單：履約價差 ${fmtN(width)} 點 × ${pv} 元）</small>`
