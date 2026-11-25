@@ -674,6 +674,31 @@ if ($('g-search')) {
   render();
 })();
 
+// 選擇權共用計算（策略頁與數據分析頁的策略篩選器共用）
+const OptMath = (() => {
+  const erf = x => { const t = 1 / (1 + 0.3275911 * Math.abs(x)), y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); return x >= 0 ? y : -y; };
+  const cnd = x => 0.5 * (1 + erf(x / Math.SQRT2));
+  // Black-76 理論價（F 期貨或指數、K 履約價、T 年、iv 年化波動率）
+  const black = (F, K, T, iv, call) => {
+    if (F <= 0) return call ? 0 : K;
+    if (T <= 0 || iv <= 0) return Math.max(call ? F - K : K - F, 0);
+    const sd = iv * Math.sqrt(T), d1 = (Math.log(F / K) + sd * sd / 2) / sd, c = F * cnd(d1) - K * cnd(d1 - sd);
+    return call ? c : c - (F - K);
+  };
+  // 由權利金反推隱含波動率（二分法）；價格低於內含價值時回傳 NaN
+  const impliedVol = (price, F, K, T, call) => {
+    const intrinsic = Math.max(call ? F - K : K - F, 0);
+    if (!(price > intrinsic) || T <= 0) return NaN;
+    let lo = 0.001, hi = 3;
+    for (let i = 0; i < 80; i++) { const mid = (lo + hi) / 2; if (black(F, K, T, mid, call) > price) hi = mid; else lo = mid; }
+    return (lo + hi) / 2;
+  };
+  // data.js 的 legs → { sg 買+1/賣-1, fut 期貨, call, k 履約價, p 權利金, q 口數, far 遠月 }
+  const legsOf = legs => legs.map(([side, type, k, p, q, mo]) => ({
+    sg: side === '買' ? 1 : -1, fut: type === '期貨', call: /call/i.test(type), k, p: p || 0, q: q || 1, far: mo === '遠月' }));
+  return { erf, cnd, black, impliedVol, legsOf };
+})();
+
 // options-strategy.html：選擇權策略（由 data.js 的 legs 自動算出損益、兩平點並畫到期損益圖）
 (function () {
   const list = document.getElementById('st-list');
@@ -684,17 +709,9 @@ if ($('g-search')) {
   const num = n => (Math.round(n * 100) / 100).toLocaleString('zh-TW');
   const views = ['看漲', '看跌', '盤整', '大波動', '套利'], vcls = { 看漲: 'up', 看跌: 'dn', 盤整: 'flat', 大波動: 'vol', 套利: 'arb' };
   const slug = s => 'st-' + s.en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const legsOf = s => s.legs.map(([side, type, k, p, q, mo]) => ({
-    sg: side === '買' ? 1 : -1, fut: type === '期貨', call: /call/i.test(type), k, p: p || 0, q: q || 1, far: mo === '遠月' }));
-
+  const legsOf = s => OptMath.legsOf(s.legs);
   // 遠月部位：近月到期當天用 Black-76 估算剩餘價值
-  const erf = x => { const t = 1 / (1 + 0.3275911 * Math.abs(x)), y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); return x >= 0 ? y : -y; };
-  const cnd = x => 0.5 * (1 + erf(x / Math.SQRT2));
-  const black = (F, K, call) => {
-    if (F <= 0) return call ? 0 : K;
-    const sd = iv * Math.sqrt(farT), d1 = (Math.log(F / K) + sd * sd / 2) / sd, c = F * cnd(d1) - K * cnd(d1 - sd);
-    return call ? c : c - (F - K);
-  };
+  const black = (F, K, call) => OptMath.black(F, K, farT, iv, call);
   const legPay = (l, S) => l.fut ? S - l.k
     : (l.far ? black(S, l.k, l.call) : Math.max(l.call ? S - l.k : l.k - S, 0)) - l.p;
   const pay = (L, S) => L.reduce((a, l) => a + l.sg * l.q * legPay(l, S), 0);
@@ -868,6 +885,255 @@ if ($('g-search')) {
     if (c?.hidden) setView('');
     c?.classList.remove('st-flash'); void c?.offsetWidth; c?.classList.add('st-flash');
   });
+})();
+
+// analysis.html：選擇權策略篩選器（報價 → 判讀 IV → 依看法篩選、排名策略庫中的組合）
+(function () {
+  const form = document.getElementById('sc-form');
+  if (!form || !D.optStrategyGroups) return;
+  const C0 = D.optScreener || {}, intro = D.optStrategyIntro || {}, PV = intro.pointValue || 50;
+  const baseIdx = intro.index || 40000, baseStep = intro.step || 400;
+  const OFFS = [-2, -1, 0, 1, 2];
+  const el = id => document.getElementById(id);
+  const val = id => parseFloat(el(id).value);
+  const nf = n => Math.round(n).toLocaleString('zh-TW');
+  const sgn = n => (n > 0 ? '+' : n < 0 ? '−' : '') + nf(Math.abs(n));
+  const pct = n => (Math.round(n * 1000) / 10).toFixed(1) + '%';
+  const slug = s => 'st-' + s.en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const vcls = { 看漲: 'up', 看跌: 'dn', 盤整: 'flat', 大波動: 'vol' };
+
+  // 預設值與 5 檔報價表
+  [['sc-spot', C0.spot], ['sc-fut', C0.fut], ['sc-days', C0.days], ['sc-step', C0.step], ['sc-refiv', C0.refIv],
+   ['sc-a', C0.A], ['sc-b', C0.B], ['sc-cval', C0.C], ['sc-budget', C0.budget]].forEach(([id, v]) => { if (v != null) el(id).value = v; });
+  el('sc-chain').innerHTML = OFFS.map((o, i) => `<div class="sc-chain-r${o === 0 ? ' atm' : ''}">` +
+    `<span class="sc-k"><b class="mono" id="sc-k${i}"></b><small>${o === 0 ? '價平' : o < 0 ? `低 ${-o} 檔` : `高 ${o} 檔`}</small></span>` +
+    `<input id="sc-c${i}" type="number" min="0" step="any" aria-label="Call 權利金" value="${C0.calls?.[i] ?? ''}">` +
+    `<input id="sc-p${i}" type="number" min="0" step="any" aria-label="Put 權利金" value="${C0.puts?.[i] ?? ''}"></div>`).join('');
+
+  // 可比較的策略：排除套利、搭配期貨、跨月份（需要遠月報價）；履約價換算成「離價平幾檔」
+  const templates = D.optStrategyGroups.flatMap(g => g.items)
+    .filter(s => vcls[s.view] && !s.legs.some(l => l[1] === '期貨' || l[5] === '遠月'))
+    .map(s => ({ s, legs: OptMath.legsOf(s.legs).map(l => ({ ...l, o: Math.max(-2, Math.min(2, Math.round((l.k - baseIdx) / baseStep))) })) }));
+
+  // 每個策略的不同履約價組合：整組平移；垂直價差另外比較不同寬度
+  const variants = t => {
+    const out = [], seen = new Set(), L = t.legs;
+    const add = offs => {
+      if (offs.some(o => o < -2 || o > 2)) return;
+      const legs = L.map((l, i) => ({ ...l, o: offs[i] }));
+      if (legs.some((a, i) => legs.some((b, j) => j > i && a.call === b.call && a.o === b.o && a.sg !== b.sg))) return;
+      const key = legs.map(l => `${l.sg}${l.call ? 'C' : 'P'}${l.o}x${l.q}`).sort().join('|');
+      if (!seen.has(key)) { seen.add(key); out.push(legs); }
+    };
+    // 跨式、勒式這類「Call 和 Put 同買或同賣」的組合不平移，平移到深價內會變成方向性部位，名稱就不符了
+    const sameSideMix = L.some(l => l.call) && L.some(l => !l.call) && L.every(l => l.sg === L[0].sg);
+    for (let sh = sameSideMix ? 0 : -4; sh <= (sameSideMix ? 0 : 4); sh++) add(L.map(l => l.o + sh));
+    if (L.length === 2 && L[0].call === L[1].call && L[0].sg !== L[1].sg && L[0].q === L[1].q) {
+      const lowFirst = L[0].o < L[1].o;
+      for (let a = -2; a <= 2; a++) for (let b = a + 1; b <= 2; b++) add(lowFirst ? [a, b] : [b, a]);
+    }
+    return out;
+  };
+  const pool = templates.flatMap(t => variants(t).map(legs => ({ t, legs })));
+
+  // 保證金估算：同種選擇權先配成價差（付權利金的價差 0、收權利金的價差 = 履約價差 × 每點），剩下的賣方部位用單一公式，Call、Put 各一口時用勒式規則
+  const marginOf = (L, M) => {
+    const single = l => l.p * PV + Math.max(M.A - Math.max(l.call ? l.k - M.spot : M.spot - l.k, 0) * PV, M.B);
+    let total = 0; const naked = { c: [], p: [] };
+    [true, false].forEach(call => {
+      const longs = [], shorts = [];
+      L.filter(l => l.call === call).forEach(l => { for (let i = 0; i < l.q; i++) (l.sg > 0 ? longs : shorts).push(l); });
+      shorts.sort((a, b) => a.k - b.k).forEach(s => {
+        if (!longs.length) { naked[call ? 'c' : 'p'].push(s); return; }
+        let bi = 0; longs.forEach((b, i) => { if (Math.abs(b.k - s.k) < Math.abs(longs[bi].k - s.k)) bi = i; });
+        const b = longs.splice(bi, 1)[0];
+        if (call ? s.k < b.k : s.k > b.k) total += Math.abs(b.k - s.k) * PV;
+      });
+    });
+    while (naked.c.length && naked.p.length) {
+      const c = naked.c.pop(), p = naked.p.pop(), mc = single(c), mp = single(p);
+      total += Math.max(mc, mp) + (mc >= mp ? p.p : c.p) * PV + M.C;
+    }
+    naked.c.concat(naked.p).forEach(l => { total += single(l); });
+    return total;
+  };
+
+  // 評估單一組合
+  const evaluate = (t, legsO, M) => {
+    const L = legsO.map(l => ({ ...l, k: M.atm + l.o * M.step, p: (l.call ? M.calls : M.puts)[l.o + 2] }));
+    const pay = S => L.reduce((a, l) => a + l.sg * l.q * (Math.max(l.call ? S - l.k : l.k - S, 0) - l.p), 0);
+    const ks = [...new Set(L.map(l => l.k))].sort((a, b) => a - b);
+    const slopeR = L.reduce((a, l) => a + (l.call ? l.sg * l.q : 0), 0), slopeL = L.reduce((a, l) => a + (l.call ? 0 : l.sg * l.q), 0);
+    const vals = ks.map(pay), hi = Math.max(...vals), lo = Math.min(...vals);
+    const net = L.reduce((a, l) => a + l.sg * l.q * l.p, 0);
+    const xs = [0, ...ks, ks[ks.length - 1] * 2], bes = [];
+    for (let i = 0; i < xs.length - 1; i++) {
+      const a = xs[i], b = xs[i + 1], fa = pay(a), fb = pay(b);
+      if (fa === 0 && !bes.includes(a)) bes.push(a);
+      if (fa * fb < 0) bes.push(a + (b - a) * (-fa) / (fb - fa));
+    }
+    const unlimited = slopeR < 0 || slopeL < 0, bigUp = slopeR > 0 || slopeL > 0;
+    // 情境：看對時的損益，與看錯方向／價格不動時比較
+    const F = M.fut, sc = M.scen;
+    let gain, other;
+    if (sc.kind === 'dir') { gain = pay(sc.c); other = pay(2 * F - sc.c); }
+    else if (sc.kind === 'flat') { gain = pay(sc.c); other = Math.max(pay(sc.c + M.em), pay(sc.c - M.em)); }
+    else { gain = Math.min(pay(F + sc.move), pay(F - sc.move)); other = pay(F); }
+    // 品質門檻：看對要明顯比看錯好（差距 ≥ 損益區間的 20%），看對時的獲利 ≥ 最大虧損的 20%
+    const maxLoss = unlimited ? Infinity : -lo, range = bigUp || unlimited ? Infinity : hi - lo;
+    const scale = Number.isFinite(range) ? range : Math.max(gain, Number.isFinite(maxLoss) ? maxLoss : gain);
+    if (!(gain > 0 && gain - other >= 0.2 * scale && (!Number.isFinite(maxLoss) || gain >= 0.2 * maxLoss))) return null;
+    // 大漲／大跌：還要比「價格不動」時明顯賺得多，而且漲（跌）過頭也不能虧損無上限
+    if (sc.big && (gain - pay(F) < 0.2 * scale || (sc.c > F ? slopeR < 0 : slopeL < 0))) return null;
+    let pop = 0;
+    M.grid.forEach(([S, w]) => { if (pay(S) > 0) pop += w; });
+    const margin = marginOf(L, M), capital = margin + Math.max(net, 0) * PV;
+    return { t, L, pay, ks, net, bes: bes.map(Math.round), hi, lo, unlimited, bigUp, gain, pop, margin, capital };
+  };
+
+  const compute = () => {
+    const spot = val('sc-spot'), fut = val('sc-fut') || spot, days = val('sc-days'), step = val('sc-step');
+    const out = { read: el('sc-read'), note: el('sc-read-note'), count: el('sc-count'), top: el('sc-top'), more: el('sc-more') };
+    const fail = msg => { out.read.innerHTML = ''; out.note.textContent = msg; out.count.textContent = ''; out.top.innerHTML = ''; out.more.innerHTML = ''; el('sc-chart-card').hidden = true; };
+    if (!(spot > 0 && days > 0 && step > 0)) return fail('請填入台指現價、距到期天數與履約價間距。');
+    const atm = Math.round(spot / step) * step, T = days / 365;
+    OFFS.forEach((o, i) => { el('sc-k' + i).textContent = nf(atm + o * step); });
+    const raw = { c: OFFS.map((_, i) => val('sc-c' + i)), p: OFFS.map((_, i) => val('sc-p' + i)) };
+    const ivC = OptMath.impliedVol(raw.c[2], fut, atm, T, true), ivP = OptMath.impliedVol(raw.p[2], fut, atm, T, false);
+    const ivs = [ivC, ivP].filter(v => v > 0), iv = ivs.length ? ivs.reduce((a, b) => a + b) / ivs.length : NaN;
+    if (!(iv > 0)) return fail('價平的 Call 或 Put 權利金無法換算出隱含波動率，請確認報價（權利金要大於內含價值）。');
+    // 空白格用價平 IV 估算，顯示在格子裡當提示
+    const est = (o, call) => OptMath.black(fut, atm + o * step, T, iv, call);
+    const calls = raw.c.map((v, i) => (v > 0 ? v : est(OFFS[i], true))), puts = raw.p.map((v, i) => (v > 0 ? v : est(OFFS[i], false)));
+    OFFS.forEach((o, i) => { el('sc-c' + i).placeholder = '估 ' + nf(calls[i]); el('sc-p' + i).placeholder = '估 ' + nf(puts[i]); });
+
+    // 市場判讀
+    const refIv = (val('sc-refiv') || 18) / 100, ratio = iv / refIv;
+    const level = ratio > 1.15 ? 'high' : ratio < 0.85 ? 'low' : 'mid';
+    const levelTxt = { high: '偏高', low: '偏低', mid: '普通' }[level];
+    const em = calls[2] + puts[2];
+    const skP = OptMath.impliedVol(puts[1], fut, atm - step, T, false), skC = OptMath.impliedVol(calls[3], fut, atm + step, T, true);
+    const skew = (skP - skC) * 100, skewTxt = !(skew === skew) ? '—' : skew > 1.5 ? 'Put 偏貴' : skew < -1.5 ? 'Call 偏貴' : '平';
+    // 套利檢查：合成價格 vs 期貨、盒式價差 vs 履約價差（只用有填的報價，差距大於 5 點才提示）
+    let arb = null;
+    OFFS.forEach((o, i) => {
+      if (!(raw.c[i] > 0 && raw.p[i] > 0)) return;
+      const d = fut - (atm + o * step + raw.c[i] - raw.p[i]);
+      if (Math.abs(d) > 5 && (!arb || Math.abs(d) > arb.v)) arb = { v: Math.abs(d), txt: d < 0 ? `期貨比 ${nf(atm + o * step)} 合成價格便宜 ${nf(-d)} 點，可留意「轉換」` : `期貨比 ${nf(atm + o * step)} 合成價格貴 ${nf(d)} 點，可留意「逆轉換」` };
+    });
+    for (let i = 0; i < 5; i++) for (let j = i + 1; j < 5; j++) {
+      if (![raw.c[i], raw.c[j], raw.p[i], raw.p[j]].every(v => v > 0)) continue;
+      const edge = (j - i) * step - (raw.c[i] - raw.c[j] + raw.p[j] - raw.p[i]);
+      if (Math.abs(edge) > 5 && (!arb || Math.abs(edge) > arb.v)) arb = { v: Math.abs(edge), txt: `${nf(atm + OFFS[i] * step)}／${nf(atm + OFFS[j] * step)} ${edge > 0 ? '買進' : '賣出'}盒式價差可鎖住約 ${nf(Math.abs(edge))} 點` };
+    }
+    out.read.innerHTML =
+      `<div><span>價平隱含波動率</span><b>${pct(iv)}</b><small>${levelTxt}（參考 ${pct(refIv)}）</small></div>` +
+      `<div><span>預期波動</span><b>±${nf(em)}</b><small>約 ${pct(em / spot)}（價平 Call ＋ Put）</small></div>` +
+      `<div><span>波動率偏斜</span><b>${skewTxt}</b><small>${skew === skew ? `價外 Put ${pct(skP)}／Call ${pct(skC)}` : '報價不足'}</small></div>` +
+      `<div><span>套利檢查</span><b>${arb ? '有落差' : '無'}</b><small>${arb ? esc(arb.txt) : '合成價格與期貨、盒式價差都沒有明顯落差'}</small></div>`;
+    out.note.textContent = { high: '權利金偏高：先收權利金的策略（賣方、收權利金的價差）較有利。', low: '權利金偏低：付權利金的策略（買方、付權利金的價差）較划算。', mid: '權利金普通：買方與賣方策略都可以考慮，重點在方向與幅度判斷。' }[level] + (arb ? '扣掉手續費與期交稅前，請先確認套利空間是否足夠。' : '');
+
+    // 情境
+    const view = form.querySelector('[name="sc-view"]:checked').value, target = val('sc-target');
+    const mult = { bigup: 1, up: 0.4, flat: 0, dn: -0.4, bigdn: -1 };
+    let scen;
+    // 大波動：你預期的波動要比市場預期大，預設取 1.3 倍預期波動
+    if (view === 'vol') scen = { kind: 'vol', move: target > 0 ? Math.abs(target - fut) || 1.3 * em : 1.3 * em };
+    else if (view === 'flat') scen = { kind: 'flat', c: target > 0 ? target : fut };
+    else scen = { kind: 'dir', c: target > 0 ? target : fut + mult[view] * em, big: view === 'bigup' || view === 'bigdn' };
+    // 到期價格分布（對數常態，用價平 IV）
+    const sd = iv * Math.sqrt(T), grid = [];
+    let wsum = 0;
+    for (let i = 0; i <= 600; i++) { const z = -5 + 10 * i / 600, w = Math.exp(-z * z / 2); grid.push([fut * Math.exp(z * sd - sd * sd / 2), w]); wsum += w; }
+    grid.forEach(g => { g[1] /= wsum; });
+    const M = { spot, fut, atm, step, T, calls, puts, em, scen, grid, A: val('sc-a') || 0, B: val('sc-b') || 0, C: val('sc-cval') || 0 };
+
+    const risk = form.querySelector('[name="sc-risk"]:checked').value, rank = form.querySelector('[name="sc-rank"]:checked').value;
+    const budget = val('sc-budget');
+    const fit = r => (level === 'high' ? (r.net < 0 ? 1 : -1) : level === 'low' ? (r.net > 0 ? 1 : -1) : 0);
+    const score = r => { const f = 1 + 0.08 * fit(r); return rank === 'pop' ? r.pop * f : rank === 'ret' ? r.gain * PV / Math.max(r.capital, 1) * f : -r.capital / f; };
+    // 策略本身的分類要和看法相容，避免平移履約價後性質改變、名稱卻不符
+    const allow = { bigup: ['看漲', '大波動'], up: ['看漲', '盤整'], flat: ['盤整', '看漲', '看跌'], dn: ['看跌', '盤整'], bigdn: ['看跌', '大波動'], vol: ['大波動'] }[view];
+    const fitView = pool.filter(c => allow.includes(c.t.s.view)).map(c => evaluate(c.t, c.legs, M)).filter(Boolean);
+    const rs = fitView.filter(r => !(risk === 'limited' && r.unlimited) && !(budget > 0 && r.capital > budget));
+    const best = new Map();
+    rs.forEach(r => { const k = r.t.s.name, s = score(r); if (!best.has(k) || s > best.get(k).s) best.set(k, { r, s }); });
+    // 排序（同分時所需資金少的優先）；到期損益完全相同的組合（例如買賣權平價下的多頭買權價差與多頭賣權價差）只留一個
+    const probe = Array.from({ length: 13 }, (_, i) => fut + (i - 6) * step);
+    const list = [];
+    [...best.values()].sort((a, b) => b.s - a.s || a.r.capital - b.r.capital).forEach(({ r }) => {
+      if (!list.some(q => probe.every(S => Math.abs(q.pay(S) - r.pay(S)) <= 3))) list.push(r);   // 容許跳動點進位造成的 1～3 點差
+    });
+    const dropped = new Set(fitView.map(r => r.t.s.name).filter(n => !best.has(n))).size;
+    const rankTxt = { pop: '勝率', ret: '報酬（看對時獲利 ÷ 所需資金）', cost: '所需資金由低到高' }[rank];
+    out.count.textContent = (list.length ? `共比較 ${pool.length} 種組合，符合條件的有 ${list.length} 種策略，依${rankTxt}排序` : '') +
+      (dropped ? `${list.length ? '；' : ''}另有 ${dropped} 種方向相符，但超出資金上限或風險限制` : '');
+    if (!list.length) {
+      out.top.innerHTML = '<div class="card sc-empty"><b>沒有符合條件的策略</b><p>可以試著放寬資金上限、把風險限制改成「不限」，或調整目標價。</p></div>';
+      out.more.innerHTML = ''; el('sc-chart-card').hidden = true; return;
+    }
+
+    // 前三名卡片
+    const legTxt = r => r.L.map(l => `<li><b class="${l.sg > 0 ? 'buy' : 'sell'}">${l.sg > 0 ? '買進' : '賣出'}</b><span class="mono">${nf(l.k)}</span> ${l.call ? 'Call' : 'Put'}${l.q > 1 ? ` × ${l.q} 口` : ''}<em class="mono">權利金 ${nf(l.p)}</em></li>`).join('');
+    const scenTxt = r => scen.kind === 'dir' ? `看對時（到期 ${nf(scen.c)}）賺 ${nf(r.gain)} 點；看錯方向（${nf(2 * fut - scen.c)}）${r.pay(2 * fut - scen.c) >= 0 ? '賺' : '虧'} ${nf(Math.abs(r.pay(2 * fut - scen.c)))} 點`
+      : scen.kind === 'flat' ? `到期停在 ${nf(scen.c)} 時賺 ${nf(r.gain)} 點` : `到期漲跌 ${nf(scen.move)} 點時，至少賺 ${nf(r.gain)} 點`;
+    const why = r => [
+      scenTxt(r),
+      `到期勝率約 ${pct(r.pop)}，損益兩平點 ${r.bes.length ? r.bes.map(nf).join('、') : '—'}`,
+      fit(r) > 0 ? (level === 'high' ? '權利金偏高，先收權利金對你有利' : '權利金偏低，付權利金比較划算')
+        : r.net < 0 ? `先收 ${nf(-r.net)} 點權利金` : `付出 ${nf(r.net)} 點權利金`,
+      r.unlimited ? '虧損沒有上限，一定要設停損' : `最大虧損 ${nf(-r.lo)} 點（${nf(-r.lo * PV)} 元）`,
+    ];
+    const pick = (r, i) => `<article class="card sc-pick${i === 0 ? ' best' : ''}">` +
+      `<header class="sc-pick-h"><span class="sc-rank">${i + 1}</span><div><h3>${esc(r.t.s.name)} <small>${esc(r.t.s.en)}</small></h3>` +
+      `<span class="st-view ${vcls[r.t.s.view]}">${esc(r.t.s.view)}</span><span class="st-lv">${esc(r.t.s.level)}</span></div></header>` +
+      `<ul class="st-legs">${legTxt(r)}</ul>` +
+      `<dl class="sc-kv"><div><dt>到期勝率</dt><dd>${pct(r.pop)}</dd></div>` +
+      `<div><dt>看對時損益</dt><dd class="pos">${sgn(r.gain)} 點<small>${sgn(r.gain * PV)} 元</small></dd></div>` +
+      `<div><dt>最大虧損</dt><dd class="neg">${r.unlimited ? '無上限' : nf(-r.lo) + ' 點'}<small>${r.unlimited ? '需設停損' : nf(-r.lo * PV) + ' 元'}</small></dd></div>` +
+      `<div><dt>所需資金</dt><dd>${nf(r.capital)} 元<small>${r.margin > 0 ? `含保證金 ${nf(r.margin)}` : '不需保證金'}</small></dd></div></dl>` +
+      `<ul class="sc-why">${why(r).map(t => `<li>${esc(t)}</li>`).join('')}</ul>` +
+      `<a class="sc-link" href="options-strategy.html#${slug(r.t.s)}">查看${esc(r.t.s.name)}的說明 →</a></article>`;
+    const top = list.slice(0, 3);
+    out.top.innerHTML = top.map(pick).join('');
+
+    // 損益比較圖
+    el('sc-chart-card').hidden = false;
+    const W = 640, H = 230, P = { l: 52, r: 14, t: 14, b: 28 };
+    const reach = Math.max(1.8 * em, scen.kind === 'dir' || scen.kind === 'flat' ? Math.abs(scen.c - fut) * 1.4 : scen.move * 1.4, 2.5 * step);
+    const x0 = fut - reach, x1 = fut + reach;
+    const xsS = Array.from({ length: 241 }, (_, i) => x0 + (x1 - x0) * i / 240);
+    const series = top.map(r => xsS.concat(r.ks.filter(k => k > x0 && k < x1)).sort((a, b) => a - b).map(x => [x, r.pay(x)]));
+    let yMax = Math.max(0, ...series.flat().map(p => p[1])), yMin = Math.min(0, ...series.flat().map(p => p[1]));
+    const pad = (yMax - yMin) * 0.1 || 50; yMax += pad; yMin -= pad;
+    const X = x => P.l + (x - x0) / (x1 - x0) * (W - P.l - P.r), Y = y => P.t + (yMax - y) / (yMax - yMin) * (H - P.t - P.b);
+    const tickStep = [100, 200, 250, 500, 1000, 2000, 5000].find(s => (x1 - x0) / s <= 6) || 10000;
+    const xt = []; for (let x = Math.ceil(x0 / tickStep) * tickStep; x <= x1; x += tickStep) xt.push(x);
+    const yStep = [10, 20, 50, 100, 200, 250, 500, 1000, 2000, 5000].find(s => (yMax - yMin) / s <= 5) || 10000;
+    const yt = []; for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) yt.push(y);
+    const marks = scen.kind === 'vol' ? [fut - scen.move, fut + scen.move] : [scen.c];
+    el('sc-chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="前三名策略的到期損益比較圖">` +
+      yt.map(y => `<line class="sc-grid" x1="${P.l}" x2="${W - P.r}" y1="${Y(y)}" y2="${Y(y)}"/><text class="sc-ty" x="${P.l - 8}" y="${Y(y) + 4}" text-anchor="end">${sgn(y)}</text>`).join('') +
+      `<line class="oc-zero" x1="${P.l}" x2="${W - P.r}" y1="${Y(0)}" y2="${Y(0)}"/>` +
+      `<line class="sc-spot" x1="${X(fut)}" x2="${X(fut)}" y1="${P.t}" y2="${H - P.b}"/>` +
+      marks.filter(m => m > x0 && m < x1).map(m => `<line class="sc-mark" x1="${X(m)}" x2="${X(m)}" y1="${P.t}" y2="${H - P.b}"/><text class="sc-mark-l" x="${X(m) + 4}" y="${P.t + 11}">情境 ${nf(m)}</text>`).join('') +
+      series.map((sr, i) => `<polyline class="sc-l sc-l${i + 1}" points="${sr.map(([x, y]) => `${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join(' ')}"/>`).join('') +
+      `<g class="oc-tick">${xt.map(x => `<text x="${X(x)}" y="${H - 8}" text-anchor="middle">${nf(x)}</text>`).join('')}</g></svg>`;
+    el('sc-legend').innerHTML = top.map((r, i) => `<span><i class="sc-sw sc-sw${i + 1}"></i>${i + 1}. ${esc(r.t.s.name)}</span>`).join('') + `<span><i class="sc-sw sc-sw-spot"></i>現價 ${nf(fut)}</span>`;
+
+    // 其他符合條件的策略
+    const rest = list.slice(3);
+    out.more.innerHTML = rest.length ? `<p class="sc-more-h">其他符合條件的策略</p><div class="table-wrap"><table class="num-table sc-table"><thead><tr><th>策略</th><th>組合</th><th>到期勝率</th><th>看對時</th><th>最大虧損</th><th>所需資金</th></tr></thead><tbody>` +
+      rest.map(r => `<tr><td><a href="options-strategy.html#${slug(r.t.s)}">${esc(r.t.s.name)}</a></td>` +
+        `<td class="mono">${r.L.map(l => `${l.sg > 0 ? '買' : '賣'}${l.q > 1 ? l.q : ''} ${nf(l.k)}${l.call ? 'C' : 'P'}`).join('、')}</td>` +
+        `<td>${pct(r.pop)}</td><td class="pos">${sgn(r.gain)}</td><td class="neg">${r.unlimited ? '無上限' : nf(-r.lo)}</td><td>${nf(r.capital)}</td></tr>`).join('') +
+      `</tbody></table></div><p class="hint">損益單位為點（每點 ${PV} 元），所需資金單位為元。</p>` : '';
+  };
+
+  let tm = 0;
+  form.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(compute, 40); });
+  form.addEventListener('submit', e => e.preventDefault());
+  compute();
 })();
 
 $('year').textContent = new Date().getFullYear();

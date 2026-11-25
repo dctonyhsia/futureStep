@@ -9,7 +9,7 @@
 | `data.js` | **網站內容資料**（名詞表、商品、卡片、守則、試算器選單） | ✅ 最常改：新增／修改內容 |
 | `index.html` | 首頁架構與段落文字（標題、說明段落、表格標題） | 要改段落文字或新增整個章節 |
 | `glossary.html` | 名詞表獨立頁（名詞內容在 `data.js` 的 `glossary`） | 要改名詞表頁的標題或說明 |
-| `analysis.html` | 數據分析頁（目前為「內容準備中」） | 要放上數據分析內容時 |
+| `analysis.html` | 數據分析頁：選擇權策略篩選器（預設報價、A／B／C 值在 `data.js` 的 `optScreener`，策略來自 `optStrategyGroups`） | 要改篩選器的說明或版面時 |
 | `contact.html` | 聯絡我們頁（聯絡資訊在 `data.js` 的 `contact`） | 要改這一頁的標題或說明 |
 | `settlement.html` | 結算價與維持率頁（內容在 `data.js` 的 `settlement`、`riskExample`） | 要改這一頁的標題或說明 |
 | `margin-calc.html` | 維持率計算機（商品與保證金預設值在 `data.js` 的 `ratioCalc`） | 要改這一頁的標題或說明 |

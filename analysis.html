@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>數據分析｜期貨・選擇權入門指南</title>
-  <meta name="description" content="期貨與選擇權數據分析：內容準備中。">
+  <meta name="description" content="選擇權策略篩選器：輸入 Call、Put 權利金與行情看法，判讀隱含波動率，並依勝率、報酬或成本篩選符合條件的選擇權策略。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- 字型非同步載入：先用系統字型顯示，不擋住畫面 -->
@@ -40,21 +40,107 @@
       <div class="wrap">
         <nav class="crumbs" aria-label="麵包屑"><a href="index.html">首頁</a><span>/</span>數據分析</nav>
         <h1>數據分析</h1>
-        <p class="lead">這一頁將放上期貨與選擇權的市場數據與分析，內容正在準備中。</p>
+        <p class="lead">輸入選擇權報價與你對行情的看法，系統會判讀權利金貴或便宜，並從策略庫中篩選出符合條件的組合。</p>
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" id="screener">
       <div class="wrap">
-        <div class="card coming-soon">
-          <span class="card-idx">COMING SOON</span>
-          <h3>內容準備中</h3>
-          <p>數據分析的內容即將上線。有想看的數據或分析主題，歡迎透過「聯絡我們」告訴我們。</p>
-          <div class="coming-actions">
-            <a class="btn primary" href="contact.html">聯絡我們</a>
-            <a class="btn ghost" href="index.html">← 回到首頁</a>
+        <header class="sec-head">
+          <span class="num">01</span>
+          <div><h2>選擇權策略篩選器</h2><p>依你的報價、看法與資金條件，比較各策略的勝率、損益與所需資金</p></div>
+        </header>
+
+        <div class="sc">
+          <form class="sc-form" id="sc-form" autocomplete="off">
+            <fieldset class="sc-box">
+              <legend><span class="sc-step">1</span>市場報價</legend>
+              <div class="sc-row4">
+                <label>台指現價<input id="sc-spot" type="number" step="any"></label>
+                <label>期貨價格<input id="sc-fut" type="number" step="any"></label>
+                <label>距到期天數<input id="sc-days" type="number" min="1" step="1"></label>
+                <label>履約價間距<input id="sc-step" type="number" min="1" step="any"></label>
+              </div>
+              <div class="sc-chain">
+                <div class="sc-chain-h"><span>履約價</span><span>Call 權利金</span><span>Put 權利金</span></div>
+                <div id="sc-chain"></div>
+              </div>
+              <p class="hint">空白的格子會用價平隱含波動率自動估算（灰字）。價平以台指現價最接近的履約價為準。</p>
+              <details class="sc-more">
+                <summary>判讀與保證金參數</summary>
+                <div class="sc-row4">
+                  <label>參考 IV（%）<input id="sc-refiv" type="number" min="1" step="any"></label>
+                  <label>A 值（元）<input id="sc-a" type="number" min="0" step="any"></label>
+                  <label>B 值（元）<input id="sc-b" type="number" min="0" step="any"></label>
+                  <label>C 值（元）<input id="sc-cval" type="number" min="0" step="any"></label>
+                </div>
+                <p class="hint">參考 IV 用來判斷權利金偏貴或偏便宜，可填近期平均 IV 或台指 VIX。A、B、C 值預設為示意值，請依期交所最新公告修改。</p>
+              </details>
+            </fieldset>
+
+            <fieldset class="sc-box">
+              <legend><span class="sc-step">2</span>你的看法與條件</legend>
+              <div class="seg sc-seg sc-seg6" role="radiogroup" aria-label="行情看法">
+                <label><input type="radio" name="sc-view" value="bigup"><span>大漲</span></label>
+                <label><input type="radio" name="sc-view" value="up" checked><span>小漲</span></label>
+                <label><input type="radio" name="sc-view" value="flat"><span>盤整</span></label>
+                <label><input type="radio" name="sc-view" value="dn"><span>小跌</span></label>
+                <label><input type="radio" name="sc-view" value="bigdn"><span>大跌</span></label>
+                <label><input type="radio" name="sc-view" value="vol"><span>大波動</span></label>
+              </div>
+              <div class="sc-row2">
+                <label>目標價（可不填）<input id="sc-target" type="number" step="any" placeholder="依看法自動設定"></label>
+                <label>資金上限（元）<input id="sc-budget" type="number" min="0" step="any"></label>
+              </div>
+              <div class="sc-row2">
+                <div class="sc-field"><span class="sc-lbl">風險限制</span>
+                  <div class="seg sc-seg" role="radiogroup" aria-label="風險限制">
+                    <label><input type="radio" name="sc-risk" value="limited" checked><span>虧損有上限</span></label>
+                    <label><input type="radio" name="sc-risk" value="any"><span>不限</span></label>
+                  </div>
+                </div>
+                <div class="sc-field"><span class="sc-lbl">優先考量</span>
+                  <div class="seg sc-seg sc-seg3" role="radiogroup" aria-label="優先考量">
+                    <label><input type="radio" name="sc-rank" value="pop" checked><span>勝率</span></label>
+                    <label><input type="radio" name="sc-rank" value="ret"><span>報酬</span></label>
+                    <label><input type="radio" name="sc-rank" value="cost"><span>成本</span></label>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+          </form>
+
+          <div class="sc-out" aria-live="polite">
+            <div class="calc-output sc-read">
+              <div class="sc-read-h"><span class="sc-step">3</span>市場判讀</div>
+              <div class="out-grid sc-read-grid" id="sc-read"></div>
+              <p class="note" id="sc-read-note"></p>
+            </div>
+            <div class="sc-res">
+              <div class="sc-res-h"><span class="sc-step">4</span><div><b>符合你條件的策略</b><small id="sc-count"></small></div></div>
+              <div id="sc-top"></div>
+              <div class="card sc-chart-card" id="sc-chart-card">
+                <p class="sc-chart-h">到期損益比較<small>（點）</small></p>
+                <div class="sc-chart" id="sc-chart"></div>
+                <div class="sc-legend" id="sc-legend"></div>
+              </div>
+              <div id="sc-more"></div>
+            </div>
           </div>
         </div>
+
+        <div class="keypoints">
+          <b>篩選方式</b>
+          <ul>
+            <li>先依看法設定情境價：沒填目標價時，小漲／小跌為現價 ± 0.4 倍預期波動，大漲／大跌為 ± 1 倍，盤整為現價，大波動看上下兩邊各 1.3 倍（你預期的波動要比市場大）。</li>
+            <li>只留下「看對時會賺錢、而且明顯比看錯方向時好」的策略；大漲／大跌還要比價格不動時賺得多，盤整則要比價格大幅移動時好。看對時的獲利至少要有最大虧損的兩成，再排除超出資金上限或不符合風險限制的組合。</li>
+            <li>勝率是用價平隱含波動率估算到期時落在獲利區的機率；報酬是看對時的獲利 ÷ 所需資金；成本是所需資金（權利金 ＋ 保證金估算）。</li>
+            <li>權利金偏高時，先收權利金的策略略為加分；偏低時，付權利金的策略略為加分。每個策略會比較不同履約價的組合，只顯示條件最好的那一組。</li>
+            <li>保證金依期交所公式粗估：單一賣方為權利金市值 ＋ Max(A 值 − 價外值, B 值)，價差拆成組合單計算，實際以期貨商計收為準。跨月份、搭配期貨與套利策略不列入排名。</li>
+            <li>本工具僅供教育與試算參考，不構成任何投資建議。</li>
+          </ul>
+        </div>
+        <div class="back-row"><a class="btn ghost" href="options-strategy.html">查看全部選擇權策略 →</a></div>
       </div>
     </section>
   </main>
