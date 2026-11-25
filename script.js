@@ -801,7 +801,11 @@ if ($('g-search')) {
       `<div><dt>損益兩平點</dt><dd>${be}</dd></div>` +
       `<div><dt>最大獲利</dt><dd class="pos">${a.maxP}</dd></div><div><dt>最大虧損</dt><dd class="neg">${a.maxL}</dd></div>` +
       `<div class="span2"><dt>保證金</dt><dd>${a.margin}</dd></div></dl>` +
-      `<p class="st-when"><b>適用時機</b>${rich(s.when)}</p><p class="st-watch"><b>注意</b>${rich(s.watch)}</p></article>`;
+      `<p class="st-when"><b>適用時機</b>${rich(s.when)}</p>` +
+      (s.cp || s.pcr ? `<div class="st-cond"><p class="st-cond-h">適用條件</p><dl>` +
+        (s.cp ? `<div><dt>權利金比較</dt><dd>${rich(s.cp)}</dd></div>` : '') +
+        (s.pcr ? `<div><dt>P/C Ratio</dt><dd>${rich(s.pcr)}</dd></div>` : '') + `</dl></div>` : '') +
+      `<p class="st-watch"><b>注意</b>${rich(s.watch)}</p></article>`;
   };
 
   // 所有損益圖共用同一個橫軸範圍：涵蓋每個策略的履約價與兩平點，再往外留 400 點，以 500 點為單位

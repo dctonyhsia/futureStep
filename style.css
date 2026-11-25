@@ -586,3 +586,16 @@ button.ct-btn { font-family: inherit; cursor: pointer; }
 @keyframes st-flash { 0%, 30% { box-shadow: 0 0 0 3px var(--gold); } 100% { box-shadow: 0 0 0 3px transparent; } }
 @media (max-width: 980px) { .st-index { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .st-index { grid-template-columns: repeat(2, minmax(0, 1fr)); } .st-gh h2 { font-size: 21px; } }
+/* 選擇權策略：適用條件（權利金比較、P/C Ratio）與說明卡 */
+.st-guide { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: -16px 0 40px; }
+.st-guide h3 { margin: 0 0 10px; font-size: 17px; color: var(--ink); }
+.st-guide ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; font-size: 14.5px; color: var(--text); }
+.st-guide b { color: var(--ink); }
+.st-cond { background: var(--bg-alt); border-radius: 10px; padding: 12px 14px; }
+.card p.st-cond-h { margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .05em; color: var(--up); }
+.st-cond dl { margin: 0; display: grid; gap: 8px; }
+.st-cond dl > div { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.st-cond dt { font-size: 12px; font-weight: 700; color: var(--muted); }
+.st-cond dd { margin: 0; font-size: 14.5px; color: var(--text); line-height: 1.6; }
+@media (max-width: 860px) { .st-guide { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 480px) { .st-cond dl > div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
