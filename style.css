@@ -730,6 +730,8 @@ fieldset.sc-box > legend + * { clear: both; }
 .sc-row4 > label, .sc-row2 > label, .sc-field { display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; font-weight: 500; color: var(--ink); min-width: 0; }
 .sc-lbl { font-size: 13.5px; font-weight: 500; color: var(--ink); }
 .sc-form input { padding: 9px 10px; font-size: 14.5px; }
+.sc-form input.sc-fixed { background: var(--bg-alt); color: var(--muted); cursor: not-allowed; }
+.sc-form input.sc-fixed:focus { box-shadow: none; border-color: var(--line) !important; }
 .sc-form input::placeholder { color: var(--muted); font-style: italic; opacity: .85; }
 .sc-chain { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .sc-chain-h, .sc-chain-r { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 10px; align-items: center; padding: 8px 12px; }

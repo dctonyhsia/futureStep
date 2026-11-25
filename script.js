@@ -909,7 +909,7 @@ const OptMath = (() => {
   const vcls = { 看漲: 'up', 看跌: 'dn', 盤整: 'flat', 大波動: 'vol' };
 
   // 預設值與 5 檔報價表
-  [['sc-spot', C0.spot], ['sc-fut', C0.fut], ['sc-days', C0.days], ['sc-step', C0.step], ['sc-refiv', C0.refIv],
+  [['sc-spot', C0.spot], ['sc-fut', C0.fut], ['sc-days', C0.days], ['sc-step', C0.step || 50], ['sc-refiv', C0.refIv],
    ['sc-a', C0.A], ['sc-b', C0.B], ['sc-cval', C0.C], ['sc-budget', C0.budget]].forEach(([id, v]) => { if (v != null) el(id).value = v; });
   if (el('sc-mdate')) el('sc-mdate').textContent = C0.marginDate ? `${C0.marginDate} 公告` : '請依期交所最新公告填入';
   el('sc-chain').innerHTML = OFFS.map((o, i) => `<div class="sc-chain-r${o === 0 ? ' atm' : ''}">` +
