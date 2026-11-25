@@ -909,7 +909,10 @@ const OptMath = (() => {
   const vcls = { 看漲: 'up', 看跌: 'dn', 盤整: 'flat', 大波動: 'vol' };
 
   // 預設值與 5 檔報價表
-  [['sc-spot', C0.spot], ['sc-fut', C0.fut], ['sc-days', C0.days], ['sc-step', C0.step || 50], ['sc-refiv', C0.refIv],
+  // 每檔間隔：履約價固定 50 點為單位，表格 5 檔可以隔 50、100、200… 點排開
+  const UNIT = C0.strikeUnit || 50;
+  el('sc-step').innerHTML = (C0.rowSteps || [50, 100, 200, 400, 500]).map(v => `<option value="${v}">${nf(v)} 點</option>`).join('');
+  [['sc-spot', C0.spot], ['sc-fut', C0.fut], ['sc-days', C0.days], ['sc-step', C0.rowStep || 200], ['sc-refiv', C0.refIv],
    ['sc-a', C0.A], ['sc-b', C0.B], ['sc-cval', C0.C], ['sc-budget', C0.budget]].forEach(([id, v]) => { if (v != null) el(id).value = v; });
   if (el('sc-mdate')) el('sc-mdate').textContent = C0.marginDate ? `${C0.marginDate} 公告` : '請依期交所最新公告填入';
   el('sc-chain').innerHTML = OFFS.map((o, i) => `<div class="sc-chain-r${o === 0 ? ' atm' : ''}">` +
@@ -1003,7 +1006,7 @@ const OptMath = (() => {
     const out = { read: el('sc-read'), note: el('sc-read-note'), count: el('sc-count'), top: el('sc-top'), more: el('sc-more') };
     const fail = msg => { out.read.innerHTML = ''; out.note.textContent = msg; out.count.textContent = ''; out.top.innerHTML = ''; out.more.innerHTML = ''; el('sc-chart-card').hidden = true; };
     if (!(spot > 0 && days > 0 && step > 0)) return fail('請填入台指現價、距到期天數與履約價間距。');
-    const atm = Math.round(spot / step) * step, T = days / 365;
+    const atm = Math.round(spot / UNIT) * UNIT, T = days / 365;   // 價平：最接近現價的 50 點履約價
     OFFS.forEach((o, i) => { el('sc-k' + i).textContent = nf(atm + o * step); });
     const raw = { c: OFFS.map((_, i) => val('sc-c' + i)), p: OFFS.map((_, i) => val('sc-p' + i)) };
     const ivC = OptMath.impliedVol(raw.c[2], fut, atm, T, true), ivP = OptMath.impliedVol(raw.p[2], fut, atm, T, false);
@@ -1063,15 +1066,16 @@ const OptMath = (() => {
     const allow = { bigup: ['看漲', '大波動'], up: ['看漲', '盤整'], flat: ['盤整', '看漲', '看跌'], dn: ['看跌', '盤整'], bigdn: ['看跌', '大波動'], vol: ['大波動'] }[view];
     const fitView = pool.filter(c => allow.includes(c.t.s.view)).map(c => evaluate(c.t, c.legs, M)).filter(Boolean);
     const rs = fitView.filter(r => !(risk === 'limited' && r.unlimited) && !(budget > 0 && r.capital > budget));
-    const best = new Map();
-    rs.forEach(r => { const k = r.t.s.name, s = score(r); if (!best.has(k) || s > best.get(k).s) best.set(k, { r, s }); });
-    // 排序（同分時所需資金少的優先）；到期損益完全相同的組合（例如買賣權平價下的多頭買權價差與多頭賣權價差）只留一個
+    // 所有組合一起排序（同分時所需資金少的優先），每個策略取分數最高、且和前面已選組合到期損益不重複的那一組
+    // （例如買賣權平價下，多頭買權價差與多頭賣權價差可能完全相同，後者就改取它的下一個組合）
     const probe = Array.from({ length: 13 }, (_, i) => fut + (i - 6) * step);
-    const list = [];
-    [...best.values()].sort((a, b) => b.s - a.s || a.r.capital - b.r.capital).forEach(({ r }) => {
-      if (!list.some(q => probe.every(S => Math.abs(q.pay(S) - r.pay(S)) <= 3))) list.push(r);   // 容許跳動點進位造成的 1～3 點差
+    const list = [], names = new Set();
+    rs.map(r => ({ r, s: score(r) })).sort((a, b) => b.s - a.s || a.r.capital - b.r.capital).forEach(({ r }) => {
+      if (names.has(r.t.s.name)) return;
+      if (list.some(q => probe.every(S => Math.abs(q.pay(S) - r.pay(S)) <= 3))) return;   // 容許跳動點進位造成的 1～3 點差
+      list.push(r); names.add(r.t.s.name);
     });
-    const dropped = new Set(fitView.map(r => r.t.s.name).filter(n => !best.has(n))).size;
+    const dropped = new Set(fitView.map(r => r.t.s.name).filter(n => !names.has(n) && !rs.some(x => x.t.s.name === n))).size;
     const rankTxt = { pop: '勝率', ret: '報酬（看對時獲利 ÷ 所需資金）', cost: '所需資金由低到高' }[rank];
     out.count.textContent = (list.length ? `共比較 ${pool.length} 種組合，符合條件的有 ${list.length} 種策略，依${rankTxt}排序` : '') +
       (dropped ? `${list.length ? '；' : ''}另有 ${dropped} 種方向相符，但超出資金上限或風險限制` : '');
@@ -1137,6 +1141,10 @@ const OptMath = (() => {
       `</tbody></table></div><p class="hint">損益單位為點（每點 ${PV} 元），所需資金單位為元。</p>` : '';
   };
 
+  // 改變每檔間隔：價平以外的報價對應的履約價變了，清空後用價平 IV 估算
+  el('sc-step').addEventListener('change', () => {
+    OFFS.forEach((o, i) => { if (o !== 0) { el('sc-c' + i).value = ''; el('sc-p' + i).value = ''; } });
+  });
   let tm = 0;
   form.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(compute, 40); });
   form.addEventListener('submit', e => e.preventDefault());

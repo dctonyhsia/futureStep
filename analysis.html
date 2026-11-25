@@ -59,13 +59,13 @@
                 <label>台指現價<input id="sc-spot" type="number" step="any"></label>
                 <label>期貨價格<input id="sc-fut" type="number" step="any"></label>
                 <label>距到期天數<input id="sc-days" type="number" min="1" step="1"></label>
-                <label>履約價間距<input id="sc-step" class="sc-fixed" type="number" value="50" readonly tabindex="-1" title="臺指選擇權履約價間距固定 50 點"></label>
+                <label>每檔間隔<select id="sc-step" aria-describedby="sc-chain-hint"></select></label>
               </div>
               <div class="sc-chain">
                 <div class="sc-chain-h"><span>履約價</span><span>Call 權利金</span><span>Put 權利金</span></div>
                 <div id="sc-chain"></div>
               </div>
-              <p class="hint">臺指選擇權履約價間距固定 50 點。空白的格子會用價平隱含波動率自動估算（灰字）。價平以台指現價最接近的履約價為準。</p>
+              <p class="hint" id="sc-chain-hint">臺指選擇權履約價間距固定 50 點，表格的 5 檔依「每檔間隔」排開（都是 50 的倍數）。改變間隔時，價平以外的報價會清空並改用價平隱含波動率估算（灰字），請再填入實際報價。價平以台指現價最接近的履約價為準。</p>
               <details class="sc-more">
                 <summary>判讀與保證金參數</summary>
                 <div class="sc-row4">
