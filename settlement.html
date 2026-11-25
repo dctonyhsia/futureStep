@@ -7,8 +7,12 @@
   <meta name="description" content="臺灣期貨的每日結算價、最後結算價算法，以及維持率、追繳與砍倉的說明，以微台為例。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- 字型非同步載入：先用系統字型顯示，不擋住畫面 -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&amp;family=IBM+Plex+Mono:wght@400;600&amp;display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&amp;family=IBM+Plex+Mono:wght@400;600&amp;display=swap"></noscript>
   <link rel="stylesheet" href="style.css">
+  <!-- 先套用上次選的深淺色，避免畫面閃一下 -->
+  <script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
   <header class="topbar">
@@ -87,7 +91,7 @@
     <div class="wrap"><p class="small copy">© <span id="year"></span> 期貨・選擇權入門指南</p></div>
   </footer>
 
-  <script src="data.js"></script>
-  <script src="script.js"></script>
+  <script src="data.js" defer></script>
+  <script src="script.js" defer></script>
 </body>
 </html>
