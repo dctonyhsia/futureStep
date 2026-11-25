@@ -787,13 +787,15 @@ if ($('g-search')) {
       `${l.q > 1 ? ` × ${l.q} 口` : ''}<em class="mono">權利金 ${num(l.p)}</em></li>`;
   };
 
+  const holdCls = k => /需放到結算/.test(k) ? 'm' : /近月/.test(k) ? 'n' : 'e';   // 持有方式的顏色
   const card = (s, a) => {
     const v = vcls[s.view] || 'flat';
     const cost = a.net > 0 ? `付出 ${pts(a.net)}` : a.net < 0 ? `收取 ${pts(-a.net)}` : '0 點<small>（一收一付，剛好相抵）</small>';
     const be = a.bes.length ? a.bes.map(b => `<span class="mono">${num(b)}</span>`).join('、') + (a.curved ? '<small>（約）</small>' : '')
       : a.maxL.startsWith('不會') ? '無<small>（損益固定）</small>' : '—';
     return `<article class="card st-card" id="${slug(s)}" data-view="${esc(s.view)}">` +
-      `<header class="st-h"><span class="st-view ${v}">${esc(s.view)}</span>${s.level ? `<span class="st-lv">${esc(s.level)}</span>` : ''}<h3>${esc(s.name)} <small>${esc(s.en)}</small></h3></header>` +
+      `<header class="st-h"><span class="st-view ${v}">${esc(s.view)}</span>${s.level ? `<span class="st-lv">${esc(s.level)}</span>` : ''}` +
+      `${s.hold && holdCls(s.hold[0]) === 'm' ? '<span class="st-lv st-lv-settle">需放到結算</span>' : ''}<h3>${esc(s.name)} <small>${esc(s.en)}</small></h3></header>` +
       `<p class="st-sum">${rich(s.summary)}</p>` +
       `<div class="st-chart">${chart(s, a)}</div>` +
       `<ul class="st-legs">${a.L.map(l => legRow(l, a.curved)).join('')}</ul>` +
@@ -802,9 +804,11 @@ if ($('g-search')) {
       `<div><dt>最大獲利</dt><dd class="pos">${a.maxP}</dd></div><div><dt>最大虧損</dt><dd class="neg">${a.maxL}</dd></div>` +
       `<div class="span2"><dt>保證金</dt><dd>${a.margin}</dd></div></dl>` +
       `<p class="st-when"><b>適用時機</b>${rich(s.when)}</p>` +
-      (s.cp || s.pcr ? `<div class="st-cond"><p class="st-cond-h">適用條件</p><dl>` +
+      (s.cp || s.pcr || s.hold ? `<div class="st-cond"><p class="st-cond-h">適用條件</p><dl>` +
         (s.cp ? `<div><dt>權利金比較</dt><dd>${rich(s.cp)}</dd></div>` : '') +
-        (s.pcr ? `<div><dt>P/C Ratio</dt><dd>${rich(s.pcr)}</dd></div>` : '') + `</dl></div>` : '') +
+        (s.pcr ? `<div><dt>P/C Ratio</dt><dd>${rich(s.pcr)}</dd></div>` : '') +
+        (s.hold ? `<div><dt>持有方式</dt><dd><span class="st-hold ${holdCls(s.hold[0])}">${esc(s.hold[0])}</span>${rich(s.hold[1])}</dd></div>` : '') +
+        `</dl></div>` : '') +
       `<p class="st-watch"><b>注意</b>${rich(s.watch)}</p></article>`;
   };
 

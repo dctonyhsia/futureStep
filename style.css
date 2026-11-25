@@ -599,3 +599,9 @@ button.ct-btn { font-family: inherit; cursor: pointer; }
 .st-cond dd { margin: 0; font-size: 14.5px; color: var(--text); line-height: 1.6; }
 @media (max-width: 860px) { .st-guide { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 480px) { .st-cond dl > div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+/* 選擇權策略：持有方式（需放到結算／可提前平倉／近月結算時處理） */
+.st-hold { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 6px; margin-right: 6px; border: 1px solid; }
+.st-hold.m { color: var(--gold); border-color: var(--gold); }
+.st-hold.e { color: var(--accent); border-color: var(--accent); }
+.st-hold.n { color: var(--muted); border-color: var(--muted); }
+.st-lv.st-lv-settle { color: var(--gold); border-color: var(--gold); font-weight: 700; }
