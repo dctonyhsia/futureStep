@@ -768,7 +768,13 @@ const OptMath = (() => {
       return b.call ? b.k < sl.k : b.k > sl.k;
     };
     const twoDebit = !hasFut && !curved && opts.length === 4 && debitPair(opts.filter(l => l.call)) && debitPair(opts.filter(l => !l.call));
-    const margin = hasFut ? `需要<small>（小台期貨保證金${hasShort ? '，加上賣出選擇權的保證金' : ''}，依期交所公告）</small>`
+    // 期貨＋賣出選擇權：「買期貨＋賣 Call」或「賣期貨＋賣 Put」1 口小台配 1 口選擇權可組合，保證金＝期貨保證金＋權利金市值
+    const futLeg = L.find(l => l.fut), shorts = opts.filter(l => l.sg < 0);
+    const mtx = ((D.ratioCalc || {}).products || []).find(p => p.name === '小台');
+    const futCombo = futLeg && shorts.length === 1 && shorts[0].q === 1 && (futLeg.sg > 0 ? shorts[0].call : !shorts[0].call);
+    const margin = hasFut && !hasShort ? `需要${mtx ? ` ${fmtN(mtx.initial)} 元` : ''}<small>（小台期貨原始保證金，買進的選擇權只付權利金）</small>`
+      : futCombo ? `需要${mtx ? ` ${fmtN(mtx.initial + shorts[0].p * pv)} 元` : ''}<small>（期貨與選擇權組合部位：小台原始保證金${mtx ? ` ${fmtN(mtx.initial)}` : ''} ＋ 賣出 ${shorts[0].call ? 'Call' : 'Put'} 的權利金市值${fmtN(shorts[0].p * pv)}）</small>`
+      : hasFut ? '需要<small>（小台期貨保證金，加上賣出選擇權的保證金，依期交所公告）</small>'
       : !hasShort ? '不需要<small>（只付權利金）</small>'
       : twoDebit ? '不需要<small>（拆成兩組付權利金的價差，用組合單下單）</small>'
       : curved ? '需要<small>（時間價差用組合單下單可減收，依期交所公告）</small>'
@@ -905,6 +911,7 @@ const OptMath = (() => {
   // 預設值與 5 檔報價表
   [['sc-spot', C0.spot], ['sc-fut', C0.fut], ['sc-days', C0.days], ['sc-step', C0.step], ['sc-refiv', C0.refIv],
    ['sc-a', C0.A], ['sc-b', C0.B], ['sc-cval', C0.C], ['sc-budget', C0.budget]].forEach(([id, v]) => { if (v != null) el(id).value = v; });
+  if (el('sc-mdate')) el('sc-mdate').textContent = C0.marginDate ? `${C0.marginDate} 公告` : '請依期交所最新公告填入';
   el('sc-chain').innerHTML = OFFS.map((o, i) => `<div class="sc-chain-r${o === 0 ? ' atm' : ''}">` +
     `<span class="sc-k"><b class="mono" id="sc-k${i}"></b><small>${o === 0 ? '價平' : o < 0 ? `低 ${-o} 檔` : `高 ${o} 檔`}</small></span>` +
     `<input id="sc-c${i}" type="number" min="0" step="any" aria-label="Call 權利金" value="${C0.calls?.[i] ?? ''}">` +
