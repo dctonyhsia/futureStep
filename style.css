@@ -714,3 +714,6 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 /* 選單項目較多：中等寬度時縮小間距，避免右側按鈕被擠出畫面 */
 @media (min-width: 961px) and (max-width: 1180px) { .nav a { padding: 6px 8px; } .nav a.nav-cta { margin-left: 4px; } .brand { letter-spacing: .02em; } }
 @media (max-width: 960px) { .nav a.nav-cta, .nav a.nav-cta + a.nav-cta { margin-left: 0; } }
+/* 選單文字：稍微加粗、顏色加深，比較好讀（用描邊微加粗，不必多載一套字重） */
+.nav a:not(.nav-cta) { color: color-mix(in srgb, var(--text) 82%, var(--muted)); font-size: 14.5px; -webkit-text-stroke: .35px currentColor; }
+.nav a:not(.nav-cta):hover, .nav a.active:not(.nav-cta) { color: var(--ink); }
