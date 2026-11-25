@@ -915,7 +915,7 @@ const OptMath = (() => {
   el('sc-chain').innerHTML = OFFS.map((o, i) => `<div class="sc-chain-r${o === 0 ? ' atm' : ''}">` +
     `<span class="sc-k"><b class="mono" id="sc-k${i}"></b><small>${o === 0 ? '價平' : o < 0 ? `低 ${-o} 檔` : `高 ${o} 檔`}</small></span>` +
     `<input id="sc-c${i}" type="number" min="0" step="any" aria-label="Call 權利金" value="${C0.calls?.[i] ?? ''}">` +
-    `<input id="sc-p${i}" type="number" min="0" step="any" aria-label="Put 權利金" value="${C0.puts?.[i] ?? ''}"></div>`).join('');
+    `<input id="sc-p${i}" type="number" min="0" step="any" aria-label="Put 權利金" value="${C0.puts?.[i] ?? ''}"></div>`).reverse().join('');   // 由高到低顯示
 
   // 可比較的策略：排除套利、搭配期貨、跨月份（需要遠月報價）；履約價換算成「離價平幾檔」
   const templates = D.optStrategyGroups.flatMap(g => g.items)
