@@ -711,3 +711,6 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 
 /* 不喜歡動態效果的使用者：關掉轉場與位移 */
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } a.card:hover { transform: none; } html { scroll-behavior: auto; } }
+/* 選單項目較多：中等寬度時縮小間距，避免右側按鈕被擠出畫面 */
+@media (min-width: 961px) and (max-width: 1180px) { .nav a { padding: 6px 8px; } .nav a.nav-cta { margin-left: 4px; } .brand { letter-spacing: .02em; } }
+@media (max-width: 960px) { .nav a.nav-cta, .nav a.nav-cta + a.nav-cta { margin-left: 0; } }
