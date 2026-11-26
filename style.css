@@ -948,3 +948,9 @@ fieldset.sc-box > legend + * { clear: both; }
   .news-item .news-tag { grid-area: tag; } .news-item .news-time { grid-area: time; } .news-head { grid-area: head; } .news-chev { grid-area: chev; }
   .news-body { padding: 2px 14px 16px; }
 }
+/* 新聞頁：縮小上方留白，標題列表更早出現 */
+.page-hero.news-hero { padding: 32px 0 20px; }
+.page-hero.news-hero h1 { margin: 4px 0 6px; }
+.page-hero.news-hero .lead { margin-bottom: 4px; }
+.section.news-section { padding-top: 28px; }
+@media (max-width: 640px) { .page-hero.news-hero { padding: 22px 0 14px; } .section.news-section { padding-top: 20px; } }
