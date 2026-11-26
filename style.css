@@ -908,3 +908,8 @@ fieldset.sc-box > legend + * { clear: both; }
 .nfp-bar.neg { fill: color-mix(in srgb, var(--down) 75%, transparent); }
 .nfp-bar.last { fill: var(--accent); }
 .nfp-bar.neg.last { fill: var(--down); }
+/* 新聞頁：時間放大、好讀 */
+.news-updated { margin: 0 0 16px; font-size: 15.5px; font-weight: 700; color: var(--text); }
+.card p.news-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 6px; color: var(--text); }
+.news-tag { display: inline-block; padding: 3px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-size: 13.5px; font-weight: 700; letter-spacing: .04em; }
+.news-time { font: 600 15.5px "IBM Plex Mono", "Noto Sans TC", monospace; color: var(--ink); letter-spacing: .02em; }

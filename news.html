@@ -47,7 +47,7 @@
 
     <section class="section">
       <div class="wrap">
-        <p class="small news-updated" style="color:var(--muted);margin:0 0 14px"></p>
+        <p class="news-updated"></p>
         <div class="news-list" style="display:grid;gap:16px;max-width:760px"></div>
         <p class="small" style="color:var(--muted);margin-top:18px">新聞內容摘錄自各媒體，僅供教育參考，不構成投資建議。詳細內容請點選原文。</p>
       </div>
@@ -87,7 +87,7 @@
         "更新時間：" + d.updated + (d.note ? "（" + d.note + "）" : "");
       box.innerHTML = d.items.map(function (n) {
         return '<article class="card">' +
-          '<span class="card-idx">' + esc(n.tag) + ' · ' + esc(n.time) + '</span>' +
+          '<p class="news-meta"><span class="news-tag">' + esc(n.tag) + '</span><time class="news-time">' + esc(n.time) + '</time></p>' +
           '<h3 style="margin:4px 0 10px;line-height:1.5">' + esc(n.title) + '</h3>' +
           (n.points ? '<ul style="margin:0;padding-left:1.2em;line-height:1.9;color:var(--text)">' +
             n.points.map(function (p) { return '<li>' + num(esc(p)) + '</li>'; }).join("") + '</ul>'
