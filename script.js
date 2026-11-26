@@ -1252,7 +1252,7 @@ const OptMath = (() => {
 
   // 表格（新到舊，最近 12 個月）；市場預期、公布日期、備註有資料才顯示
   const shown = rows.slice(-12).reverse();
-  const cols = [['資料月份', r => mon(r.m)], ['CPI 年增率', r => pct(r.cpi)], ['核心 CPI 年增率', r => pct(r.core)], ['CPI 月增率', r => pct(r.cpiMoM)], ['核心 CPI 月增率', r => pct(r.coreMoM)]];
+  const cols = [['資料月份', r => mon(r.m)], ['CPI 月增率', r => pct(r.cpiMoM)], ['核心 CPI 月增率', r => pct(r.coreMoM)], ['CPI 年增率', r => pct(r.cpi)], ['核心 CPI 年增率', r => pct(r.core)]];
   if (any('exp')) cols.push(['市場預期（年增率）', r => pct(r.exp)]);
   if (any('release')) cols.push(['公布日期', r => esc(r.release || '—')]);
   if (shown.some(r => r.note)) cols.push(['備註', r => esc(r.note || '')]);
@@ -1263,7 +1263,7 @@ const OptMath = (() => {
     const s = has(r.cpi) && has(r.exp) ? r.cpi - r.exp : null;
     const cls = s === null || Math.abs(s) < 0.05 ? '' : s > 0 ? 'pos' : 'neg';
     const tds = cols.map((c, ci) => {
-      const k = ci === 1 && cls ? cls : c[0] === '備註' ? 'cpi-rem' : '';
+      const k = c[0] === 'CPI 年增率' && cls ? cls : c[0] === '備註' ? 'cpi-rem' : '';
       return `<td${k ? ` class="${k}"` : ''}>${c[1](r)}</td>`;
     }).join('');
     return `<tr${ok(r) || has(r.cpiMoM) ? '' : ' class="cpi-gap"'}>${tds}</tr>`;
