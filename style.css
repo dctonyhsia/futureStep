@@ -60,7 +60,7 @@ h1, h2, .footer-brand { font-family: inherit; font-weight: 700; letter-spacing: 
 .nav a:hover, .nav a.active { color: var(--ink); background: var(--bg-alt); }
 .nav a.nav-cta { background: var(--accent); color: #fff; font-weight: 700; margin-left: 8px; }
 .nav a.nav-cta:hover { background: var(--accent); color: #fff; filter: brightness(1.1); }
-/* 數據分析：與「聯絡我們」同款實心按鈕；兩顆並排時間距縮小 */
+/* 數據：與「聯絡我們」同款實心按鈕；兩顆並排時間距縮小 */
 .nav a.nav-cta + a.nav-cta { margin-left: 6px; }
 .coming-soon { max-width: 640px; }
 .card.coming-soon p { margin: 4px 0 20px; }
@@ -720,7 +720,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .nav a:not(.nav-cta) { color: color-mix(in srgb, var(--text) 82%, var(--muted)); font-size: 14.5px; -webkit-text-stroke: .35px currentColor; }
 .nav a:not(.nav-cta):hover, .nav a.active:not(.nav-cta) { color: var(--ink); }
 
-/* ============ 數據分析：選擇權策略篩選器 ============ */
+/* ============ 數據：選擇權策略篩選器 ============ */
 .sc { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; align-items: start; }
 .sc-form { display: flex; flex-direction: column; gap: 16px; }
 fieldset.sc-box { margin: 0; min-width: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 20px 22px 22px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 14px; }
