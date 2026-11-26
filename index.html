@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>期貨・選擇權入門指南</title>
-  <meta name="description" content="從零開始認識期貨與選擇權：基本概念、權利金、合約規格、保證金與槓桿、每日結算、損益試算、台灣常見商品與風險管理。">
+  <meta name="description" content="從零開始認識期貨與選擇權：基本概念、權利金、契約規格、保證金與槓桿、每日結算、損益試算、台灣常見商品與風險管理。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- 字型非同步載入：先用系統字型顯示，不擋住畫面 -->
@@ -21,7 +21,7 @@
       <button class="menu-btn" aria-label="開啟選單" aria-expanded="false">☰</button>
       <nav class="nav">
         <a href="#what">基本概念</a>
-        <a href="#terms">合約規格</a>
+        <a href="#terms">契約規格</a>
         <a href="#margin">保證金</a>
         <a href="#calc">損益試算</a>
         <a href="#products">商品</a>
@@ -43,7 +43,7 @@
         <div>
           <p class="kicker">投資人教育 ・ 期貨與選擇權基礎</p>
           <h1>看懂<em>期貨</em>與<em>選擇權</em>，<br>掌握保證金與槓桿風險</h1>
-          <p class="lead">期貨是一份「約定在未來以特定價格買賣標的」的標準化合約；選擇權則是用權利金買一個「可以選擇要不要買進或賣出」的權利。兩者都能用來避險或投機。本指南用實際的規格與數字，說明它們如何計價、結算，以及槓桿如何同時放大獲利和虧損。</p>
+          <p class="lead">期貨是一份「約定在未來以特定價格買賣標的」的標準化契約；選擇權則是用權利金買一個「可以選擇要不要買進或賣出」的權利。兩者都能用來避險或投機。本指南用實際的規格與數字，說明它們如何計價、結算，以及槓桿如何同時放大獲利和虧損。</p>
           <div class="hero-cta">
             <a class="btn primary" href="#what">開始閱讀</a>
             <a class="btn ghost" href="#calc">損益試算器 →</a>
@@ -81,7 +81,7 @@
           </dl>
           <div class="spec-example">
             <span>以 40,000 點計算</span>
-            <b class="mono">一口合約價值 8,000,000 元</b>
+            <b class="mono">一口契約價值 8,000,000 元</b>
           </div>
         </aside>
       </div>
@@ -89,9 +89,9 @@
       <div class="wrap">
         <div class="stats">
           <div><span class="stat-k">標準化</span><span class="stat-v">規格由交易所統一制定</span></div>
-          <div><span class="stat-k">保證金交易</span><span class="stat-v">只需繳交合約價值的一部分</span></div>
+          <div><span class="stat-k">保證金交易</span><span class="stat-v">只需繳交契約價值的一部分</span></div>
           <div><span class="stat-k">多空雙向</span><span class="stat-v">看漲、看跌都能建立部位</span></div>
-          <div><span class="stat-k">到期結算</span><span class="stat-v">每份合約都有最後交易日</span></div>
+          <div><span class="stat-k">到期結算</span><span class="stat-v">每份契約都有最後交易日</span></div>
         </div>
       </div>
     </section>
@@ -101,10 +101,10 @@
       <div class="wrap">
         <header class="sec-head sec-head-switch">
           <span class="num">01</span>
-          <div class="sec-head-text"><h2 id="what-title">什麼是期貨？</h2><p id="what-sub">從遠期契約到交易所的標準化合約</p></div>
+          <div class="sec-head-text"><h2 id="what-title">什麼是期貨？</h2><p id="what-sub">從遠期契約到交易所的標準化契約</p></div>
           <div class="tabs switch" role="tablist" aria-label="切換期貨或選擇權介紹">
             <button role="tab" class="tab active" data-tab="fut" aria-selected="true" aria-controls="tab-fut"
-              data-title="什麼是期貨？" data-sub="從遠期契約到交易所的標準化合約">期貨</button>
+              data-title="什麼是期貨？" data-sub="從遠期契約到交易所的標準化契約">期貨</button>
             <button role="tab" class="tab" data-tab="opt" aria-selected="false" aria-controls="tab-opt"
               data-title="什麼是選擇權？" data-sub="用權利金買一個「可以選擇」的權利">選擇權</button>
           </div>
@@ -114,7 +114,7 @@
         <div class="two-col">
           <div class="prose">
             <p>想像一位麵包店老闆擔心三個月後麵粉漲價，而一位小麥農夫擔心三個月後價格下跌。兩人現在就約好：<strong>三個月後，以每噸 10,000 元成交</strong>。不管到時市價是多少，雙方都照約定價格交易——這就是期貨最原始的概念。</p>
-            <p>現代的期貨在<strong>交易所</strong>集中交易，合約的數量、品質、到期月份都已標準化，買賣雙方不需要認識彼此，由<strong>結算機構</strong>擔保履約。</p>
+            <p>現代的期貨在<strong>交易所</strong>集中交易，契約的數量、品質、到期月份都已標準化，買賣雙方不需要認識彼此，由<strong>結算機構</strong>擔保履約。</p>
 
             <h3 class="sub">市場上的三種參與者</h3>
             <ul class="roles">
@@ -159,8 +159,8 @@
           <table class="compare">
             <thead><tr><th>項目</th><th>股票（現股）</th><th>期貨</th></tr></thead>
             <tbody>
-              <tr><td>交易的是</td><td>公司的所有權</td><td>一份未來買賣的合約</td></tr>
-              <tr><td>需要資金</td><td>全額價金</td><td>保證金（約合約價值的一成上下）</td></tr>
+              <tr><td>交易的是</td><td>公司的所有權</td><td>一份未來買賣的契約</td></tr>
+              <tr><td>需要資金</td><td>全額價金</td><td>保證金（約契約價值的一成上下）</td></tr>
               <tr><td>到期日</td><td>無，可長期持有</td><td>有，到期必須結算或轉倉</td></tr>
               <tr><td>做空</td><td>需融券，有限制</td><td>直接賣出即可，與做多一樣方便</td></tr>
               <tr><td>每日結算</td><td>無</td><td>有，每天依結算價計算盈虧</td></tr>
@@ -172,7 +172,7 @@
         <div class="keypoints">
           <b>重點整理</b>
           <ul>
-            <li>期貨是標準化合約，由交易所制定規格、結算機構擔保履約。</li>
+            <li>期貨是標準化契約，由交易所制定規格、結算機構擔保履約。</li>
             <li>做多與做空的損益對稱，價格每變動 1 點的損益＝每點價值 × 口數。</li>
             <li>與股票最大的不同在於保證金、到期日與每日結算。</li>
           </ul>
@@ -259,7 +259,7 @@
           <table class="compare">
             <thead><tr><th>項目</th><th>期貨</th><th>選擇權</th></tr></thead>
             <tbody>
-              <tr><td>交易的是</td><td>買賣雙方都有履約義務的合約</td><td>買方買到權利、賣方承擔義務</td></tr>
+              <tr><td>交易的是</td><td>買賣雙方都有履約義務的契約</td><td>買方買到權利、賣方承擔義務</td></tr>
               <tr><td>需要資金</td><td>多空雙方都繳保證金</td><td>買方付權利金；賣方繳保證金</td></tr>
               <tr><td>損益型態</td><td>多空對稱，漲跌 1 點損益相同</td><td>買方虧損有限、獲利可能很大；賣方相反</td></tr>
               <tr><td>時間的影響</td><td>不直接影響損益</td><td>時間價值每天流失，對買方不利、對賣方有利</td></tr>
@@ -294,7 +294,7 @@
       <div class="wrap">
         <header class="sec-head">
           <span class="num">02</span>
-          <div><h2>合約規格</h2><p>交易所為每份合約訂定的六項要素</p></div>
+          <div><h2>契約規格</h2><p>交易所為每份契約訂定的六項要素</p></div>
         </header>
         <div class="grid spec-grid" id="terms-list"></div>
       </div>
@@ -312,9 +312,9 @@
           <div class="prose">
             <p>買賣期貨不用付全額，只要存入一筆<strong>保證金</strong>作為履約擔保。因為用小錢控制大部位，就產生了<strong>槓桿</strong>。</p>
             <div class="formula">
-              <span>槓桿倍數</span><b>≈</b><span>合約價值 ÷ 保證金</span>
+              <span>槓桿倍數</span><b>≈</b><span>契約價值 ÷ 保證金</span>
             </div>
-            <p>以大台為例：指數 40,000 點時，一口合約價值為 40,000 × 200 ＝ <strong class="mono">8,000,000</strong> 元。若保證金為 701,000 元，槓桿約 <strong class="mono">11.4</strong> 倍——指數只要變動 1%（400 點），帳戶權益就變動 80,000 元，約為保證金的 11%。</p>
+            <p>以大台為例：指數 40,000 點時，一口契約價值為 40,000 × 200 ＝ <strong class="mono">8,000,000</strong> 元。若保證金為 701,000 元，槓桿約 <strong class="mono">11.4</strong> 倍——指數只要變動 1%（400 點），帳戶權益就變動 80,000 元，約為保證金的 11%。</p>
           </div>
           <div class="card">
             <h3>三種保證金</h3>
@@ -346,7 +346,7 @@
         <div class="keypoints">
           <b>重點整理</b>
           <ul>
-            <li>槓桿倍數 ≈ 合約價值 ÷ 保證金；倍數越高，權益波動越劇烈。</li>
+            <li>槓桿倍數 ≈ 契約價值 ÷ 保證金；倍數越高，權益波動越劇烈。</li>
             <li>期貨每天依結算價計算盈虧，虧損會直接從權益數扣除。</li>
             <li>權益跌破維持保證金就會被追繳，必須補足至原始保證金。</li>
           </ul>
@@ -396,7 +396,7 @@
             </div>
             <div class="out-grid">
               <div><span>點數變動</span><b id="o-pts">—</b></div>
-              <div><span>合約總價值</span><b id="o-value">—</b></div>
+              <div><span>契約總價值</span><b id="o-value">—</b></div>
               <div><span>所需保證金</span><b id="o-margin">—</b></div>
               <div><span>約略槓桿</span><b id="o-lev">—</b></div>
             </div>
@@ -463,7 +463,7 @@
       <div class="wrap">
         <header class="sec-head">
           <span class="num">05</span>
-          <div><h2>常見期貨商品</h2><p>台灣期交所主要合約與海外期貨分類</p></div>
+          <div><h2>常見期貨商品</h2><p>台灣期交所主要契約與海外期貨分類</p></div>
         </header>
         <div class="tabs" role="tablist">
           <button role="tab" class="tab active" data-tab="tw" aria-selected="true">台灣期交所</button>
@@ -489,7 +489,7 @@
           <a class="card os-link" href="overseas.html">
             <div>
               <h3>海外期貨商品規格與保證金</h3>
-              <p>收錄 SGX、HKEX、JPX、CME 共 <b id="os-total"></b> 項商品的合約規格、跳動點、跳動值、台灣交易時間，以及原始與維持保證金，可依交易所、類別、商品名稱篩選。</p>
+              <p>收錄 SGX、HKEX、JPX、CME 共 <b id="os-total"></b> 項商品的契約規格、跳動點、跳動值、台灣交易時間，以及原始與維持保證金，可依交易所、類別、商品名稱篩選。</p>
             </div>
             <span class="btn primary">查看規格與保證金 →</span>
           </a>

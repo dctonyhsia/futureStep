@@ -580,7 +580,7 @@ if ($('g-search')) {
   });
 }
 
-// ===== 05 海外期貨：商品合約規格表（篩選 + 分頁）=====
+// ===== 05 海外期貨：商品契約規格表（篩選 + 分頁）=====
 (function () {
   const body = document.getElementById('os-body');
   if (!body || !D.overseasSpecs) return;
@@ -594,10 +594,10 @@ if ($('g-search')) {
   const pager = document.getElementById('os-pager'), count = document.getElementById('os-count');
   const head = document.getElementById('os-head');
   const MG = D.overseasMargins || {};
-  // 檢視：合約規格 spec ／ 保證金 margin（網址可帶 ?view=margin 直接開保證金）
+  // 檢視：契約規格 spec ／ 保證金 margin（網址可帶 ?view=margin 直接開保證金）
   let view = new URLSearchParams(location.search).get('view') === 'margin' ? 'margin' : 'spec';
   const viewBtns = [...document.querySelectorAll('.os-view .tab')];
-  const SPEC_H = ['交易所', '類別', '商品名稱', '代碼', '幣別', '合約規格', '跳動點', '跳動值', '熱門月份', '台灣交易時間'];
+  const SPEC_H = ['交易所', '類別', '商品名稱', '代碼', '幣別', '契約規格', '跳動點', '跳動值', '熱門月份', '台灣交易時間'];
   const MARGIN_H = ['交易所', '類別', '商品名稱', '代碼', '幣別', '原始保證金', '維持保證金'];
   const n0 = v => (v == null ? '—' : Number(v).toLocaleString('en-US'));
   const uniq = a => [...new Set(a)];
@@ -632,7 +632,7 @@ if ($('g-search')) {
     body.innerHTML = !shown.length ? `<tr><td colspan="${cols.length}" class="os-empty">找不到符合條件的商品。</td></tr>`
       : view === 'margin' ? shown.map(marginRow).join('') : shown.map(r =>
       `<tr><td data-l="交易所"><span class="ex-tag">${esc(r.ex)}</span></td><td data-l="類別">${esc(r.cat)}</td><td class="os-name" data-l="商品名稱">${esc(r.name)}</td>` +
-      `<td class="mono" data-l="代碼">${esc(r.code)}</td><td class="mono" data-l="幣別">${esc(r.cur)}</td><td data-l="合約規格">${esc(r.size)}</td><td class="mono" data-l="跳動點">${esc(r.tick)}</td>` +
+      `<td class="mono" data-l="代碼">${esc(r.code)}</td><td class="mono" data-l="幣別">${esc(r.cur)}</td><td data-l="契約規格">${esc(r.size)}</td><td class="mono" data-l="跳動點">${esc(r.tick)}</td>` +
       `<td class="mono" data-l="跳動值">${esc(r.tv)}</td><td data-l="熱門月份">${esc(r.months)}</td><td class="os-hours" data-l="台灣交易時間">${esc(r.hours)}</td></tr>`).join('');
     if (note) note.textContent = view === 'margin'
       ? `保證金資料日期：${D.overseasMarginsDate || ''}。${D.overseasMarginsNote || ''}保證金會依市況變動，實際以期貨商最新公告為準。`

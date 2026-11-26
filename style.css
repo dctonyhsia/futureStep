@@ -513,7 +513,7 @@ button.ct-btn { font-family: inherit; cursor: pointer; }
 .os-link:hover { border-color: var(--accent); }
 .os-link p { max-width: 680px; }
 
-/* 海外期貨：合約規格／保證金 切換 */
+/* 海外期貨：契約規格／保證金 切換 */
 .os-view { margin-bottom: 18px; }
 .os-table.os-margin { min-width: 640px; }
 .os-table td.num, .os-table.os-margin th:nth-child(n+6) { text-align: right; }
