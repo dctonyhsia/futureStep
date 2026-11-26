@@ -1180,7 +1180,7 @@ const OptMath = (() => {
   } else {
     // 依圖表實際寬度畫，手機上字才不會縮得太小；視窗寬度改變時重畫
     const draw = () => {
-      const W = Math.max(320, Math.round(chart.clientWidth || 720)), H = W < 560 ? 240 : 300, L = 40, R = 14, T = 16, B = 34;
+      const W = Math.max(320, Math.round(chart.clientWidth || 720)), H = W < 560 ? 240 : 300, L = 40, R = 50, T = 16, B = 34;   // 右邊多留空間給最後一點的數值
       const vals = pts.flatMap(r => [r.cpi, r.core].filter(has)).concat(2);
       let lo = Math.floor(Math.min(...vals) - 0.3), hi = Math.ceil(Math.max(...vals) + 0.3);
       if (hi - lo < 2) hi = lo + 2;
@@ -1215,7 +1215,17 @@ const OptMath = (() => {
         const dots = pts.map((r, i) => has(r[k]) ? `<circle class="cpi-dot ${cls}" cx="${x(i).toFixed(1)}" cy="${y(r[k]).toFixed(1)}" r="${rad}"><title>${mon(r.m)}：${r[k].toFixed(1)}%</title></circle>` : '').join('');
         return d ? `<path class="sc-l ${cls}" d="${d}"/>${dots}` : '';
       };
-      chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="美國 CPI 與核心 CPI 年增率走勢圖">${g}${line('core', 'sc-l2')}${line('cpi', 'sc-l1')}</svg>`;
+      // 最後一點：放大圓點並標上數值；兩個數值太靠近時上下錯開
+      const ends = [['cpi', 'sc-l1'], ['core', 'sc-l2']].map(([k, cls]) => {
+        let i = pts.length - 1; while (i >= 0 && !has(pts[i][k])) i--;
+        return i < 0 ? null : { cls, i, v: pts[i][k], ly: y(pts[i][k]) + 4 };
+      }).filter(Boolean);
+      if (ends.length === 2 && Math.abs(ends[0].ly - ends[1].ly) < 14) {
+        const [a, b] = ends[0].v >= ends[1].v ? ends : [ends[1], ends[0]];
+        const mid = (a.ly + b.ly) / 2; a.ly = mid - 7; b.ly = mid + 7;
+      }
+      const endG = ends.map(e => `<circle class="cpi-dot ${e.cls}" cx="${x(e.i).toFixed(1)}" cy="${y(e.v).toFixed(1)}" r="4.5"/><text class="cpi-end ${e.cls}" x="${(x(e.i) + 8).toFixed(1)}" y="${e.ly.toFixed(1)}">${e.v.toFixed(1)}%</text>`).join('');
+      chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="美國 CPI 與核心 CPI 年增率走勢圖">${g}${line('core', 'sc-l2')}${line('cpi', 'sc-l1')}${endG}</svg>`;
     };
     draw();
     let lastW = chart.clientWidth, tm;

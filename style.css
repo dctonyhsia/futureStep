@@ -873,3 +873,6 @@ fieldset.sc-box > legend + * { clear: both; }
 .cpi-panel .cpi-extra { margin: -6px 0 0; font-size: 13px; }
 .cpi-table td.cpi-rem { color: var(--muted); font-size: 13px; }
 .cpi-table tr.cpi-gap td { color: var(--muted); }
+.cpi-end { font: 700 12.5px "IBM Plex Mono", monospace; stroke: none; paint-order: stroke; }
+.cpi-end.sc-l1 { fill: var(--accent); }
+.cpi-end.sc-l2 { fill: var(--gold); }
