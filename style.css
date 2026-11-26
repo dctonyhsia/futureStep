@@ -870,3 +870,6 @@ fieldset.sc-box > legend + * { clear: both; }
 .cpi-item h3 { margin: 0; font-size: 17px; color: var(--ink); }
 .card .cpi-item p { margin: 0; font-size: 15px; color: var(--text); line-height: 1.8; }
 @media (max-width: 640px) { .card.cpi-intro { padding: 4px 18px; } .cpi-item { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 16px 0; } }
+.cpi-panel .cpi-extra { margin: -6px 0 0; font-size: 13px; }
+.cpi-table td.cpi-rem { color: var(--muted); font-size: 13px; }
+.cpi-table tr.cpi-gap td { color: var(--muted); }

@@ -62,6 +62,7 @@
 
         <div class="cpi-panel">
           <div class="cpi-kpis" id="cpi-kpis"></div>
+          <p class="hint cpi-extra" id="cpi-extra" hidden></p>
           <div class="card cpi-chart-card">
             <div class="cpi-chart-h">
               <p class="sc-chart-h">CPI 年增率走勢<small>（%）</small></p>
@@ -77,11 +78,11 @@
           </div>
           <div class="table-wrap cpi-table">
             <table>
-              <thead><tr><th>資料月份</th><th>CPI 年增率</th><th>核心 CPI 年增率</th><th>CPI 月增率</th><th>核心 CPI 月增率</th><th>市場預期（年增率）</th><th>公布日期</th></tr></thead>
+              <thead id="cpi-head"></thead>
               <tbody id="cpi-rows"></tbody>
             </table>
           </div>
-          <p class="hint cpi-note">表格列出最近 12 個月（走勢圖顯示全部月份）。CPI 年增率標紅字代表高於市場預期、綠字代表低於市場預期；月增率為經季節調整後的數字。</p>
+          <p class="hint cpi-note" id="cpi-note"></p>
         </div>
 
         <div class="keypoints">
