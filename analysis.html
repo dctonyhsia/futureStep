@@ -61,6 +61,15 @@
         </article>
 
         <div class="cpi-panel">
+          <div class="cpi-adj" id="cpi-adj" hidden>
+            <span class="cpi-adj-l">季節調整</span>
+            <div class="tabs cpi-adj-tabs" role="group" aria-label="切換季調或未季調數字">
+              <button type="button" class="tab active" data-adj="mkt" aria-pressed="true">市場慣用</button>
+              <button type="button" class="tab" data-adj="sa" aria-pressed="false">季調</button>
+              <button type="button" class="tab" data-adj="nsa" aria-pressed="false">未季調</button>
+            </div>
+            <span class="hint" id="cpi-adj-hint"></span>
+          </div>
           <div class="cpi-kpis" id="cpi-kpis"></div>
           <p class="hint cpi-extra" id="cpi-extra" hidden></p>
           <div class="card cpi-chart-card">

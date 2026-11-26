@@ -885,3 +885,10 @@ fieldset.sc-box > legend + * { clear: both; }
 .cpi-toggle:hover { background: var(--accent-soft); }
 .cpi-toggle[hidden] { display: none; }
 @media (max-width: 760px) { .cpi-toggle { position: sticky; left: 0; min-width: 0; } }
+.cpi-adj { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.cpi-adj[hidden] { display: none; }
+.cpi-adj-l { font-size: 14px; font-weight: 700; color: var(--ink); }
+.tabs.cpi-adj-tabs { margin: 0; padding: 3px; }
+.cpi-adj-tabs .tab { padding: 6px 14px; font-size: 13.5px; }
+.cpi-adj .hint { font-size: 13px; }
+@media (max-width: 420px) { .cpi-k { font-size: 12px; letter-spacing: -.01em; } .cpi-kpi { justify-content: flex-start; } .cpi-k { min-height: 3.2em; } }
