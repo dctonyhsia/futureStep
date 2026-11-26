@@ -1259,9 +1259,9 @@ const OptMath = (() => {
     chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="美國 CPI 與核心 CPI ${M.name}（${tag(mode)}）走勢圖">${g}${line(k2, 'sc-l2')}${line(k1, 'sc-l1')}${endG}</svg>`;
   };
   // 切換月增率／年增率
-  document.querySelectorAll('.cpi-tabs .tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#cpi .cpi-tabs .tab').forEach(b => b.addEventListener('click', () => {
     mode = b.dataset.mode;
-    document.querySelectorAll('.cpi-tabs .tab').forEach(t => { const on = t === b; t.classList.toggle('active', on); t.setAttribute('aria-pressed', on); });
+    document.querySelectorAll('#cpi .cpi-tabs .tab').forEach(t => { const on = t === b; t.classList.toggle('active', on); t.setAttribute('aria-pressed', on); });
     draw();
   }));
   // 視窗寬度改變時重畫
@@ -1329,6 +1329,204 @@ const OptMath = (() => {
       renderTiles(); draw(); renderTable(); renderNote();
     }));
     setText('cpi-adj-hint', ADJ_HINT[adj]);
+  }
+
+  renderTiles(); draw(); renderTable(); renderNote();
+})();
+
+// ---------- 數據頁：指標下拉選單（只顯示選中的指標；網址 #cpi、#nfp 可直接開啟）----------
+(function () {
+  const sel = document.getElementById('ind-select');
+  if (!sel) return;
+  const panels = [...document.querySelectorAll('.ind-panel')];
+  const show = (v, push) => {
+    if (!panels.some(p => p.dataset.ind === v)) v = panels[0] && panels[0].dataset.ind;
+    panels.forEach(p => { p.hidden = p.dataset.ind !== v; });
+    sel.value = v;
+    if (push) try { history.replaceState(null, '', '#' + v); } catch (e) {}
+    dispatchEvent(new Event('resize'));   // 讓剛顯示的圖表依實際寬度重畫
+  };
+  sel.addEventListener('change', () => show(sel.value, true));
+  addEventListener('hashchange', () => show(location.hash.slice(1), false));
+  show(location.hash.slice(1) || sel.value, false);
+})();
+
+// ---------- 數據頁：美國非農就業（資料在 data.js 的 usNfp，沒有資料時顯示預留位置）----------
+(function () {
+  const kpis = document.getElementById('nfp-kpis');
+  if (!kpis) return;
+  const cfg = D.usNfp || {};
+  const rows = (cfg.rows || []).filter(r => r && r.m).slice().sort((a, b) => a.m < b.m ? -1 : 1);
+  const has = v => typeof v === 'number' && isFinite(v);
+  const mon = m => { const [y, mm] = String(m).split('-'); return `${y} 年 ${+mm} 月`; };
+  const any = k => rows.some(r => has(r[k]));
+  const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  // 季節調整：sa＝季調（預設，市場慣用）；nsa＝未季調（欄位名稱加 NSA）
+  let adj = 'sa';
+  const hasNSA = any('nfpNSA');
+  const K = k => adj === 'nsa' ? k + 'NSA' : k;
+  const tag = () => adj === 'nsa' ? '未季調' : '季調';
+  // 小數位數：依 data.js 裡該欄實際的位數（1～2 位）
+  const decOf = k => Math.min(2, Math.max(1, ...rows.filter(r => has(r[k])).map(r => (String(r[k]).split('.')[1] || '').length)));
+  const pct = (v, k) => has(v) ? v.toFixed(decOf(k)) + '%' : '—';
+  const wan = v => has(v) ? `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v / 10).toFixed(1)} 萬` : '—';   // 千人 → 萬人
+  const sign = (d, dec, unit) => `${d > 0.0001 ? '+' : d < -0.0001 ? '−' : '±'}${Math.abs(d).toFixed(dec)}${unit}`;
+  const okAny = r => ['nfp', 'ur', 'aheMoM', 'aheYoY', 'lfpr'].some(k => has(r[k]) || has(r[k + 'NSA']));
+  const latestOf = k => { for (let i = rows.length - 1; i >= 0; i--) if (has(rows[i][k])) return i; return -1; };
+
+  // 最新數據
+  const tile = (label, k, fmt, diffFmt) => {
+    const i = latestOf(k);
+    if (i < 0) return [label, '—', '待更新'];
+    const r = rows[i], p = rows[i - 1];
+    const d = p && has(p[k]) ? r[k] - p[k] : null;
+    return [label, fmt(r[k]), mon(r.m) + (d === null || !diffFmt ? '' : `　較上月 ${diffFmt(d)}`)];
+  };
+  const renderTiles = () => {
+    const tiles = [
+      tile(`非農新增就業（${tag()}）`, K('nfp'), v => wan(v) + '人', d => sign(d / 10, 1, ' 萬人')),
+      tile(`失業率（${tag()}）`, K('ur'), v => pct(v, K('ur')), d => sign(d, decOf(K('ur')), ' 個百分點')),
+      tile(`平均時薪月增率（${tag()}）`, K('aheMoM'), v => pct(v, K('aheMoM')), d => sign(d, decOf(K('aheMoM')), ' 個百分點')),
+      tile(`平均時薪年增率（${tag()}）`, K('aheYoY'), v => pct(v, K('aheYoY')), d => sign(d, decOf(K('aheYoY')), ' 個百分點')),
+    ];
+    kpis.innerHTML = tiles.map(([k, v, s]) => `<div class="card cpi-kpi"><span class="cpi-k">${k}</span><b class="cpi-v">${esc(v)}</b><small>${esc(s)}</small></div>`).join('');
+  };
+  const meta = document.getElementById('nfp-meta');
+  if (meta && rows.length) meta.textContent = `${mon(rows[0].m)} ～ ${mon(rows[rows.length - 1].m)}｜資料來源：${cfg.source || '美國勞工統計局 BLS'}${cfg.updated ? `｜更新：${cfg.updated}` : ''}`;
+
+  // 圖表：新增就業（長條，萬人）／失業率（折線）／平均時薪年增率（折線）
+  const chart = document.getElementById('nfp-chart');
+  const legend = document.getElementById('nfp-legend');
+  const MODES = {
+    nfp: { k: 'nfp', bar: true, scale: 0.1, title: '非農新增就業人數', unit: '（萬人）', lg: '非農新增就業', ref: 0, refLg: '0 基準線' },
+    ur: { k: 'ur', title: '失業率', unit: '（%）', lg: '失業率' },
+    ahe: { k: 'aheYoY', title: '平均時薪年增率', unit: '（%）', lg: '平均時薪年增率' },
+  };
+  let mode = 'nfp';
+  const draw = () => {
+    const M = MODES[mode], k = K(M.k), sc = M.scale || 1;
+    setText('nfp-title', `${M.title}（${tag()}）`); setText('nfp-unit', M.unit);
+    if (legend) legend.innerHTML = `<span><i class="sc-sw sc-sw1"></i>${M.lg}（${tag()}）</span>` + (has(M.ref) ? `<span><i class="sc-sw sc-sw-spot"></i>${M.refLg}</span>` : '');
+    const i0 = rows.findIndex(r => has(r[k]));
+    let i1 = rows.length - 1; while (i1 >= 0 && !has(rows[i1][k])) i1--;
+    const pts = i0 < 0 ? [] : rows.slice(i0, i1 + 1);
+    if (pts.filter(r => has(r[k])).length < 2) {
+      chart.classList.add('cpi-empty');
+      chart.innerHTML = `<div class="cpi-ph"><b>圖表位置</b><span>數據更新後，這裡會顯示${M.title}的走勢圖</span></div>`;
+      return;
+    }
+    chart.classList.remove('cpi-empty');
+    const W = Math.max(320, Math.round(chart.clientWidth || 720)), H = W < 560 ? 240 : 300, L = 44, R = 68, T = 16, B = 34;   // 右邊留空間給最後一點的數值（例如 +16.5 萬）
+    const vals = pts.filter(r => has(r[k])).map(r => r[k] * sc);
+    if (has(M.ref)) vals.push(M.ref);
+    const span0 = Math.max(...vals) - Math.min(...vals) || 1;
+    const nice = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200];
+    const stepY = nice.find(s => span0 / s <= 6) || 500;
+    const pad = stepY * 0.3;
+    let lo = Math.floor((Math.min(...vals) - pad) / stepY) * stepY, hi = Math.ceil((Math.max(...vals) + pad) / stepY) * stepY;
+    if (M.bar) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+    const n = pts.length, bw = (W - L - R) / n;
+    const x = i => M.bar ? L + bw * (i + 0.5) : L + (W - L - R) * (n === 1 ? 0.5 : i / (n - 1));
+    const y = v => T + (H - T - B) * (hi - v) / (hi - lo);
+    const yDec = stepY < 1 ? 1 : 0;
+    let g = '';
+    for (let v = lo; v <= hi + 1e-9; v += stepY) g += `<line class="sc-grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="sc-ty" x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${(+v.toFixed(2)).toFixed(yDec)}</text>`;
+    // 橫軸
+    const lastI = n - 1, yearly = n > 30;
+    const every = Math.max(1, Math.ceil(n / Math.max(3, Math.floor((W - L - R) / 70))));
+    const yStep = Math.max(1, Math.ceil((n / 12) / Math.max(2, Math.floor((W - L - R) / 56))));
+    pts.forEach((r, i) => {
+      const [yy, mm] = r.m.split('-');
+      if (yearly) {
+        if (mm !== '01' || (+yy - +pts[0].m.slice(0, 4)) % yStep) return;
+        g += `<line class="sc-grid" x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${H - B}"/><text class="sc-ty" x="${x(i)}" y="${H - 12}" text-anchor="${i === 0 ? 'start' : 'middle'}">${yy}</text>`;
+        return;
+      }
+      if (i !== lastI && (i % every || lastI - i < every)) return;
+      g += `<text class="sc-ty" x="${x(i)}" y="${H - 12}" text-anchor="${i === 0 ? 'start' : i === lastI ? 'end' : 'middle'}">${yy.slice(2)}/${mm}</text>`;
+    });
+    if (has(M.ref)) g += `<line class="sc-spot" x1="${L}" x2="${W - R}" y1="${y(M.ref)}" y2="${y(M.ref)}"/>`;
+    // 這一項沒公布的月份：標「未公布」，線在那裡斷開
+    pts.forEach((r, i) => { if (!has(r[k])) g += `<line class="sc-mark" x1="${x(i)}" x2="${x(i)}" y1="${T}" y2="${H - B}"/><text class="sc-mark-l" x="${x(i) - 4}" y="${T + 10}" text-anchor="end">未公布</text>`; });
+    const fmtV = v => M.bar ? wan(v) : pct(v, k);
+    let body = '';
+    if (M.bar) {
+      const w = Math.max(1.5, bw * 0.68);
+      body = pts.map((r, i) => {
+        if (!has(r[k])) return '';
+        const v = r[k] * sc, y0 = y(0), y1 = y(v);
+        return `<rect class="nfp-bar${v < 0 ? ' neg' : ''}${i === lastI ? ' last' : ''}" x="${(x(i) - w / 2).toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(0.5, Math.abs(y1 - y0)).toFixed(1)}"><title>${mon(r.m)}：${fmtV(r[k])}人</title></rect>`;
+      }).join('');
+    } else {
+      let d = '', on = false;
+      pts.forEach((r, i) => { if (has(r[k])) { d += `${on ? 'L' : 'M'}${x(i).toFixed(1)},${y(r[k]).toFixed(1)} `; on = true; } else on = false; });
+      const rad = n > 36 ? 2 : 3;
+      body = `<path class="sc-l sc-l1" d="${d}"/>` + pts.map((r, i) => has(r[k]) ? `<circle class="cpi-dot sc-l1" cx="${x(i).toFixed(1)}" cy="${y(r[k]).toFixed(1)}" r="${rad}"><title>${mon(r.m)}：${fmtV(r[k])}</title></circle>` : '').join('');
+    }
+    // 最後一點標數值
+    let li = n - 1; while (li >= 0 && !has(pts[li][k])) li--;
+    const lv = pts[li][k], ly = y(lv * sc);
+    const endG = (M.bar ? '' : `<circle class="cpi-dot sc-l1" cx="${x(li).toFixed(1)}" cy="${ly.toFixed(1)}" r="4.5"/>`) +
+      `<text class="cpi-end sc-l1" x="${(x(li) + (M.bar ? bw / 2 + 4 : 8)).toFixed(1)}" y="${(ly + 4).toFixed(1)}">${fmtV(lv)}</text>`;
+    chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="美國${M.title}（${tag()}）走勢圖">${g}${body}${endG}</svg>`;
+  };
+  document.querySelectorAll('.nfp-tabs .tab').forEach(b => b.addEventListener('click', () => {
+    mode = b.dataset.mode;
+    document.querySelectorAll('.nfp-tabs .tab').forEach(t => { const on = t === b; t.classList.toggle('active', on); t.setAttribute('aria-pressed', on); });
+    draw();
+  }));
+  let lastW = chart.clientWidth, tm;
+  addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(() => { if (chart.clientWidth !== lastW) { lastW = chart.clientWidth; draw(); } }, 150); });
+
+  // 表格（新到舊，最近 12 個月；預設只顯示 3 個月）
+  const shown = rows.slice(-12).reverse();
+  const head = document.getElementById('nfp-head'), body = document.getElementById('nfp-rows'), toggle = document.getElementById('nfp-toggle');
+  const PEEK = 3;
+  let open = false;
+  const setOpen = o => {
+    open = o;
+    [...body.querySelectorAll('tr')].slice(PEEK).forEach(tr => { tr.hidden = !open; });
+    if (!toggle) return;
+    toggle.setAttribute('aria-expanded', open);
+    toggle.innerHTML = open ? '收起表格 <span aria-hidden="true">▴</span>' : `展開全部 ${shown.length} 個月 <span aria-hidden="true">▾</span>`;
+  };
+  if (toggle) toggle.addEventListener('click', () => setOpen(!open));
+  const renderTable = () => {
+    const cols = [['資料月份', r => mon(r.m)], [`新增就業（${tag()}）`, r => has(r[K('nfp')]) ? wan(r[K('nfp')]) + '人' : '—'], ['失業率', r => pct(r[K('ur')], K('ur'))], ['平均時薪月增率', r => pct(r[K('aheMoM')], K('aheMoM'))], ['平均時薪年增率', r => pct(r[K('aheYoY')], K('aheYoY'))]];
+    if (any(K('lfpr'))) cols.push(['勞動參與率', r => pct(r[K('lfpr')], K('lfpr'))]);
+    if (any('first')) cols.push(['首次公布', r => has(r.first) ? wan(r.first) + '人' : '—']);
+    if (shown.some(r => r.note)) cols.push(['備註', r => esc(r.note || ''), 'rem']);
+    if (head) head.innerHTML = `<tr>${cols.map(c => `<th>${c[0]}</th>`).join('')}</tr>`;
+    body.innerHTML = rows.length ? shown.map(r => `<tr${okAny(r) ? '' : ' class="cpi-gap"'}>${cols.map(c => `<td${c[2] === 'rem' ? ' class="cpi-rem"' : ''}>${c[1](r)}</td>`).join('')}</tr>`).join('')
+      : `<tr><td colspan="${cols.length}" class="cpi-none">數據準備中，更新後會依月份列在這裡</td></tr>`;
+    if (toggle && shown.length > PEEK) { toggle.hidden = false; setOpen(open); }
+  };
+
+  // 表格下方說明
+  const renderNote = () => {
+    const note = document.getElementById('nfp-note');
+    if (!note) return;
+    const gaps = rows.filter(r => r.note).map(r => `${mon(r.m)}${r.note}`);
+    note.textContent = [
+      `表格列出最近 12 個月（圖表顯示全部月份），目前顯示${tag()}數字。新增就業人數為當月變動，以萬人表示（1 萬人＝10 千人）；前兩個月的數字會在新報告中修正，本頁顯示最新修正值。`,
+      '失業率、平均時薪依 BLS 公布的數字計算至小數兩位，BLS 官方公布至小數一位。',
+      adj === 'nsa' ? '未季調的新增就業受季節性招募影響很大（例如年底假期、1 月與 7 月），比較趨勢時建議看季調數字。' : '',
+      gaps.length ? `${gaps.join('；')}。` : '',
+    ].join('');
+  };
+
+  // 季調／未季調切換
+  const adjBar = document.getElementById('nfp-adj');
+  const ADJ_HINT = { sa: '季調數字排除季節性因素，與新聞報導相同', nsa: '未季調數字受季節性招募影響大，月與月之間跳動明顯' };
+  if (adjBar && hasNSA) {
+    adjBar.hidden = false;
+    adjBar.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+      adj = b.dataset.adj;
+      adjBar.querySelectorAll('.tab').forEach(t => { const on = t === b; t.classList.toggle('active', on); t.setAttribute('aria-pressed', on); });
+      setText('nfp-adj-hint', ADJ_HINT[adj]);
+      renderTiles(); draw(); renderTable(); renderNote();
+    }));
+    setText('nfp-adj-hint', ADJ_HINT[adj]);
   }
 
   renderTiles(); draw(); renderTable(); renderNote();

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>數據｜期貨・選擇權入門指南</title>
-  <meta name="description" content="影響期貨市場的重要經濟數據：美國 CPI（消費者物價指數）的意義、公布時間、觀察方式與走勢圖。">
+  <meta name="description" content="影響期貨市場的重要經濟數據：美國 CPI（消費者物價指數）與非農就業的意義、公布時間、觀察方式與走勢圖。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- 字型非同步載入：先用系統字型顯示，不擋住畫面 -->
@@ -46,7 +46,20 @@
       </div>
     </section>
 
-    <section class="section" id="cpi">
+    <!-- 指標下拉選單：選了哪一個，下方就只顯示那一個指標（網址加 #cpi 或 #nfp 可直接開啟） -->
+    <div class="ind-bar-wrap">
+      <div class="wrap ind-bar">
+        <label class="ind-pick" for="ind-select">指標</label>
+        <div class="ind-select-box">
+          <select id="ind-select" aria-label="選擇要查看的經濟指標">
+            <option value="cpi">美國 CPI（消費者物價指數）</option>
+            <option value="nfp">美國非農就業</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <section class="section ind-panel" id="cpi" data-ind="cpi">
       <div class="wrap">
         <header class="sec-head">
           <span class="num">01</span>
@@ -113,11 +126,73 @@
       </div>
     </section>
 
+    <section class="section ind-panel" id="nfp" data-ind="nfp">
+      <div class="wrap">
+        <header class="sec-head">
+          <span class="num">02</span>
+          <div><h2>美國非農就業</h2><p>美國就業市場最受關注的指標，常牽動聯準會利率預期與台指期夜盤</p></div>
+        </header>
+
+        <article class="card cpi-intro">
+          <section class="cpi-item"><h3>什麼是非農就業</h3><p>美國「就業情勢報告」（Employment Situation）中的非農業部門就業人數，統計企業與政府的受薪員工，不含農業從業人員、自營業者、家庭幫傭與無薪志工。市場最關注的是「當月新增多少就業人數」。</p></section>
+          <section class="cpi-item"><h3>誰公布、何時公布</h3><p>由美國勞工統計局（BLS）每月公布上一個月的數據，通常在每月第一個星期五，美東時間上午 8:30 發布。換算台灣時間，美國夏令時間約為 20:30、冬令時間約為 21:30，正好落在台指期夜盤交易時段。</p></section>
+          <section class="cpi-item"><h3>數字怎麼看</h3><p><b>新增就業人數</b>（經季節調整）看就業市場擴張的速度；<b>失業率</b>來自另一份家庭調查，看勞動市場的鬆緊；<b>平均時薪</b>反映薪資成長，是觀察通膨壓力的線索。前兩個月的數字會在新報告中修正，每年另有一次基準修正。</p></section>
+          <section class="cpi-item"><h3>和期貨市場的關係</h3><p>市場同樣看「公布值和預期的差距」。優於預期時，市場傾向認為聯準會降息的空間變小，美債殖利率與美元常走升；遜於預期時，降息預期常升溫，但數字過弱也可能引發經濟衰退的疑慮。股價指數期貨的反應不一定朝同一方向，須視當時市場關注的重點而定。</p></section>
+        </article>
+
+        <div class="cpi-panel">
+          <div class="cpi-adj" id="nfp-adj" hidden>
+            <span class="cpi-adj-l">季節調整</span>
+            <div class="tabs cpi-adj-tabs" role="group" aria-label="切換季調或未季調數字">
+              <button type="button" class="tab active" data-adj="sa" aria-pressed="true">季調</button>
+              <button type="button" class="tab" data-adj="nsa" aria-pressed="false">未季調</button>
+            </div>
+            <span class="hint" id="nfp-adj-hint"></span>
+          </div>
+          <div class="cpi-kpis" id="nfp-kpis"></div>
+          <div class="card cpi-chart-card">
+            <div class="cpi-chart-h">
+              <p class="sc-chart-h"><span id="nfp-title">非農新增就業人數</span><small id="nfp-unit">（萬人）</small></p>
+              <div class="tabs cpi-tabs nfp-tabs" role="group" aria-label="切換非農圖表">
+                <button type="button" class="tab active" data-mode="nfp" aria-pressed="true">新增就業</button>
+                <button type="button" class="tab" data-mode="ur" aria-pressed="false">失業率</button>
+                <button type="button" class="tab" data-mode="ahe" aria-pressed="false">平均時薪</button>
+              </div>
+            </div>
+            <p class="hint cpi-meta" id="nfp-meta"></p>
+            <!-- 圖表位置：在 data.js 的 usNfp.rows 填入數據後，這裡會自動畫出圖表 -->
+            <div class="sc-chart cpi-chart" id="nfp-chart"></div>
+            <div class="sc-legend" id="nfp-legend"></div>
+          </div>
+          <div class="table-wrap cpi-table">
+            <table>
+              <thead id="nfp-head"></thead>
+              <tbody id="nfp-rows"></tbody>
+            </table>
+            <button type="button" class="cpi-toggle" id="nfp-toggle" aria-controls="nfp-rows" aria-expanded="false" hidden></button>
+          </div>
+          <p class="hint cpi-note" id="nfp-note"></p>
+        </div>
+
+        <div class="keypoints">
+          <b>觀察重點</b>
+          <ul>
+            <li>同時看<b>新增就業、失業率與平均時薪</b>：三者方向不一定一致，例如新增就業強但失業率上升，代表勞動力也在增加。</li>
+            <li>留意<b>前兩個月的修正</b>：修正幅度有時比當月數字更影響市場對就業趨勢的判斷。</li>
+            <li>新增就業來自企業端的「機構調查」，失業率來自「家庭調查」，兩份調查的樣本不同，短期可能出現落差。</li>
+            <li>平均時薪年增率偏高，代表薪資推升通膨的壓力較大，常和 CPI 一起觀察。</li>
+            <li>公布當下美股期貨、美元、黃金與台指期夜盤的波動可能放大，買賣價差變大、容易滑價，持有部位時請注意風險控管。</li>
+            <li>數據以美國勞工統計局（BLS）官方公布為準，本頁內容僅供教育與參考，不構成任何投資建議。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- 選擇權策略篩選器暫時停用：要恢復顯示，刪掉下一行的 hidden -->
     <section class="section" id="screener" hidden>
       <div class="wrap">
         <header class="sec-head">
-          <span class="num">02</span>
+          <span class="num">03</span>
           <div><h2>選擇權策略篩選器</h2><p>依你的報價、看法與資金條件，比較各策略的損益與所需資金</p></div>
         </header>
 
