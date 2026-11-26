@@ -1003,3 +1003,5 @@ fieldset.sc-box > legend + * { clear: both; }
 .yld-sw-s1, .yld-sw-s2 { display: inline-block; width: 16px; height: 3px; border-radius: 2px; }
 @media (max-width: 880px) { .cpi-kpis.yld-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .cpi-kpis.yld-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* 數據頁：先圖表、再數據介紹 */
+.card.cpi-intro.cpi-intro-after { margin: 28px 0 0; }
