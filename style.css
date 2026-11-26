@@ -881,3 +881,7 @@ fieldset.sc-box > legend + * { clear: both; }
 .cpi-tabs .tab { padding: 6px 16px; font-size: 13.5px; }
 .cpi-chart-card .cpi-meta { margin: 0 0 10px; font-size: 12.5px; }
 .sc-legend span span { display: inline; }
+.cpi-toggle { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-width: 720px; padding: 12px; border: 0; border-top: 1px solid var(--line); background: var(--bg-alt); color: var(--accent); font: 700 14px "Noto Sans TC", sans-serif; cursor: pointer; }
+.cpi-toggle:hover { background: var(--accent-soft); }
+.cpi-toggle[hidden] { display: none; }
+@media (max-width: 760px) { .cpi-toggle { position: sticky; left: 0; min-width: 0; } }

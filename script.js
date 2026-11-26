@@ -1269,6 +1269,21 @@ const OptMath = (() => {
     return `<tr${ok(r) || has(r.cpiMoM) ? '' : ' class="cpi-gap"'}>${tds}</tr>`;
   }).join('') : `<tr><td colspan="${cols.length}" class="cpi-none">數據準備中，更新後會依月份列在這裡</td></tr>`;
 
+  // 表格預設收起：只顯示最近 PEEK 個月，按「展開」才顯示全部
+  const PEEK = 3;
+  const toggle = document.getElementById('cpi-toggle');
+  const extraRows = [...body.querySelectorAll('tr')].slice(PEEK);
+  if (toggle && extraRows.length) {
+    const setOpen = open => {
+      extraRows.forEach(tr => { tr.hidden = !open; });
+      toggle.setAttribute('aria-expanded', open);
+      toggle.innerHTML = open ? '收起表格 <span aria-hidden="true">▴</span>' : `展開全部 ${shown.length} 個月 <span aria-hidden="true">▾</span>`;
+    };
+    setOpen(false);
+    toggle.hidden = false;
+    toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+  }
+
   // 表格下方說明
   const note = document.getElementById('cpi-note');
   if (note) {
