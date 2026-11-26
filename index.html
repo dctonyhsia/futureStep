@@ -127,7 +127,7 @@
           </div>
 
           <figure class="figure">
-            <figcaption><b>圖 1　到期損益圖</b><span>以 22,000 點進場 1 口大台</span></figcaption>
+            <figcaption><b>圖 1　到期損益圖</b><span>以 40,000 點進場 1 口大台</span></figcaption>
             <svg viewBox="0 0 480 320" role="img" aria-label="做多與做空的到期損益圖：做多在價格上漲時獲利，做空在價格下跌時獲利，兩者損益對稱">
               <g class="grid-lines">
                 <line x1="60" y1="40" x2="460" y2="40"/><line x1="60" y1="100" x2="460" y2="100"/>
@@ -144,13 +144,13 @@
                 <text x="54" y="164" text-anchor="end">0</text>
                 <text x="54" y="224" text-anchor="end">−100,000</text>
                 <text x="54" y="284" text-anchor="end">−200,000</text>
-                <text x="60" y="308" text-anchor="middle">21,000</text>
-                <text x="260" y="308" text-anchor="middle">22,000</text>
-                <text x="460" y="308" text-anchor="middle">23,000</text>
+                <text x="60" y="308" text-anchor="middle">39,000</text>
+                <text x="260" y="308" text-anchor="middle">40,000</text>
+                <text x="460" y="308" text-anchor="middle">41,000</text>
               </g>
               <text class="lbl-long" x="400" y="62" text-anchor="end">做多（買進）</text>
               <text class="lbl-short" x="400" y="262" text-anchor="end">做空（賣出）</text>
-              <text class="lbl-mute" x="268" y="182">進場價 22,000</text>
+              <text class="lbl-mute" x="268" y="182">進場價 40,000</text>
             </svg>
             <p class="fig-note">縱軸為損益（元），橫軸為到期結算價（點）。每偏離 1 點，損益變動 200 元，多空兩方損益完全對稱。</p>
           </figure>
@@ -205,8 +205,8 @@
           </div>
 
           <figure class="figure">
-            <figcaption><b>圖 1　選擇權買方到期損益圖</b><span>台指選，履約價 22,000、權利金 200 點</span></figcaption>
-            <svg viewBox="0 0 480 320" role="img" aria-label="買進買權與買進賣權的到期損益圖：兩者最大虧損都是權利金一萬元，買權在兩萬兩千兩百點以上獲利，賣權在兩萬一千八百點以下獲利">
+            <figcaption><b>圖 1　選擇權買方到期損益圖</b><span>台指選，履約價 40,000、權利金 200 點</span></figcaption>
+            <svg viewBox="0 0 480 320" role="img" aria-label="買進買權與買進賣權的到期損益圖：兩者最大虧損都是權利金一萬元，買權在四萬零兩百點以上獲利，賣權在三萬九千八百點以下獲利">
               <g class="grid-lines">
                 <line x1="60" y1="40" x2="460" y2="40"/><line x1="60" y1="120" x2="460" y2="120"/>
                 <line x1="60" y1="240" x2="460" y2="240"/><line x1="60" y1="280" x2="460" y2="280"/>
@@ -223,17 +223,17 @@
                 <text x="54" y="204" text-anchor="end">0</text>
                 <text x="54" y="244" text-anchor="end">−10,000</text>
                 <text x="54" y="284" text-anchor="end">−20,000</text>
-                <text x="60" y="308" text-anchor="middle">21,000</text>
-                <text x="260" y="308" text-anchor="middle">22,000</text>
-                <text x="460" y="308" text-anchor="middle">23,000</text>
+                <text x="60" y="308" text-anchor="middle">39,000</text>
+                <text x="260" y="308" text-anchor="middle">40,000</text>
+                <text x="460" y="308" text-anchor="middle">41,000</text>
               </g>
               <text class="lbl-long" x="456" y="122" text-anchor="end">買進買權</text>
               <text class="lbl-short" x="64" y="122">買進賣權</text>
-              <text class="lbl-mute" x="306" y="217">損益兩平 22,200</text>
-              <text class="lbl-mute" x="214" y="217" text-anchor="end">21,800</text>
+              <text class="lbl-mute" x="306" y="217">損益兩平 40,200</text>
+              <text class="lbl-mute" x="214" y="217" text-anchor="end">39,800</text>
               <text class="lbl-mute" x="268" y="262">最大虧損＝權利金 10,000 元</text>
             </svg>
-            <p class="fig-note">縱軸為損益（元），橫軸為到期結算價（點）。權利金 200 點 × 50 元 ＝ 10,000 元，這就是買方的最大虧損；買權要漲過 22,200、賣權要跌破 21,800 才開始獲利。</p>
+            <p class="fig-note">縱軸為損益（元），橫軸為到期結算價（點）。權利金 200 點 × 50 元 ＝ 10,000 元，這就是買方的最大虧損；買權要漲過 40,200、賣權要跌破 39,800 才開始獲利。</p>
           </figure>
         </div>
 
@@ -242,7 +242,7 @@
           <div class="prose">
             <div class="formula"><span>權利金</span><b>＝</b><span>內含價值 ＋ 時間價值</span></div>
             <p><strong>內含價值</strong>是「現在立刻履約」能拿到的價值；<strong>時間價值</strong>則是「到期前還可能變化」的價值，越接近到期消失得越快。</p>
-            <p>例如指數 22,300 點時，履約價 22,000 的買權內含價值是 300 點。若權利金報價 380 點，多出的 80 點就是時間價值。內含價值不等於獲利，還要扣掉當初付出的權利金。</p>
+            <p>例如指數 40,300 點時，履約價 40,000 的買權內含價值是 300 點。若權利金報價 380 點，多出的 80 點就是時間價值。內含價值不等於獲利，還要扣掉當初付出的權利金。</p>
           </div>
           <div class="table-wrap">
             <table class="moneyness">
@@ -316,7 +316,7 @@
             <div class="formula">
               <span>槓桿倍數</span><b>≈</b><span>合約價值 ÷ 保證金</span>
             </div>
-            <p>以大台為例：指數 22,000 點時，一口合約價值為 22,000 × 200 ＝ <strong class="mono">4,400,000</strong> 元。若保證金為 330,000 元，槓桿約 <strong class="mono">13.3</strong> 倍——指數只要變動 1%（220 點），帳戶權益就變動 44,000 元，約為保證金的 13%。</p>
+            <p>以大台為例：指數 40,000 點時，一口合約價值為 40,000 × 200 ＝ <strong class="mono">8,000,000</strong> 元。若保證金為 701,000 元，槓桿約 <strong class="mono">11.4</strong> 倍——指數只要變動 1%（400 點），帳戶權益就變動 80,000 元，約為保證金的 11%。</p>
           </div>
           <div class="card">
             <h3>三種保證金</h3>
@@ -330,7 +330,7 @@
         </div>
 
         <h3 class="sub">實例：每日結算與追繳</h3>
-        <p class="intro">假設做多 1 口大台，原始保證金 330,000 元、維持保證金 253,000 元（假設數字，實際以期交所公告為準）。</p>
+        <p class="intro">假設做多 1 口大台，原始保證金 701,000 元、維持保證金 538,000 元（以期交所 2026/08/12 公告為例，實際以最新公告為準）。</p>
         <div class="mc">
           <figure class="figure">
             <figcaption><b>圖 2　帳戶權益變化</b><span>權益數 vs. 保證金水位</span></figcaption>
@@ -385,10 +385,10 @@
               <label><input type="radio" name="dir" value="1" checked><span>做多（買進）</span></label>
               <label><input type="radio" name="dir" value="-1"><span>做空（賣出）</span></label>
             </div>
-            <label>進場價（點）<input id="c-entry" type="number" step="any" value="22000"></label>
-            <label>出場價（點）<input id="c-exit" type="number" step="any" value="22300"></label>
+            <label>進場價（點）<input id="c-entry" type="number" step="any" value="40000"></label>
+            <label>出場價（點）<input id="c-exit" type="number" step="any" value="40300"></label>
             <label>口數<input id="c-qty" type="number" min="1" step="1" value="1"></label>
-            <label>每口保證金（元，自填）<input id="c-margin" type="number" min="0" step="any" value="330000"></label>
+            <label>每口保證金（元，自填）<input id="c-margin" type="number" min="0" step="any" value="701000"></label>
           </form>
           <div class="calc-output" aria-live="polite">
             <div class="out-main">
@@ -423,16 +423,16 @@
               <label><input type="radio" name="opos" value="sc"><span>Sell Call<small>賣出買權</small></span></label>
               <label><input type="radio" name="opos" value="sp"><span>Sell Put<small>賣出賣權</small></span></label>
             </div>
-            <label class="op-single">履約價（點）<input id="op-k" type="number" step="any" value="22000"></label>
+            <label class="op-single">履約價（點）<input id="op-k" type="number" step="any" value="40000"></label>
             <label class="op-single">權利金（點）<input id="op-p" type="number" min="0" step="any" value="200"></label>
             <p class="op-dual leg-h span2" hidden>買權（Call）</p>
-            <label class="op-dual" hidden>Call 履約價（點）<input id="op-kc" type="number" step="any" value="22000"></label>
+            <label class="op-dual" hidden>Call 履約價（點）<input id="op-kc" type="number" step="any" value="40000"></label>
             <label class="op-dual" hidden>Call 權利金（點）<input id="op-pc" type="number" min="0" step="any" value="200"></label>
             <p class="op-dual leg-h span2" hidden>賣權（Put）</p>
-            <label class="op-dual" hidden>Put 履約價（點）<input id="op-kp" type="number" step="any" value="22000"></label>
+            <label class="op-dual" hidden>Put 履約價（點）<input id="op-kp" type="number" step="any" value="40000"></label>
             <label class="op-dual" hidden>Put 權利金（點）<input id="op-pp" type="number" min="0" step="any" value="180"></label>
             <p class="op-dual hint span2" hidden>兩個履約價相同為「跨式」（Straddle），不同為「勒式」（Strangle），系統會自動判斷。</p>
-            <label>到期結算價（點）<input id="op-s" type="number" step="any" value="22300"></label>
+            <label>到期結算價（點）<input id="op-s" type="number" step="any" value="40300"></label>
             <label>口數<input id="op-q" type="number" min="1" step="1" value="1"></label>
             <label class="span2">每點價值（元）<input id="op-m" type="number" min="0" step="any" value="50"><small class="hint">台指選（TXO）每點 50 元</small></label>
           </form>

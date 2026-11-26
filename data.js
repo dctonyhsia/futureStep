@@ -17,13 +17,13 @@ const SITE_DATA = {
   // 數字為教學用假設，可依最新公告調整；圖表會自動重新計算
   marginExample: {
     pointValue: 200,        // 每點價值（大台）
-    initial: 330000,        // 原始保證金
-    maintenance: 253000,    // 維持保證金
+    initial: 701000,        // 原始保證金（期交所 2026/08/12 公告）
+    maintenance: 538000,    // 維持保證金
     days: [
-      { label: "第 1 天（進場）", price: 22000 },
-      { label: "第 2 天", price: 22100 },
-      { label: "第 3 天", price: 21800 },
-      { label: "第 4 天", price: 21580 },
+      { label: "第 1 天（進場）", price: 40000 },
+      { label: "第 2 天", price: 40200 },
+      { label: "第 3 天", price: 39600 },
+      { label: "第 4 天", price: 39150 },
     ],
   },
 
