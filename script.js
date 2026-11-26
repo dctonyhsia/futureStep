@@ -1146,7 +1146,8 @@ const OptMath = (() => {
   const cfg = D.usCpi || {};
   const rows = (cfg.rows || []).filter(r => r && r.m).slice().sort((a, b) => a.m < b.m ? -1 : 1);
   const has = v => typeof v === 'number' && isFinite(v);
-  const pct = v => has(v) ? v.toFixed(1) + '%' : '—';
+  const DEC = 2;   // 顯示到小數第幾位（data.js 目前為 2 位）
+  const pct = v => has(v) ? v.toFixed(DEC) + '%' : '—';
   const mon = m => { const [y, mm] = String(m).split('-'); return `${y} 年 ${+mm} 月`; };
   const any = k => rows.some(r => has(r[k]) || (typeof r[k] === 'string' && r[k]));
   const latestOf = k => { for (let i = rows.length - 1; i >= 0; i--) if (has(rows[i][k])) return i; return -1; };
@@ -1158,7 +1159,7 @@ const OptMath = (() => {
     if (i < 0) return [label, '—', '待更新'];
     const r = rows[i], p = rows[i - 1];
     const d = p && has(p[k]) ? r[k] - p[k] : null;
-    const chg = d === null ? '' : `　較上月 ${d > 0.04 ? '+' : d < -0.04 ? '−' : '±'}${Math.abs(d).toFixed(1)} 個百分點`;
+    const chg = d === null ? '' : `　較上月 ${d > 0.004 ? '+' : d < -0.004 ? '−' : '±'}${Math.abs(d).toFixed(DEC)} 個百分點`;
     return [label, pct(r[k]), mon(r.m) + chg];
   };
   const tiles = [tile('CPI 年增率', 'cpi'), tile('核心 CPI 年增率', 'core'), tile('CPI 月增率（季調）', 'cpiMoM'), tile('核心 CPI 月增率（季調）', 'coreMoM')];
@@ -1224,7 +1225,7 @@ const OptMath = (() => {
     const line = (k, cls) => {
       let d = '', on = false;
       pts.forEach((r, i) => { if (has(r[k])) { d += `${on ? 'L' : 'M'}${x(i).toFixed(1)},${y(r[k]).toFixed(1)} `; on = true; } else on = false; });
-      const dots = pts.map((r, i) => has(r[k]) ? `<circle class="cpi-dot ${cls}" cx="${x(i).toFixed(1)}" cy="${y(r[k]).toFixed(1)}" r="${rad}"><title>${mon(r.m)}：${r[k].toFixed(1)}%</title></circle>` : '').join('');
+      const dots = pts.map((r, i) => has(r[k]) ? `<circle class="cpi-dot ${cls}" cx="${x(i).toFixed(1)}" cy="${y(r[k]).toFixed(1)}" r="${rad}"><title>${mon(r.m)}：${r[k].toFixed(DEC)}%</title></circle>` : '').join('');
       return d ? `<path class="sc-l ${cls}" d="${d}"/>${dots}` : '';
     };
     // 最後一點：放大圓點並標上數值；兩個數值太靠近時上下錯開
@@ -1236,7 +1237,7 @@ const OptMath = (() => {
       const [a, b] = ends[0].v >= ends[1].v ? ends : [ends[1], ends[0]];
       const mid = (a.ly + b.ly) / 2; a.ly = mid - 7; b.ly = mid + 7;
     }
-    const endG = ends.map(e => `<circle class="cpi-dot ${e.cls}" cx="${x(e.i).toFixed(1)}" cy="${y(e.v).toFixed(1)}" r="4.5"/><text class="cpi-end ${e.cls}" x="${(x(e.i) + 8).toFixed(1)}" y="${e.ly.toFixed(1)}">${e.v.toFixed(1)}%</text>`).join('');
+    const endG = ends.map(e => `<circle class="cpi-dot ${e.cls}" cx="${x(e.i).toFixed(1)}" cy="${y(e.v).toFixed(1)}" r="4.5"/><text class="cpi-end ${e.cls}" x="${(x(e.i) + 8).toFixed(1)}" y="${e.ly.toFixed(1)}">${e.v.toFixed(DEC)}%</text>`).join('');
     chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="美國 CPI 與核心 CPI ${M.name}走勢圖">${g}${line(k2, 'sc-l2')}${line(k1, 'sc-l1')}${endG}</svg>`;
   };
   draw();
@@ -1289,7 +1290,7 @@ const OptMath = (() => {
   if (note) {
     const gaps = rows.filter(r => !ok(r) && !has(r.cpiMoM) && r.note).map(r => `${mon(r.m)}${r.note}`);
     note.textContent = [
-      '表格列出最近 12 個月（走勢圖顯示全部月份）。年增率為未經季節調整、與去年同月比較；月增率為經季節調整、與上月比較。',
+      '表格列出最近 12 個月（走勢圖顯示全部月份）。年增率為未經季節調整、與去年同月比較；月增率為經季節調整、與上月比較。數值依 BLS 公布的物價指數計算至小數兩位；BLS 官方新聞稿公布至小數一位，部分月份進位後會和新聞數字差 0.1 個百分點。',
       any('exp') ? 'CPI 年增率標紅字代表高於市場預期、綠字代表低於市場預期。' : '',
       gaps.length ? `${gaps.join('；')}，走勢圖在該月斷開。` : '',
     ].join('');
