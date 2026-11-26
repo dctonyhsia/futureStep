@@ -713,6 +713,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } a.card:hover { transform: none; } html { scroll-behavior: auto; } }
 /* 選單項目較多：中等寬度時縮小間距，避免右側按鈕被擠出畫面 */
 @media (min-width: 961px) and (max-width: 1180px) { .nav a { padding: 6px 8px; } .nav a.nav-cta { margin-left: 4px; } .brand { letter-spacing: .02em; } }
+/* 選單項目多（含新聞、數據、聯絡我們三顆按鈕），961～1080px 再縮小間距，避免擠出畫面 */
+@media (min-width: 961px) and (max-width: 1080px) { .nav a { padding: 6px 6px; } .nav a.nav-cta, .nav a.nav-cta + a.nav-cta { margin-left: 3px; } .nav a:not(.nav-cta) { font-size: 14px; } }
 @media (max-width: 960px) { .nav a.nav-cta, .nav a.nav-cta + a.nav-cta { margin-left: 0; } }
 /* 選單文字：稍微加粗、顏色加深，比較好讀（用描邊微加粗，不必多載一套字重） */
 .nav a:not(.nav-cta) { color: color-mix(in srgb, var(--text) 82%, var(--muted)); font-size: 14.5px; -webkit-text-stroke: .35px currentColor; }
