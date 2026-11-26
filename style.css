@@ -829,4 +829,7 @@ fieldset.sc-box > legend + * { clear: both; }
 
 /* 選擇權策略頁：最上方的風險預告 */
 .st-risk { margin-bottom: 20px; }
-.st-risk p { font-size: 14.5px; line-height: 1.8; }
+.st-risk strong { display: block; margin-bottom: 8px; letter-spacing: .08em; }
+.st-risk ul { margin: 0; padding-left: 1.25em; display: grid; gap: 6px; font-size: 14.5px; line-height: 1.75; color: var(--text); max-width: 920px; }
+.st-risk li::marker { color: var(--warn-line); }
+.st-lead span { display: inline-block; }

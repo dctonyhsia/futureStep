@@ -859,7 +859,7 @@ const OptMath = (() => {
     items.filter(s => s.view === v).map(s => `<li><a href="#${slug(s)}">${esc(s.name)}</a></li>`).join('') + `</ul></div>`).join('');
 
   const note = document.getElementById('st-note');
-  if (note) note.textContent = cfg.note || '';
+  if (note) note.innerHTML = [].concat(cfg.note || []).map(t => `<li>${esc(t)}</li>`).join('');
   const bar = document.getElementById('st-filter');
   const count = v => items.filter(s => !v || s.view === v).length;
   const setView = v => {
