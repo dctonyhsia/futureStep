@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>數據分析｜期貨・選擇權入門指南</title>
-  <meta name="description" content="選擇權策略篩選器：輸入 Call、Put 權利金與行情看法，判讀隱含波動率，並依勝率、報酬或成本篩選符合條件的選擇權策略。">
+  <meta name="description" content="選擇權策略篩選器：輸入 Call、Put 權利金與行情看法，判讀隱含波動率，並依報酬或成本篩選符合條件的選擇權策略。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- 字型非同步載入：先用系統字型顯示，不擋住畫面 -->
@@ -48,7 +48,7 @@
       <div class="wrap">
         <header class="sec-head">
           <span class="num">01</span>
-          <div><h2>選擇權策略篩選器</h2><p>依你的報價、看法與資金條件，比較各策略的勝率、損益與所需資金</p></div>
+          <div><h2>選擇權策略篩選器</h2><p>依你的報價、看法與資金條件，比較各策略的損益與所需資金</p></div>
         </header>
 
         <div class="sc">
@@ -100,9 +100,8 @@
                   </div>
                 </div>
                 <div class="sc-field"><span class="sc-lbl">優先考量</span>
-                  <div class="seg sc-seg sc-seg3" role="radiogroup" aria-label="優先考量">
-                    <label><input type="radio" name="sc-rank" value="pop" checked><span>勝率</span></label>
-                    <label><input type="radio" name="sc-rank" value="ret"><span>報酬</span></label>
+                  <div class="seg sc-seg" role="radiogroup" aria-label="優先考量">
+                    <label><input type="radio" name="sc-rank" value="ret" checked><span>報酬</span></label>
                     <label><input type="radio" name="sc-rank" value="cost"><span>成本</span></label>
                   </div>
                 </div>
@@ -133,8 +132,8 @@
           <b>篩選方式</b>
           <ul>
             <li>先依看法設定情境價：沒填目標價時，小漲／小跌為現價 ± 0.4 倍預期波動，大漲／大跌為 ± 1 倍，盤整為現價，大波動看上下兩邊各 1.3 倍（你預期的波動要比市場大）。</li>
-            <li>只留下「看對時會賺錢、而且明顯比看錯方向時好」的策略；大漲／大跌還要比價格不動時賺得多，盤整則要比價格大幅移動時好。看對時的獲利至少要有最大虧損的兩成，再排除超出資金上限或不符合風險限制的組合。</li>
-            <li>勝率是用價平隱含波動率估算到期時落在獲利區的機率；報酬是看對時的獲利 ÷ 所需資金；成本是所需資金（權利金 ＋ 保證金估算）。</li>
+            <li>只留下「看對時會賺錢、而且明顯比看錯方向時好」的策略；大漲／大跌還要比價格不動時賺得多，盤整則要比價格大幅移動時好。看對時的獲利也要夠大（相對於可能的虧損），再排除超出資金上限或不符合風險限制的組合。</li>
+            <li>報酬是看對時的獲利 ÷ 所需資金；成本是所需資金（權利金 ＋ 保證金估算）。</li>
             <li>權利金偏高時，先收權利金的策略略為加分；偏低時，付權利金的策略略為加分。每個策略會比較不同履約價的組合，只顯示條件最好的那一組。</li>
             <li>保證金依期交所公式粗估：單一賣方為權利金市值 ＋ Max(A 值 − 價外值, B 值)，價差拆成組合單計算，實際以期貨商計收為準。跨月份、搭配期貨與套利策略不列入排名。</li>
             <li>本工具僅供教育與試算參考，不構成任何投資建議。</li>

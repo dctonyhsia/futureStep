@@ -995,10 +995,8 @@ const OptMath = (() => {
     if (!(gain > 0 && gain - other >= 0.2 * scale && (!Number.isFinite(maxLoss) || gain >= 0.2 * maxLoss))) return null;
     // 大漲／大跌：還要比「價格不動」時明顯賺得多，而且漲（跌）過頭也不能虧損無上限
     if (sc.big && (gain - pay(F) < 0.2 * scale || (sc.c > F ? slopeR < 0 : slopeL < 0))) return null;
-    let pop = 0;
-    M.grid.forEach(([S, w]) => { if (pay(S) > 0) pop += w; });
     const margin = marginOf(L, M), capital = margin + Math.max(net, 0) * PV;
-    return { t, L, pay, ks, net, bes: bes.map(Math.round), hi, lo, unlimited, bigUp, gain, pop, margin, capital };
+    return { t, L, pay, ks, net, bes: bes.map(Math.round), hi, lo, unlimited, bigUp, gain, margin, capital };
   };
 
   const compute = () => {
@@ -1051,17 +1049,12 @@ const OptMath = (() => {
     if (view === 'vol') scen = { kind: 'vol', move: target > 0 ? Math.abs(target - fut) || 1.3 * em : 1.3 * em };
     else if (view === 'flat') scen = { kind: 'flat', c: target > 0 ? target : fut };
     else scen = { kind: 'dir', c: target > 0 ? target : fut + mult[view] * em, big: view === 'bigup' || view === 'bigdn' };
-    // 到期價格分布（對數常態，用價平 IV）
-    const sd = iv * Math.sqrt(T), grid = [];
-    let wsum = 0;
-    for (let i = 0; i <= 600; i++) { const z = -5 + 10 * i / 600, w = Math.exp(-z * z / 2); grid.push([fut * Math.exp(z * sd - sd * sd / 2), w]); wsum += w; }
-    grid.forEach(g => { g[1] /= wsum; });
-    const M = { spot, fut, atm, step, T, calls, puts, em, scen, grid, A: val('sc-a') || 0, B: val('sc-b') || 0, C: val('sc-cval') || 0 };
+    const M = { spot, fut, atm, step, T, calls, puts, em, scen, A: val('sc-a') || 0, B: val('sc-b') || 0, C: val('sc-cval') || 0 };
 
     const risk = form.querySelector('[name="sc-risk"]:checked').value, rank = form.querySelector('[name="sc-rank"]:checked').value;
     const budget = val('sc-budget');
     const fit = r => (level === 'high' ? (r.net < 0 ? 1 : -1) : level === 'low' ? (r.net > 0 ? 1 : -1) : 0);
-    const score = r => { const f = 1 + 0.08 * fit(r); return rank === 'pop' ? r.pop * f : rank === 'ret' ? r.gain * PV / Math.max(r.capital, 1) * f : -r.capital / f; };
+    const score = r => { const f = 1 + 0.08 * fit(r); return rank === 'cost' ? -r.capital / f : r.gain * PV / Math.max(r.capital, 1) * f; };
     // 策略本身的分類要和看法相容，避免平移履約價後性質改變、名稱卻不符
     const allow = { bigup: ['看漲', '大波動'], up: ['看漲', '盤整'], flat: ['盤整', '看漲', '看跌'], dn: ['看跌', '盤整'], bigdn: ['看跌', '大波動'], vol: ['大波動'] }[view];
     const fitView = pool.filter(c => allow.includes(c.t.s.view)).map(c => evaluate(c.t, c.legs, M)).filter(Boolean);
@@ -1076,7 +1069,7 @@ const OptMath = (() => {
       list.push(r); names.add(r.t.s.name);
     });
     const dropped = new Set(fitView.map(r => r.t.s.name).filter(n => !names.has(n) && !rs.some(x => x.t.s.name === n))).size;
-    const rankTxt = { pop: '勝率', ret: '報酬（看對時獲利 ÷ 所需資金）', cost: '所需資金由低到高' }[rank];
+    const rankTxt = { ret: '報酬（看對時獲利 ÷ 所需資金）', cost: '所需資金由低到高' }[rank] || '報酬（看對時獲利 ÷ 所需資金）';
     out.count.textContent = (list.length ? `共比較 ${pool.length} 種組合，符合條件的有 ${list.length} 種策略，依${rankTxt}排序` : '') +
       (dropped ? `${list.length ? '；' : ''}另有 ${dropped} 種方向相符，但超出資金上限或風險限制` : '');
     if (!list.length) {
@@ -1090,18 +1083,17 @@ const OptMath = (() => {
       : scen.kind === 'flat' ? `到期停在 ${nf(scen.c)} 時賺 ${nf(r.gain)} 點` : `到期漲跌 ${nf(scen.move)} 點時，至少賺 ${nf(r.gain)} 點`;
     const why = r => [
       scenTxt(r),
-      `到期勝率約 ${pct(r.pop)}，損益兩平點 ${r.bes.length ? r.bes.map(nf).join('、') : '—'}`,
+      `損益兩平點 ${r.bes.length ? r.bes.map(nf).join('、') : '—'}`,
       fit(r) > 0 ? (level === 'high' ? '權利金偏高，先收權利金對你有利' : '權利金偏低，付權利金比較划算')
         : r.net < 0 ? `先收 ${nf(-r.net)} 點權利金` : `付出 ${nf(r.net)} 點權利金`,
-      r.unlimited ? '虧損沒有上限，一定要設停損' : `最大虧損 ${nf(-r.lo)} 點（${nf(-r.lo * PV)} 元）`,
-    ];
+      r.unlimited ? '虧損沒有上限，一定要設停損' : '',
+    ].filter(Boolean);
     const pick = (r, i) => `<article class="card sc-pick${i === 0 ? ' best' : ''}">` +
       `<header class="sc-pick-h"><span class="sc-rank">${i + 1}</span><div><h3>${esc(r.t.s.name)} <small>${esc(r.t.s.en)}</small></h3>` +
       `<span class="st-view ${vcls[r.t.s.view]}">${esc(r.t.s.view)}</span><span class="st-lv">${esc(r.t.s.level)}</span></div></header>` +
       `<ul class="st-legs">${legTxt(r)}</ul>` +
-      `<dl class="sc-kv"><div><dt>到期勝率</dt><dd>${pct(r.pop)}</dd></div>` +
+      `<dl class="sc-kv">` +
       `<div><dt>看對時損益</dt><dd class="pos">${sgn(r.gain)} 點<small>${sgn(r.gain * PV)} 元</small></dd></div>` +
-      `<div><dt>最大虧損</dt><dd class="neg">${r.unlimited ? '無上限' : nf(-r.lo) + ' 點'}<small>${r.unlimited ? '需設停損' : nf(-r.lo * PV) + ' 元'}</small></dd></div>` +
       `<div><dt>所需資金</dt><dd>${nf(r.capital)} 元<small>${r.margin > 0 ? `含保證金 ${nf(r.margin)}` : '不需保證金'}</small></dd></div></dl>` +
       `<ul class="sc-why">${why(r).map(t => `<li>${esc(t)}</li>`).join('')}</ul>` +
       `<a class="sc-link" href="options-strategy.html#${slug(r.t.s)}">查看${esc(r.t.s.name)}的說明 →</a></article>`;
@@ -1134,10 +1126,10 @@ const OptMath = (() => {
 
     // 其他符合條件的策略
     const rest = list.slice(3);
-    out.more.innerHTML = rest.length ? `<p class="sc-more-h">其他符合條件的策略</p><div class="table-wrap"><table class="num-table sc-table"><thead><tr><th>策略</th><th>組合</th><th>到期勝率</th><th>看對時</th><th>最大虧損</th><th>所需資金</th></tr></thead><tbody>` +
+    out.more.innerHTML = rest.length ? `<p class="sc-more-h">其他符合條件的策略</p><div class="table-wrap"><table class="num-table sc-table"><thead><tr><th>策略</th><th>組合</th><th>看對時</th><th>所需資金</th></tr></thead><tbody>` +
       rest.map(r => `<tr><td><a href="options-strategy.html#${slug(r.t.s)}">${esc(r.t.s.name)}</a></td>` +
         `<td class="mono">${r.L.map(l => `${l.sg > 0 ? '買' : '賣'}${l.q > 1 ? l.q : ''} ${nf(l.k)}${l.call ? 'C' : 'P'}`).join('、')}</td>` +
-        `<td>${pct(r.pop)}</td><td class="pos">${sgn(r.gain)}</td><td class="neg">${r.unlimited ? '無上限' : nf(-r.lo)}</td><td>${nf(r.capital)}</td></tr>`).join('') +
+        `<td class="pos">${sgn(r.gain)}</td><td>${nf(r.capital)}</td></tr>`).join('') +
       `</tbody></table></div><p class="hint">損益單位為點（每點 ${PV} 元），所需資金單位為元。</p>` : '';
   };
 
