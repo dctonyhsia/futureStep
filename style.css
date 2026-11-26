@@ -1026,3 +1026,8 @@ fieldset.sc-box > legend + * { clear: both; }
 .tbl-center th:nth-child(3), .tbl-center td:nth-child(3) { text-align: left; padding-left: 48px; }
 @media (max-width: 640px) { .tbl-center th:nth-child(3), .tbl-center td:nth-child(3) { padding-left: 20px; } }
 .td-lines span { display: block; }
+
+/* 新聞分頁（每頁 10 則）：按鈕沿用 .news-chip 樣式 */
+.news-pager { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 900px; margin: 16px 0 0; }
+.news-pager .news-chip { min-width: 40px; }
+.news-pager .news-chip:disabled { opacity: .4; cursor: default; }

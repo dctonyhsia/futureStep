@@ -123,7 +123,37 @@
         var b = e.target.closest("button"); if (!b) return;
         var t = b.getAttribute("data-tag");
         bar.querySelectorAll("button").forEach(function (x) { var on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", on); });
-        box.querySelectorAll(".news-item").forEach(function (it) { it.hidden = !!t && it.getAttribute("data-tag") !== t; });
+        curTag = t; page = 1; apply();
+      });
+      // 分頁：每頁 PER 則，依目前分類篩選後的則數計算頁數
+      var PER = 10, curTag = "", page = 1;
+      var pager = document.createElement("nav");
+      pager.className = "news-pager"; pager.setAttribute("aria-label", "新聞分頁");
+      box.insertAdjacentElement("afterend", pager);
+      var apply = function () {
+        var els = [].slice.call(box.querySelectorAll(".news-item"));
+        var match = els.filter(function (it) { return !curTag || it.getAttribute("data-tag") === curTag; });
+        var pages = Math.max(1, Math.ceil(match.length / PER));
+        if (page > pages) page = pages;
+        els.forEach(function (it) { it.hidden = true; });
+        match.slice((page - 1) * PER, page * PER).forEach(function (it) { it.hidden = false; });
+        if (pages < 2) { pager.innerHTML = ""; pager.hidden = true; syncAll(); return; }
+        pager.hidden = false;
+        var btn = function (label, p, cls, dis, cur) {
+          return '<button type="button" class="news-chip' + cls + '" data-page="' + p + '"' +
+            (dis ? ' disabled' : '') + (cur ? ' aria-current="page"' : '') + '>' + label + '</button>';
+        };
+        var html = btn("‹ 上一頁", page - 1, " news-pg-nav", page === 1, false);
+        for (var i = 1; i <= pages; i++) html += btn(i, i, i === page ? " active" : "", false, i === page);
+        html += btn("下一頁 ›", page + 1, " news-pg-nav", page === pages, false);
+        pager.innerHTML = html;
+        syncAll();
+      };
+      pager.addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-page]"); if (!b || b.disabled) return;
+        page = +b.getAttribute("data-page"); apply();
+        var top = bar.getBoundingClientRect().top + window.pageYOffset - 90;
+        if (window.pageYOffset > top) window.scrollTo({ top: top, behavior: "smooth" });
       });
       // 全部展開／收起
       var syncAll = function () {
@@ -136,6 +166,7 @@
         syncAll();
       });
       box.addEventListener("toggle", syncAll, true);
+      apply();
       // 頁尾「資料來源」：自動列出今天新聞用到的媒體（新聞來源可寫成「經濟日報、鉅亨網」或「經濟日報（DIGITIMES 研究）」）
       var SITES = { "經濟日報": "https://money.udn.com/", "Yahoo股市": "https://tw.stock.yahoo.com/", "鉅亨網": "https://news.cnyes.com/", "DIGITIMES": "https://www.digitimes.com.tw/" };
       var srcList = document.querySelector(".footer .sources"), names = [];
