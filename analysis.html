@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>數據｜期貨・選擇權入門指南</title>
-  <meta name="description" content="影響期貨市場的重要經濟數據：美國 CPI（消費者物價指數）與非農就業的意義、公布時間、觀察方式與走勢圖。">
+  <meta name="description" content="影響期貨市場的重要經濟數據：美國 CPI（消費者物價指數）、非農就業與公債殖利率的意義、公布時間、觀察方式與走勢圖。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- 字型非同步載入：先用系統字型顯示，不擋住畫面 -->
@@ -54,6 +54,7 @@
           <select id="ind-select" aria-label="選擇要查看的經濟指標">
             <option value="cpi">美國 CPI（消費者物價指數）</option>
             <option value="nfp">美國非農就業</option>
+            <option value="yield">美國公債殖利率</option>
           </select>
         </div>
       </div>
@@ -188,11 +189,90 @@
       </div>
     </section>
 
+    <section class="section ind-panel" id="yield" data-ind="yield">
+      <div class="wrap">
+        <header class="sec-head">
+          <span class="num">03</span>
+          <div><h2>美國公債殖利率</h2><p>全球資金成本的基準，牽動美股、美元與台指期的評價</p></div>
+        </header>
+
+        <article class="card cpi-intro">
+          <section class="cpi-item"><h3>什麼是公債殖利率</h3><p>投資人買進美國政府公債並持有到期的年化報酬率。債券價格下跌時殖利率上升，兩者反向變動。<b>短天期</b>（3 個月、2 年）主要反映市場對聯準會政策利率的預期；<b>長天期</b>（10 年、30 年）則反映經濟成長、通膨與財政風險。10 年期是全球資產定價最常用的基準。</p></section>
+          <section class="cpi-item"><h3>誰公布、何時公布</h3><p>由美國財政部每個交易日公布各天期殖利率（Daily Treasury Par Yield Curve Rates），以紐約時間下午約 3:30 的市場報價計算，換算台灣時間約為隔天清晨。美國公債休市日沒有資料。</p></section>
+          <section class="cpi-item"><h3>殖利率曲線怎麼看</h3><p>把各天期的殖利率連起來就是殖利率曲線。正常情況下長天期高於短天期；若短天期反而高於長天期，稱為<b>倒掛</b>，歷史上常被視為經濟衰退的預警訊號，但不代表一定會發生，發生的時間也不確定。</p></section>
+          <section class="cpi-item"><h3>和期貨市場的關係</h3><p>殖利率上升代表資金成本提高，常壓抑股市評價，對科技成長股的影響尤其明顯，美元也常同步走強；殖利率快速下滑則可能反映避險需求或降息預期。台指期權值以科技股為主，常跟著美債殖利率與美股科技股的變化波動。</p></section>
+        </article>
+
+        <div class="cpi-panel">
+          <div class="yld-range">
+            <span class="cpi-adj-l">期間</span>
+            <div class="tabs cpi-adj-tabs" role="group" aria-label="切換圖表期間" id="yld-range">
+              <button type="button" class="tab" data-days="31" aria-pressed="false">1 個月</button>
+              <button type="button" class="tab" data-days="183" aria-pressed="false">6 個月</button>
+              <button type="button" class="tab" data-days="366" aria-pressed="false">1 年</button>
+              <button type="button" class="tab" data-days="1096" aria-pressed="false">3 年</button>
+              <button type="button" class="tab active" data-days="0" aria-pressed="true">全部</button>
+            </div>
+          </div>
+
+          <!-- 原始數據：財政部官方公布值 -->
+          <div class="yld-group">
+            <p class="yld-gh"><span class="yld-badge">原始數據</span>財政部官方公布的各天期殖利率（%）</p>
+            <div class="cpi-kpis yld-kpis" id="yld-kpis"></div>
+            <div class="card cpi-chart-card">
+              <div class="cpi-chart-h">
+                <p class="sc-chart-h">殖利率走勢<small>（%）</small></p>
+                <div class="yld-tenors" role="group" aria-label="選擇要顯示的天期" id="yld-tenors"></div>
+              </div>
+              <p class="hint cpi-meta" id="yld-meta"></p>
+              <div class="sc-chart cpi-chart yld-chart" id="yld-chart"></div>
+            </div>
+            <div class="table-wrap cpi-table">
+              <table>
+                <thead id="yld-head"></thead>
+                <tbody id="yld-rows"></tbody>
+              </table>
+              <button type="button" class="cpi-toggle" id="yld-toggle" aria-controls="yld-rows" aria-expanded="false" hidden></button>
+            </div>
+          </div>
+
+          <!-- 加工指標：由原始數據相減計算，與原始數據分開呈現 -->
+          <div class="yld-group">
+            <p class="yld-gh"><span class="yld-badge derived">加工指標</span>由上方原始數據相減計算的利差（百分點）；小於 0 代表殖利率曲線倒掛</p>
+            <div class="cpi-kpis yld-kpis2" id="yld-kpis2"></div>
+            <div class="card cpi-chart-card">
+              <div class="cpi-chart-h">
+                <p class="sc-chart-h">利差走勢<small>（百分點）</small></p>
+              </div>
+              <div class="sc-chart cpi-chart yld-chart" id="yld-spread-chart"></div>
+              <div class="sc-legend">
+                <span><i class="sc-sw yld-sw-s1"></i>10 年 − 2 年</span>
+                <span><i class="sc-sw yld-sw-s2"></i>10 年 − 3 個月</span>
+                <span><i class="sc-sw sc-sw-spot"></i>0 基準線（低於此線＝倒掛）</span>
+              </div>
+            </div>
+            <p class="hint cpi-note" id="yld-note"></p>
+          </div>
+        </div>
+
+        <div class="keypoints">
+          <b>觀察重點</b>
+          <ul>
+            <li><b>10 年 − 2 年</b>與<b>10 年 − 3 個月</b>是最常用的兩個利差；利差由負轉正（倒掛結束）的時點也常受到市場關注。</li>
+            <li>殖利率的變動常用「基點」（bp）表示：1 個百分點＝100 個基點，例如 4.50% 升到 4.53% 就是上升 3 個基點。</li>
+            <li>短天期殖利率對聯準會的利率決策最敏感；長天期殖利率則受通膨預期、公債供給與財政狀況影響較大。</li>
+            <li>CPI、非農等重要數據公布當下，殖利率常大幅波動，可以和本頁其他指標一起觀察。</li>
+            <li>原始數據以美國財政部公布為準；利差為本站依原始數據計算的加工指標。本頁內容僅供教育與參考，不構成任何投資建議。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- 選擇權策略篩選器暫時停用：要恢復顯示，刪掉下一行的 hidden -->
     <section class="section" id="screener" hidden>
       <div class="wrap">
         <header class="sec-head">
-          <span class="num">03</span>
+          <span class="num">04</span>
           <div><h2>選擇權策略篩選器</h2><p>依你的報價、看法與資金條件，比較各策略的損益與所需資金</p></div>
         </header>
 
@@ -299,7 +379,8 @@
         <p class="footer-h">資料來源</p>
         <ul class="sources">
           <li><a href="https://www.taifex.com.tw/" target="_blank" rel="noopener">臺灣期貨交易所（商品規格、保證金公告）</a></li>
-          <li><a href="https://www.bls.gov/cpi/" target="_blank" rel="noopener">美國勞工統計局 BLS（CPI 數據）</a></li>
+          <li><a href="https://www.bls.gov/cpi/" target="_blank" rel="noopener">美國勞工統計局 BLS（CPI、非農就業數據）</a></li>
+          <li><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">美國財政部（公債殖利率數據）</a></li>
         </ul>
         <p class="small">內容更新：<span id="updated"></span></p>
       </div>
@@ -308,6 +389,7 @@
   </footer>
 
   <script src="data.js" defer></script>
+  <script src="yield-data.js" defer></script>
   <script src="script.js" defer></script>
 </body>
 </html>

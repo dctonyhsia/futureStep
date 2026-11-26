@@ -1532,4 +1532,162 @@ const OptMath = (() => {
   renderTiles(); draw(); renderTable(); renderNote();
 })();
 
+// ---------- 數據頁：美國公債殖利率（資料在 yield-data.js 的 US_YIELD，每日一筆）----------
+// 原始數據（5 個天期）與加工指標（2 個利差）分開呈現
+(function () {
+  const kpis = document.getElementById('yld-kpis');
+  if (!kpis) return;
+  const cfg = window.US_YIELD || {};
+  const rows = (cfg.rows || []).filter(r => Array.isArray(r) && r[0]).map(r => ({ d: r[0], v: r.slice(1, 6), s: r.slice(6, 8) })).sort((a, b) => a.d < b.d ? -1 : 1);
+  const has = v => typeof v === 'number' && isFinite(v);
+  const TENORS = ['3 個月', '2 年', '5 年', '10 年', '30 年'];
+  const SPREADS = ['10 年 − 2 年', '10 年 − 3 個月'];
+  const day = d => { const [y, m, dd] = d.split('-'); return `${y}/${+m}/${+dd}`; };
+  const md = d => { const [, m, dd] = d.split('-'); return `${+m}/${+dd}`; };
+  const bp = d => `${d > 0.0001 ? '+' : d < -0.0001 ? '−' : '±'}${Math.round(Math.abs(d) * 100)} bp`;
+  const sgn = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(2)}`;
+  const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  const last = rows[rows.length - 1], prev = rows[rows.length - 2];
+
+  if (!rows.length) {
+    kpis.innerHTML = TENORS.map(t => `<div class="card cpi-kpi"><span class="cpi-k">${t}期</span><b class="cpi-v">—</b><small>待更新</small></div>`).join('');
+    ['yld-chart', 'yld-spread-chart'].forEach(id => { const el = document.getElementById(id); if (el) { el.classList.add('cpi-empty'); el.innerHTML = '<div class="cpi-ph"><b>圖表位置</b><span>數據更新後，這裡會顯示走勢圖</span></div>'; } });
+    return;
+  }
+
+  // 最新數據：原始數據 5 格、加工指標 2 格（較前一個交易日的變動用 bp 表示）
+  const chg = (a, b) => has(a) && has(b) ? `　較前一交易日 ${bp(a - b)}` : '';
+  kpis.innerHTML = TENORS.map((t, i) => `<div class="card cpi-kpi"><span class="cpi-k">${t}期</span><b class="cpi-v">${has(last.v[i]) ? last.v[i].toFixed(2) + '%' : '—'}</b><small>${day(last.d)}${prev ? chg(last.v[i], prev.v[i]) : ''}</small></div>`).join('');
+  const k2 = document.getElementById('yld-kpis2');
+  if (k2) k2.innerHTML = SPREADS.map((t, i) => {
+    const v = last.s[i];
+    const state = !has(v) ? '' : v < 0 ? '<span class="yld-state inv">倒掛中</span>' : '<span class="yld-state">正斜率</span>';
+    return `<div class="card cpi-kpi"><span class="cpi-k">${t}利差</span><b class="cpi-v">${has(v) ? sgn(v) : '—'}${state}</b><small>${day(last.d)}${prev ? chg(v, prev.s[i]) : ''}</small></div>`;
+  }).join('');
+  setText('yld-meta', `${day(rows[0].d)} ～ ${day(last.d)}｜每日收盤（美國日期，休市日沒有資料）｜資料來源：${cfg.source || '美國財政部'}${cfg.updated ? `｜更新：${cfg.updated}` : ''}`);
+
+  // 期間與天期選擇
+  let days = 0;
+  const on = [true, true, true, true, true];
+  const inRange = () => {
+    if (!days) return rows;
+    const t = new Date(last.d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - days);
+    const from = t.toISOString().slice(0, 10);
+    return rows.filter(r => r.d >= from);
+  };
+  const tenorBox = document.getElementById('yld-tenors');
+  if (tenorBox) {
+    tenorBox.innerHTML = TENORS.map((t, i) => `<button type="button" class="yld-chip yl${i} active" data-i="${i}" aria-pressed="true"><i></i>${t}</button>`).join('');
+    tenorBox.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const i = +b.dataset.i;
+      if (on[i] && on.filter(Boolean).length === 1) return;   // 至少留一條線
+      on[i] = !on[i]; b.classList.toggle('active', on[i]); b.setAttribute('aria-pressed', on[i]);
+      drawRaw();
+    });
+  }
+
+  // 通用折線圖（日頻，橫軸以交易日排列）；滑鼠移上去顯示當天數值
+  const lineChart = (el, pts, series, opt) => {
+    const W = Math.max(320, Math.round(el.clientWidth || 720)), H = W < 560 ? 250 : 320, L = 40, R = 58, T = 14, B = 34;
+    const vals = [];
+    pts.forEach(p => series.forEach(s => { const v = s.get(p); if (has(v)) vals.push(v); }));
+    if (has(opt.ref)) vals.push(opt.ref);
+    if (vals.length < 2) { el.innerHTML = ''; return; }
+    const span0 = Math.max(...vals) - Math.min(...vals) || 1;
+    const stepY = [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2].find(s => span0 / s <= 6) || 5;
+    let lo = Math.floor((Math.min(...vals) - stepY * 0.25) / stepY) * stepY, hi = Math.ceil((Math.max(...vals) + stepY * 0.25) / stepY) * stepY;
+    const n = pts.length;
+    const x = i => L + (W - L - R) * (n === 1 ? 0.5 : i / (n - 1));
+    const y = v => T + (H - T - B) * (hi - v) / (hi - lo);
+    const yDec = stepY < 0.1 ? 2 : stepY < 1 ? (stepY === 0.25 ? 2 : 1) : 0;
+    let g = '';
+    if (opt.shadeBelowRef && has(opt.ref) && lo < opt.ref) g += `<rect class="yld-inv-band" x="${L}" y="${y(Math.min(opt.ref, hi)).toFixed(1)}" width="${W - L - R}" height="${(y(lo) - y(Math.min(opt.ref, hi))).toFixed(1)}"/>`;
+    for (let v = lo; v <= hi + 1e-9; v += stepY) g += `<line class="sc-grid" x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="sc-ty" x="${L - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${v.toFixed(yDec)}</text>`;
+    // 橫軸刻度：超過約 1 年半標年份、超過 2 個月標月份、更短標日期
+    const spanDays = (new Date(pts[n - 1].d) - new Date(pts[0].d)) / 864e5;
+    const ticks = [];
+    if (spanDays > 540) pts.forEach((p, i) => { if (i === 0 || p.d.slice(0, 4) !== pts[i - 1].d.slice(0, 4)) ticks.push([i, p.d.slice(0, 4)]); });
+    else if (spanDays > 62) pts.forEach((p, i) => { if (i === 0 || p.d.slice(0, 7) !== pts[i - 1].d.slice(0, 7)) ticks.push([i, `${p.d.slice(2, 4)}/${p.d.slice(5, 7)}`]); });
+    else { const every = Math.max(1, Math.ceil(n / Math.max(3, Math.floor((W - L - R) / 60)))); pts.forEach((p, i) => { if (i % every === 0) ticks.push([i, md(p.d)]); }); }
+    const minGap = 46; let lastX = -1e9;
+    if (ticks.length > 1 && ticks[0][0] === 0 && x(ticks[1][0]) - x(0) < minGap) ticks.shift();   // 起點太靠近下一個刻度時，改標下一個（例如 2024 年）
+    ticks.forEach(([i, t]) => {
+      if (x(i) - lastX < minGap || x(i) > W - R - 10) return;
+      lastX = x(i);
+      g += `<line class="sc-grid" x1="${x(i).toFixed(1)}" x2="${x(i).toFixed(1)}" y1="${T}" y2="${H - B}"/><text class="sc-ty" x="${x(i).toFixed(1)}" y="${H - 12}" text-anchor="${i === 0 ? 'start' : 'middle'}">${t}</text>`;
+    });
+    if (has(opt.ref)) g += `<line class="sc-spot" x1="${L}" x2="${W - R}" y1="${y(opt.ref).toFixed(1)}" y2="${y(opt.ref).toFixed(1)}"/>`;
+    // 折線（資料點多時用每像素抽樣，線條比較順）
+    const stride = Math.max(1, Math.floor(n / ((W - L - R) * 1.5)));
+    series.forEach(s => {
+      let d = '', pen = false;
+      pts.forEach((p, i) => {
+        if (i % stride && i !== n - 1) return;
+        const v = s.get(p);
+        if (has(v)) { d += `${pen ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`; pen = true; } else pen = false;
+      });
+      g += `<path class="yld-l ${s.cls}" d="${d}"/>`;
+    });
+    // 最後一點標數值，太靠近時上下錯開
+    const ends = series.map(s => { let i = n - 1; while (i >= 0 && !has(s.get(pts[i]))) i--; return i < 0 ? null : { s, i, v: s.get(pts[i]), ly: y(s.get(pts[i])) + 4 }; }).filter(Boolean).sort((a, b) => a.ly - b.ly);
+    for (let k = 1; k < ends.length; k++) if (ends[k].ly - ends[k - 1].ly < 13) ends[k].ly = ends[k - 1].ly + 13;
+    ends.forEach(e => { g += `<circle class="yld-dot ${e.s.cls}" cx="${x(e.i).toFixed(1)}" cy="${y(e.v).toFixed(1)}" r="3.5"/><text class="cpi-end yld-end ${e.s.cls}" x="${(x(e.i) + 7).toFixed(1)}" y="${e.ly.toFixed(1)}">${opt.fmt(e.v)}</text>`; });
+    g += `<line class="yld-guide" x1="0" x2="0" y1="${T}" y2="${H - B}" visibility="hidden"/><rect class="yld-hit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}"/>`;
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opt.label)}">${g}</svg><div class="yld-tip" hidden></div>`;
+    // 滑鼠／手指移動時顯示當天數值
+    const svg = el.querySelector('svg'), guide = svg.querySelector('.yld-guide'), tip = el.querySelector('.yld-tip');
+    const move = e => {
+      const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * W / r.width;
+      const i = Math.max(0, Math.min(n - 1, Math.round((px - L) / (W - L - R) * (n - 1))));
+      const p = pts[i], gx = x(i);
+      guide.setAttribute('x1', gx); guide.setAttribute('x2', gx); guide.setAttribute('visibility', 'visible');
+      tip.innerHTML = `<b>${day(p.d)}</b>` + series.map(s => `<span><i class="${s.cls}"></i>${s.label}<em>${has(s.get(p)) ? opt.fmt(s.get(p)) : '—'}</em></span>`).join('');
+      tip.hidden = false;
+      const left = gx * r.width / W, tw = tip.offsetWidth;
+      tip.style.left = Math.max(4, Math.min(r.width - tw - 4, left + (left > r.width / 2 ? -tw - 12 : 12))) + 'px';
+    };
+    const leave = () => { guide.setAttribute('visibility', 'hidden'); tip.hidden = true; };
+    svg.addEventListener('pointermove', move); svg.addEventListener('pointerdown', move); svg.addEventListener('pointerleave', leave);
+  };
+
+  const rawEl = document.getElementById('yld-chart'), spEl = document.getElementById('yld-spread-chart');
+  const drawRaw = () => lineChart(rawEl, inRange(), TENORS.map((t, i) => ({ label: t, cls: 'yl' + i, get: p => p.v[i] })).filter((s, i) => on[i]), { fmt: v => v.toFixed(2) + '%', label: '美國公債殖利率走勢圖' });
+  const drawSpread = () => lineChart(spEl, inRange(), SPREADS.map((t, i) => ({ label: t, cls: 'ys' + i, get: p => p.s[i] })), { ref: 0, shadeBelowRef: true, fmt: v => sgn(v), label: '美國公債利差走勢圖（加工指標）' });
+  const drawAll = () => { drawRaw(); drawSpread(); };
+  const rangeBox = document.getElementById('yld-range');
+  if (rangeBox) rangeBox.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    days = +b.dataset.days;
+    rangeBox.querySelectorAll('button').forEach(t => { const a = t === b; t.classList.toggle('active', a); t.setAttribute('aria-pressed', a); });
+    drawAll();
+  });
+  drawAll();
+  let lastW = rawEl.clientWidth, tm;
+  addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(() => { if (rawEl.clientWidth !== lastW) { lastW = rawEl.clientWidth; drawAll(); } }, 150); });
+
+  // 表格：原始數據，最近 20 個交易日（預設顯示 5 天）
+  const head = document.getElementById('yld-head'), body = document.getElementById('yld-rows'), toggle = document.getElementById('yld-toggle');
+  const shown = rows.slice(-20).reverse(), PEEK = 5;
+  if (head) head.innerHTML = `<tr><th>日期</th>${TENORS.map(t => `<th>${t}期</th>`).join('')}</tr>`;
+  body.innerHTML = shown.map(r => `<tr><td>${day(r.d)}</td>${r.v.map(v => `<td>${has(v) ? v.toFixed(2) + '%' : '—'}</td>`).join('')}</tr>`).join('');
+  if (toggle && shown.length > PEEK) {
+    let open = false;
+    const setOpen = o => {
+      open = o; [...body.querySelectorAll('tr')].slice(PEEK).forEach(tr => { tr.hidden = !open; });
+      toggle.setAttribute('aria-expanded', open);
+      toggle.innerHTML = open ? '收起表格 <span aria-hidden="true">▴</span>' : `展開最近 ${shown.length} 個交易日 <span aria-hidden="true">▾</span>`;
+    };
+    setOpen(false); toggle.hidden = false;
+    toggle.addEventListener('click', () => setOpen(!open));
+  }
+
+  // 加工指標說明：倒掛天數與期間（由資料計算）
+  const note = document.getElementById('yld-note');
+  if (note) note.textContent = '利差＝長天期殖利率減短天期殖利率，由本站依財政部原始數據計算（小數 2 位）。' + SPREADS.map((t, i) => {
+    const neg = rows.filter(r => has(r.s[i]) && r.s[i] < 0);
+    return neg.length ? `資料期間內，${t}利差共有 ${neg.length.toLocaleString('zh-TW')} 個交易日小於 0（${day(neg[0].d)}～${day(neg[neg.length - 1].d)}）` : `資料期間內，${t}利差沒有出現倒掛`;
+  }).join('；') + '。';
+})();
+
 $('year').textContent = new Date().getFullYear();

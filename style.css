@@ -955,3 +955,51 @@ fieldset.sc-box > legend + * { clear: both; }
 .section.tight-top { padding-top: 28px; }
 .page-hero.tight-hero + .ind-bar-wrap { padding-top: 28px; }
 @media (max-width: 640px) { .page-hero.tight-hero { padding: 22px 0 14px; } .section.tight-top, .page-hero.tight-hero + .ind-bar-wrap { padding-top: 20px; } }
+/* 數據頁：美國公債殖利率 */
+:root { --yl4: #8b6cc8; }
+:root[data-theme="dark"] { --yl4: #b49cf0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --yl4: #b49cf0; } }
+.yld-range { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.yld-group { display: flex; flex-direction: column; gap: 14px; }
+.yld-group + .yld-group { margin-top: 18px; padding-top: 22px; border-top: 2px dashed var(--line); }
+.yld-gh { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 14px; color: var(--muted); }
+.yld-badge { display: inline-block; padding: 4px 12px; border-radius: 6px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 700; letter-spacing: .04em; }
+.yld-badge.derived { background: var(--gold); }
+:root[data-theme="dark"] .yld-badge { color: #0c1420; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .yld-badge { color: #0c1420; } }
+.cpi-kpis.yld-kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.cpi-kpis.yld-kpis2 { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 640px; }
+.yld-state { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 99px; font: 700 12px "Noto Sans TC", sans-serif; vertical-align: middle; background: var(--bg-alt); color: var(--muted); }
+.yld-state.inv { background: color-mix(in srgb, var(--up) 15%, transparent); color: var(--up); }
+.yld-tenors { display: flex; flex-wrap: wrap; gap: 6px; }
+.yld-chip { display: inline-flex; align-items: center; gap: 6px; font: 700 13px "Noto Sans TC", sans-serif; padding: 5px 11px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.yld-chip i { width: 14px; height: 3px; border-radius: 2px; background: currentColor; opacity: .35; }
+.yld-chip.active { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.yld-chip.active i { opacity: 1; }
+.yld-chip.yl0.active i, .yld-tip i.yl0 { background: var(--muted); }
+.yld-chip.yl1.active i, .yld-tip i.yl1 { background: var(--gold); }
+.yld-chip.yl2.active i, .yld-tip i.yl2 { background: var(--down); }
+.yld-chip.yl3.active i, .yld-tip i.yl3 { background: var(--accent); }
+.yld-chip.yl4.active i, .yld-tip i.yl4 { background: var(--yl4); }
+.yld-tip i.ys0, .yld-sw-s1 { background: var(--accent); }
+.yld-tip i.ys1, .yld-sw-s2 { background: var(--up); }
+.yld-chart { position: relative; touch-action: pan-y; }
+.yld-l { fill: none; stroke-width: 2; stroke-linejoin: round; }
+.yld-l.yl0 { stroke: var(--muted); } .yld-l.yl1 { stroke: var(--gold); } .yld-l.yl2 { stroke: var(--down); } .yld-l.yl3 { stroke: var(--accent); stroke-width: 2.6; } .yld-l.yl4 { stroke: var(--yl4); }
+.yld-l.ys0 { stroke: var(--accent); stroke-width: 2.4; } .yld-l.ys1 { stroke: var(--up); }
+.yld-dot { stroke: var(--surface); stroke-width: 1.5; }
+.yld-dot.yl0 { fill: var(--muted); } .yld-dot.yl1 { fill: var(--gold); } .yld-dot.yl2 { fill: var(--down); } .yld-dot.yl3 { fill: var(--accent); } .yld-dot.yl4 { fill: var(--yl4); } .yld-dot.ys0 { fill: var(--accent); } .yld-dot.ys1 { fill: var(--up); }
+.cpi-end.yld-end { font-size: 11.5px; }
+.cpi-end.yld-end.yl0 { fill: var(--muted); } .cpi-end.yld-end.yl1 { fill: var(--gold); } .cpi-end.yld-end.yl2 { fill: var(--down); } .cpi-end.yld-end.yl3 { fill: var(--accent); } .cpi-end.yld-end.yl4 { fill: var(--yl4); } .cpi-end.yld-end.ys0 { fill: var(--accent); } .cpi-end.yld-end.ys1 { fill: var(--up); }
+.yld-inv-band { fill: color-mix(in srgb, var(--up) 9%, transparent); }
+.yld-guide { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3 3; opacity: .5; pointer-events: none; }
+.yld-hit { fill: transparent; cursor: crosshair; }
+.yld-tip { position: absolute; top: 10px; z-index: 2; display: flex; flex-direction: column; gap: 3px; min-width: 150px; padding: 9px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); font-size: 13px; color: var(--text); pointer-events: none; }
+.yld-tip[hidden] { display: none; }
+.yld-tip b { font: 700 13px "IBM Plex Mono", monospace; color: var(--ink); }
+.yld-tip span { display: flex; align-items: center; gap: 6px; }
+.yld-tip i { width: 12px; height: 3px; border-radius: 2px; flex: none; }
+.yld-tip em { margin-left: auto; padding-left: 12px; font: 600 13px "IBM Plex Mono", monospace; font-style: normal; color: var(--ink); }
+.yld-sw-s1, .yld-sw-s2 { display: inline-block; width: 16px; height: 3px; border-radius: 2px; }
+@media (max-width: 880px) { .cpi-kpis.yld-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .cpi-kpis.yld-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
