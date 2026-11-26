@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>新聞｜期貨・選擇權入門指南</title>
-  <meta name="description" content="期貨與選擇權市場新聞：內容準備中。">
+  <meta name="description" content="每日精選影響期貨市場的財經與產業新聞。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- 字型非同步載入：先用系統字型顯示，不擋住畫面 -->
@@ -41,21 +41,15 @@
       <div class="wrap">
         <nav class="crumbs" aria-label="麵包屑"><a href="index.html">首頁</a><span>/</span>新聞</nav>
         <h1>新聞</h1>
-        <p class="lead">期貨與選擇權市場的新聞與重要公告正在整理中，敬請期待。</p>
+        <p class="lead">每日精選影響期貨市場的財經與產業新聞。</p>
       </div>
     </section>
 
     <section class="section">
       <div class="wrap">
-        <div class="card coming-soon">
-          <span class="card-idx">COMING SOON</span>
-          <h3>內容準備中</h3>
-          <p>市場新聞與期交所重要公告即將上線。有想看的新聞主題，歡迎透過「聯絡我們」告訴我們。</p>
-          <div class="coming-actions">
-            <a class="btn primary" href="options-strategy.html">查看選擇權策略</a>
-            <a class="btn ghost" href="contact.html">聯絡我們</a>
-          </div>
-        </div>
+        <p class="small news-updated" style="color:var(--muted);margin:0 0 14px"></p>
+        <div class="news-list" style="display:grid;gap:16px;max-width:760px"></div>
+        <p class="small" style="color:var(--muted);margin-top:18px">新聞內容摘錄自各媒體，僅供教育參考，不構成投資建議。詳細內容請點選原文。</p>
       </div>
     </section>
   </main>
@@ -77,6 +71,27 @@
     <div class="wrap"><p class="small copy">© <span id="year"></span> 期貨・選擇權入門指南</p></div>
   </footer>
 
+  <script src="news.js"></script>
+  <script>
+    (function () {
+      var d = window.NEWS_DATA, box = document.querySelector(".news-list");
+      if (!d || !box) return;
+      var esc = function (s) { return String(s || "").replace(/[&<>"]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+      document.querySelector(".news-updated").textContent =
+        "更新時間：" + d.updated + (d.note ? "（" + d.note + "）" : "");
+      box.innerHTML = d.items.map(function (n) {
+        return '<article class="card">' +
+          '<span class="card-idx">' + esc(n.tag) + ' · ' + esc(n.time) + '</span>' +
+          '<h3 style="margin:4px 0 10px;line-height:1.5">' + esc(n.title) + '</h3>' +
+          '<p style="line-height:1.8">' + esc(n.summary) + '</p>' +
+          (n.watch ? '<p style="margin-top:12px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--accent-soft);color:var(--text);border-radius:6px"><b>觀察重點：</b>' + esc(n.watch) + '</p>' : '') +
+          '<p class="small" style="margin-top:12px">來源：' + esc(n.source) +
+          '｜<a href="' + esc(n.url) + '" target="_blank" rel="noopener" style="color:var(--accent)">看原文</a></p>' +
+          '</article>';
+      }).join("");
+    })();
+  </script>
   <script src="data.js" defer></script>
   <script src="script.js" defer></script>
 </body>
