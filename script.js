@@ -1079,10 +1079,7 @@ const OptMath = (() => {
 
     // 前三名卡片
     const legTxt = r => r.L.map(l => `<li><b class="${l.sg > 0 ? 'buy' : 'sell'}">${l.sg > 0 ? '買進' : '賣出'}</b><span class="mono">${nf(l.k)}</span> ${l.call ? 'Call' : 'Put'}${l.q > 1 ? ` × ${l.q} 口` : ''}<em class="mono">權利金 ${nf(l.p)}</em></li>`).join('');
-    const scenTxt = r => scen.kind === 'dir' ? `看對時（到期 ${nf(scen.c)}）賺 ${nf(r.gain)} 點；看錯方向（${nf(2 * fut - scen.c)}）${r.pay(2 * fut - scen.c) >= 0 ? '賺' : '虧'} ${nf(Math.abs(r.pay(2 * fut - scen.c)))} 點`
-      : scen.kind === 'flat' ? `到期停在 ${nf(scen.c)} 時賺 ${nf(r.gain)} 點` : `到期漲跌 ${nf(scen.move)} 點時，至少賺 ${nf(r.gain)} 點`;
     const why = r => [
-      scenTxt(r),
       `損益兩平點 ${r.bes.length ? r.bes.map(nf).join('、') : '—'}`,
       fit(r) > 0 ? (level === 'high' ? '權利金偏高，先收權利金對你有利' : '權利金偏低，付權利金比較划算')
         : r.net < 0 ? `先收 ${nf(-r.net)} 點權利金` : `付出 ${nf(r.net)} 點權利金`,
@@ -1093,7 +1090,6 @@ const OptMath = (() => {
       `<span class="st-view ${vcls[r.t.s.view]}">${esc(r.t.s.view)}</span><span class="st-lv">${esc(r.t.s.level)}</span></div></header>` +
       `<ul class="st-legs">${legTxt(r)}</ul>` +
       `<dl class="sc-kv">` +
-      `<div><dt>看對時損益</dt><dd class="pos">${sgn(r.gain)} 點<small>${sgn(r.gain * PV)} 元</small></dd></div>` +
       `<div><dt>所需資金</dt><dd>${nf(r.capital)} 元<small>${r.margin > 0 ? `含保證金 ${nf(r.margin)}` : '不需保證金'}</small></dd></div></dl>` +
       `<ul class="sc-why">${why(r).map(t => `<li>${esc(t)}</li>`).join('')}</ul>` +
       `<a class="sc-link" href="options-strategy.html#${slug(r.t.s)}">查看${esc(r.t.s.name)}的說明 →</a></article>`;
@@ -1126,11 +1122,11 @@ const OptMath = (() => {
 
     // 其他符合條件的策略
     const rest = list.slice(3);
-    out.more.innerHTML = rest.length ? `<p class="sc-more-h">其他符合條件的策略</p><div class="table-wrap"><table class="num-table sc-table"><thead><tr><th>策略</th><th>組合</th><th>看對時</th><th>所需資金</th></tr></thead><tbody>` +
+    out.more.innerHTML = rest.length ? `<p class="sc-more-h">其他符合條件的策略</p><div class="table-wrap"><table class="num-table sc-table"><thead><tr><th>策略</th><th>組合</th><th>所需資金</th></tr></thead><tbody>` +
       rest.map(r => `<tr><td><a href="options-strategy.html#${slug(r.t.s)}">${esc(r.t.s.name)}</a></td>` +
         `<td class="mono">${r.L.map(l => `${l.sg > 0 ? '買' : '賣'}${l.q > 1 ? l.q : ''} ${nf(l.k)}${l.call ? 'C' : 'P'}`).join('、')}</td>` +
-        `<td class="pos">${sgn(r.gain)}</td><td>${nf(r.capital)}</td></tr>`).join('') +
-      `</tbody></table></div><p class="hint">損益單位為點（每點 ${PV} 元），所需資金單位為元。</p>` : '';
+        `<td>${nf(r.capital)}</td></tr>`).join('') +
+      `</tbody></table></div><p class="hint">所需資金單位為元（權利金 ＋ 保證金估算）。</p>` : '';
   };
 
   // 改變每檔間隔：價平以外的報價對應的履約價變了，清空後用價平 IV 估算
