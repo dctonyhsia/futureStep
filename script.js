@@ -1139,4 +1139,78 @@ const OptMath = (() => {
   compute();
 })();
 
+// ---------- 數據頁：美國 CPI（資料在 data.js 的 usCpi，沒有資料時顯示預留位置）----------
+(function () {
+  const kpis = document.getElementById('cpi-kpis');
+  if (!kpis) return;
+  const cfg = D.usCpi || {};
+  const rows = (cfg.rows || []).filter(r => r && r.m).slice().sort((a, b) => a.m < b.m ? -1 : 1);
+  const has = v => typeof v === 'number' && isFinite(v);
+  const pct = v => has(v) ? v.toFixed(1) + '%' : '—';
+  const mon = m => { const [y, mm] = String(m).split('-'); return `${y} 年 ${+mm} 月`; };
+  const last = rows[rows.length - 1], prev = rows[rows.length - 2];
+  const diff = (k) => last && prev && has(last[k]) && has(prev[k]) ? last[k] - prev[k] : null;
+  const chg = d => d === null ? '' : `較上月 ${d > 0 ? '+' : d < 0 ? '−' : '±'}${Math.abs(d).toFixed(1)} 個百分點`;
+
+  // 最新數據
+  const surprise = last && has(last.cpi) && has(last.exp) ? last.cpi - last.exp : null;
+  const tiles = [
+    ['CPI 年增率', last ? pct(last.cpi) : '—', last ? `${mon(last.m)}　${chg(diff('cpi'))}` : '待更新'],
+    ['核心 CPI 年增率', last ? pct(last.core) : '—', last ? `${mon(last.m)}　${chg(diff('core'))}` : '待更新'],
+    ['市場預期（年增率）', last ? pct(last.exp) : '—', surprise === null ? (last ? '未提供預期值' : '待更新') : (Math.abs(surprise) < 0.05 ? '與預期相同' : `實際${surprise > 0 ? '高' : '低'}於預期 ${Math.abs(surprise).toFixed(1)} 個百分點`)],
+    ['下次公布（台灣時間）', esc(String(cfg.next || '—').split(' ')[0]), cfg.next ? `${String(cfg.next).split(' ')[1] || ''} 公布（美東時間 8:30）`.trim() : '待更新'],
+  ];
+  kpis.innerHTML = tiles.map(([k, v, s]) => `<div class="card cpi-kpi"><span class="cpi-k">${k}</span><b class="cpi-v">${v}</b><small>${esc(s)}</small></div>`).join('');
+  const meta = document.getElementById('cpi-meta');
+  if (meta) meta.textContent = rows.length ? `${mon(rows[0].m)} ～ ${mon(last.m)}${cfg.updated ? `｜更新：${cfg.updated}` : ''}` : '';
+
+  // 走勢圖
+  const chart = document.getElementById('cpi-chart');
+  const pts = rows.filter(r => has(r.cpi) || has(r.core));
+  if (pts.length < 2) {
+    chart.classList.add('cpi-empty');
+    chart.innerHTML = `<div class="cpi-ph"><b>圖表位置</b><span>數據更新後，這裡會顯示 CPI 與核心 CPI 年增率的走勢圖</span></div>`;
+  } else {
+   // 依圖表實際寬度畫，手機上字才不會縮得太小；視窗寬度改變時重畫
+   const draw = () => {
+    const W = Math.max(320, Math.round(chart.clientWidth || 720)), H = W < 560 ? 240 : 300, L = 40, R = 14, T = 16, B = 34;
+    const vals = pts.flatMap(r => [r.cpi, r.core].filter(has)).concat(2);
+    let lo = Math.floor(Math.min(...vals) - 0.3), hi = Math.ceil(Math.max(...vals) + 0.3);
+    if (hi - lo < 2) hi = lo + 2;
+    const stepY = (hi - lo) > 8 ? 2 : (hi - lo) > 4 ? 1 : 0.5;
+    const x = i => L + (W - L - R) * (pts.length === 1 ? 0.5 : i / (pts.length - 1));
+    const y = v => T + (H - T - B) * (hi - v) / (hi - lo);
+    let g = '';
+    for (let v = lo; v <= hi + 1e-9; v += stepY) g += `<line class="sc-grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="sc-ty" x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${+v.toFixed(1)}</text>`;
+    const every = Math.max(1, Math.ceil(pts.length / Math.max(3, Math.floor((W - L - R) / 70))));
+    pts.forEach((r, i) => {
+      const lastI = pts.length - 1;
+      if (i !== lastI && (i % every || lastI - i < every)) return;   // 最後一個月一定標，太靠近的就不標，避免重疊
+      const [yy, mm] = r.m.split('-');
+      const anc = i === 0 ? 'start' : i === pts.length - 1 ? 'end' : 'middle';
+      g += `<text class="sc-ty" x="${x(i)}" y="${H - 12}" text-anchor="${anc}">${yy.slice(2)}/${mm}</text>`;
+    });
+    g += `<line class="sc-spot" x1="${L}" x2="${W - R}" y1="${y(2)}" y2="${y(2)}"/>`;
+    const line = (k, cls) => {
+      let d = '', on = false;
+      pts.forEach((r, i) => { if (has(r[k])) { d += `${on ? 'L' : 'M'}${x(i).toFixed(1)},${y(r[k]).toFixed(1)} `; on = true; } else on = false; });
+      const dots = pts.map((r, i) => has(r[k]) ? `<circle class="cpi-dot ${cls}" cx="${x(i).toFixed(1)}" cy="${y(r[k]).toFixed(1)}" r="3"><title>${mon(r.m)}：${r[k].toFixed(1)}%</title></circle>` : '').join('');
+      return d ? `<path class="sc-l ${cls}" d="${d}"/>${dots}` : '';
+    };
+    chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="美國 CPI 與核心 CPI 年增率走勢圖">${g}${line('core', 'sc-l2')}${line('cpi', 'sc-l1')}</svg>`;
+   };
+   draw();
+   let lastW = chart.clientWidth, tm;
+   addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(() => { if (chart.clientWidth !== lastW) { lastW = chart.clientWidth; draw(); } }, 150); });
+  }
+
+  // 表格（新到舊）
+  const body = document.getElementById('cpi-rows');
+  body.innerHTML = rows.length ? rows.slice(-12).reverse().map(r => {   // 表格列出最近 12 個月
+    const s = has(r.cpi) && has(r.exp) ? r.cpi - r.exp : null;
+    const cls = s === null || Math.abs(s) < 0.05 ? '' : s > 0 ? ' class="pos"' : ' class="neg"';
+    return `<tr><td>${mon(r.m)}</td><td${cls}>${pct(r.cpi)}</td><td>${pct(r.core)}</td><td>${pct(r.cpiMoM)}</td><td>${pct(r.coreMoM)}</td><td>${pct(r.exp)}</td><td>${esc(r.release || '—')}</td></tr>`;
+  }).join('') : `<tr><td colspan="7" class="cpi-none">數據準備中，更新後會依月份列在這裡</td></tr>`;
+})();
+
 $('year').textContent = new Date().getFullYear();

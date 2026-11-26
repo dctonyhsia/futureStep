@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>數據分析｜期貨・選擇權入門指南</title>
-  <meta name="description" content="期貨與選擇權數據分析：內容準備中。">
+  <meta name="description" content="影響期貨市場的重要經濟數據：美國 CPI（消費者物價指數）的意義、公布時間、觀察方式與走勢圖。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- 字型非同步載入：先用系統字型顯示，不擋住畫面 -->
@@ -42,29 +42,67 @@
         <nav class="crumbs" aria-label="麵包屑"><a href="index.html">首頁</a><span>/</span>數據分析</nav>
         <h1>數據分析</h1>
         <!-- 篩選器恢復顯示時，把下一行換回：輸入選擇權報價與你對行情的看法，系統會判讀權利金貴或便宜，並從策略庫中篩選出符合條件的組合。 -->
-        <p class="lead">期貨與選擇權的數據分析工具正在準備中，敬請期待。</p>
+        <p class="lead">整理影響期貨市場的重要經濟數據，說明數據的意義、公布時間與觀察方式。</p>
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" id="cpi">
       <div class="wrap">
-        <div class="card coming-soon">
-          <span class="card-idx">COMING SOON</span>
-          <h3>內容準備中</h3>
-          <p>數據分析工具即將上線。有想看的數據或分析主題，歡迎透過「聯絡我們」告訴我們。</p>
-          <div class="coming-actions">
-            <a class="btn primary" href="options-strategy.html">查看選擇權策略</a>
-            <a class="btn ghost" href="contact.html">聯絡我們</a>
+        <header class="sec-head">
+          <span class="num">01</span>
+          <div><h2>美國 CPI（消費者物價指數）</h2><p>美國最受關注的通膨指標，公布時常牽動美股期貨、美元與台指期夜盤</p></div>
+        </header>
+
+        <div class="grid cpi-intro">
+          <article class="card"><span class="card-idx">01</span><h3>什麼是 CPI</h3><p>消費者物價指數（Consumer Price Index）追蹤一般家庭購買一籃子商品與服務的價格變化，包括食品、能源、住房、交通、醫療等，用來衡量通膨。市場最常看的是「都市消費者 CPI（CPI-U）」。</p></article>
+          <article class="card"><span class="card-idx">02</span><h3>誰公布、何時公布</h3><p>由美國勞工統計局（BLS）每月公布上一個月的數據，多在月中前後，美東時間上午 8:30 發布。換算台灣時間，美國夏令時間約為 20:30、冬令時間約為 21:30，正好落在台指期夜盤交易時段。</p></article>
+          <article class="card"><span class="card-idx">03</span><h3>數字怎麼看</h3><p><b>年增率</b>和去年同月比較，看通膨水準；<b>月增率</b>和上個月比較（經季節調整），看最新變化。<b>核心 CPI</b> 扣除波動較大的食品與能源，較能反映通膨的長期趨勢。</p></article>
+          <article class="card"><span class="card-idx">04</span><h3>和期貨市場的關係</h3><p>市場反應的是「公布值和預期的差距」。高於預期時，市場傾向認為聯準會將延後降息或維持高利率，美債殖利率與美元常走升、股價指數期貨常承壓；低於預期時則常相反。實際反應仍須視當時市場狀況而定。</p></article>
+        </div>
+
+        <div class="cpi-panel">
+          <div class="cpi-kpis" id="cpi-kpis"></div>
+          <div class="card cpi-chart-card">
+            <div class="cpi-chart-h">
+              <p class="sc-chart-h">CPI 年增率走勢<small>（%）</small></p>
+              <span class="hint" id="cpi-meta"></span>
+            </div>
+            <!-- 圖表位置：在 data.js 的 usCpi.rows 填入數據後，這裡會自動畫出走勢圖 -->
+            <div class="sc-chart cpi-chart" id="cpi-chart"></div>
+            <div class="sc-legend">
+              <span><i class="sc-sw sc-sw1"></i>CPI 年增率</span>
+              <span><i class="sc-sw sc-sw2"></i>核心 CPI 年增率</span>
+              <span><i class="sc-sw sc-sw-spot"></i>2% 參考線</span>
+            </div>
           </div>
+          <div class="table-wrap cpi-table">
+            <table>
+              <thead><tr><th>資料月份</th><th>CPI 年增率</th><th>核心 CPI 年增率</th><th>CPI 月增率</th><th>核心 CPI 月增率</th><th>市場預期（年增率）</th><th>公布日期</th></tr></thead>
+              <tbody id="cpi-rows"></tbody>
+            </table>
+          </div>
+          <p class="hint cpi-note">表格列出最近 12 個月（走勢圖顯示全部月份）。CPI 年增率標紅字代表高於市場預期、綠字代表低於市場預期；月增率為經季節調整後的數字。</p>
+        </div>
+
+        <div class="keypoints">
+          <b>觀察重點</b>
+          <ul>
+            <li>先看<b>實際值與市場預期的差距</b>：數字高低本身多半已反映在價格中，市場波動主要來自超出或低於預期的部分。</li>
+            <li>同時比較 CPI 與核心 CPI、年增率與月增率；核心 CPI 月增率常被視為觀察通膨趨勢的重要數字。</li>
+            <li>住房（Shelter）是 CPI 中權重最高的項目，約占三分之一，變化較慢，對核心 CPI 的走勢影響很大。</li>
+            <li>聯準會的 2% 通膨目標以 PCE 物價指數衡量，但 CPI 公布較早，市場常用它來預判 PCE 與利率政策走向。</li>
+            <li>公布當下美股期貨、美元、黃金與台指期夜盤的波動可能放大，買賣價差變大、容易滑價，持有部位時請注意風險控管。</li>
+            <li>數據以美國勞工統計局（BLS）官方公布為準，本頁內容僅供教育與參考，不構成任何投資建議。</li>
+          </ul>
         </div>
       </div>
     </section>
 
-    <!-- 選擇權策略篩選器暫時停用：要恢復顯示，刪掉下一行的 hidden，並刪掉上面「內容準備中」那一段 -->
+    <!-- 選擇權策略篩選器暫時停用：要恢復顯示，刪掉下一行的 hidden -->
     <section class="section" id="screener" hidden>
       <div class="wrap">
         <header class="sec-head">
-          <span class="num">01</span>
+          <span class="num">02</span>
           <div><h2>選擇權策略篩選器</h2><p>依你的報價、看法與資金條件，比較各策略的損益與所需資金</p></div>
         </header>
 
@@ -171,6 +209,7 @@
         <p class="footer-h">資料來源</p>
         <ul class="sources">
           <li><a href="https://www.taifex.com.tw/" target="_blank" rel="noopener">臺灣期貨交易所（商品規格、保證金公告）</a></li>
+          <li><a href="https://www.bls.gov/cpi/" target="_blank" rel="noopener">美國勞工統計局 BLS（CPI 數據）</a></li>
         </ul>
         <p class="small">內容更新：<span id="updated"></span></p>
       </div>

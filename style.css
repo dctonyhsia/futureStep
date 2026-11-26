@@ -835,3 +835,34 @@ fieldset.sc-box > legend + * { clear: both; }
 .st-risk ul { margin: 0; padding-left: 1.25em; display: grid; gap: 6px; font-size: 14.5px; line-height: 1.75; color: var(--text); max-width: 920px; }
 .st-risk li::marker { color: var(--warn-line); }
 .st-lead span { display: inline-block; }
+
+/* ============ 數據頁：美國 CPI ============ */
+.cpi-intro { margin-bottom: 28px; }
+.cpi-intro .card p b { color: var(--ink); }
+.cpi-panel { display: flex; flex-direction: column; gap: 16px; }
+.cpi-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.cpi-kpi { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; }
+.cpi-k { font-size: 13px; font-weight: 700; color: var(--muted); }
+.cpi-v { font: 600 26px "IBM Plex Mono", "Noto Sans TC", monospace; color: var(--ink); line-height: 1.25; }
+.cpi-kpi small { font-size: 12.5px; color: var(--muted); }
+.cpi-chart-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 10px; }
+.cpi-chart-h .sc-chart-h { margin: 0; }
+.cpi-chart { padding: 6px 0 0; }
+.cpi-chart.cpi-empty { display: grid; place-items: center; min-height: 280px; padding: 16px; border: 1.5px dashed color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.cpi-ph { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.cpi-ph b { font: 600 13px "IBM Plex Mono", "Noto Sans TC", monospace; letter-spacing: .14em; color: var(--accent); }
+.cpi-ph span { font-size: 14px; color: var(--muted); }
+.cpi-dot { stroke: var(--surface); stroke-width: 1.5; }
+.cpi-dot.sc-l1 { fill: var(--accent); }
+.cpi-dot.sc-l2 { fill: var(--gold); }
+.cpi-table table { min-width: 720px; font-size: 14.5px; }
+.cpi-table td.pos { color: var(--up); font-weight: 700; }
+.cpi-table td.neg { color: var(--down); font-weight: 700; }
+.cpi-table td.cpi-none { text-align: center; color: var(--muted); padding: 28px 12px; }
+@media (max-width: 860px) { .cpi-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .cpi-v { font-size: 22px; } .cpi-kpi { padding: 14px; } }
+.cpi-panel .cpi-note { margin: -6px 0 0; font-size: 13px; }
+.cpi-table th, .cpi-table td { white-space: nowrap; }
+.grid.cpi-intro { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .grid.cpi-intro { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .grid.cpi-intro { grid-template-columns: minmax(0, 1fr); } }
