@@ -1020,4 +1020,5 @@ fieldset.sc-box > legend + * { clear: both; }
 .spec-hours-note { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.6; }
 /* 交易時間放在規格卡最上方（標題下）：上方不用分隔線，下方用虛線和規格分開 */
 .spec-sheet header + .spec-hours { border-top: 0; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+.td-lines { text-align: center; }
 .td-lines span { display: block; }
