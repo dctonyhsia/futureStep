@@ -78,14 +78,21 @@
       if (!d || !box) return;
       var esc = function (s) { return String(s || "").replace(/[&<>"]/g, function (c) {
         return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+      // 帶單位的數字自動加粗（例如 15%、1,926 點、2,165 元）
+      var num = function (s) {
+        return s.replace(/[−+-]?\d[\d,.]*\s?(?:%|萬顆|萬|億|點|元|角|顆|倍|次)/g,
+          '<b style="color:var(--accent)">$&</b>');
+      };
       document.querySelector(".news-updated").textContent =
         "更新時間：" + d.updated + (d.note ? "（" + d.note + "）" : "");
       box.innerHTML = d.items.map(function (n) {
         return '<article class="card">' +
           '<span class="card-idx">' + esc(n.tag) + ' · ' + esc(n.time) + '</span>' +
           '<h3 style="margin:4px 0 10px;line-height:1.5">' + esc(n.title) + '</h3>' +
-          '<p style="line-height:1.8">' + esc(n.summary) + '</p>' +
-          (n.watch ? '<p style="margin-top:12px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--accent-soft);color:var(--text);border-radius:6px"><b>觀察重點：</b>' + esc(n.watch) + '</p>' : '') +
+          (n.points ? '<ul style="margin:0;padding-left:1.2em;line-height:1.9;color:var(--text)">' +
+            n.points.map(function (p) { return '<li>' + num(esc(p)) + '</li>'; }).join("") + '</ul>'
+            : '<p style="line-height:1.8">' + num(esc(n.summary)) + '</p>') +
+          (n.watch ? '<p style="margin-top:12px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--accent-soft);color:var(--text);border-radius:6px"><b>觀察重點：</b>' + num(esc(n.watch)) + '</p>' : '') +
           '<p class="small" style="margin-top:12px">來源：' + esc(n.source) +
           '｜<a href="' + esc(n.url) + '" target="_blank" rel="noopener" style="color:var(--accent)">看原文</a></p>' +
           '</article>';
