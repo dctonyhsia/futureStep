@@ -136,6 +136,18 @@
         syncAll();
       });
       box.addEventListener("toggle", syncAll, true);
+      // 頁尾「資料來源」：自動列出今天新聞用到的媒體（新聞來源可寫成「經濟日報、鉅亨網」或「經濟日報（DIGITIMES 研究）」）
+      var SITES = { "經濟日報": "https://money.udn.com/", "Yahoo股市": "https://tw.stock.yahoo.com/", "鉅亨網": "https://news.cnyes.com/", "DIGITIMES": "https://www.digitimes.com.tw/" };
+      var srcList = document.querySelector(".footer .sources"), names = [];
+      items.forEach(function (n) {
+        String(n.source || "").replace(/[（）()]/g, "、").split("、").forEach(function (s) {
+          s = s.trim().replace(/\s*研究$/, "");
+          if (s && names.indexOf(s) < 0) names.push(s);
+        });
+      });
+      if (srcList && names.length) srcList.insertAdjacentHTML("beforeend", names.map(function (s) {
+        return '<li>' + (SITES[s] ? '<a href="' + SITES[s] + '" target="_blank" rel="noopener">' + esc(s) + '（新聞）</a>' : esc(s) + '（新聞）') + '</li>';
+      }).join(""));
     })();
   </script>
   <script src="data.js" defer></script>
