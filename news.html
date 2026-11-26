@@ -48,7 +48,12 @@
     <section class="section">
       <div class="wrap">
         <p class="news-updated"></p>
-        <div class="news-list" style="display:grid;gap:16px;max-width:760px"></div>
+        <!-- 新聞列表：先只看標題，點一下展開重點；上方可依分類篩選 -->
+        <div class="news-bar">
+          <div class="news-filter" role="group" aria-label="依分類篩選新聞"></div>
+          <button type="button" class="news-all" aria-pressed="false">全部展開</button>
+        </div>
+        <div class="news-list"></div>
         <p class="small" style="color:var(--muted);margin-top:18px">新聞內容摘錄自各媒體，僅供教育參考，不構成投資建議。詳細內容請點選原文。</p>
       </div>
     </section>
@@ -85,18 +90,52 @@
       };
       document.querySelector(".news-updated").textContent =
         "更新時間：" + d.updated + (d.note ? "（" + d.note + "）" : "");
-      box.innerHTML = d.items.map(function (n) {
-        return '<article class="card">' +
-          '<p class="news-meta"><span class="news-tag">' + esc(n.tag) + '</span><time class="news-time">' + esc(n.time) + '</time></p>' +
-          '<h3 style="margin:4px 0 10px;line-height:1.5">' + esc(n.title) + '</h3>' +
-          (n.points ? '<ul style="margin:0;padding-left:1.2em;line-height:1.9;color:var(--text)">' +
-            n.points.map(function (p) { return '<li>' + num(esc(p)) + '</li>'; }).join("") + '</ul>'
-            : '<p style="line-height:1.8">' + num(esc(n.summary)) + '</p>') +
-          (n.watch ? '<p style="margin-top:12px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--accent-soft);color:var(--text);border-radius:6px"><b>觀察重點：</b>' + num(esc(n.watch)) + '</p>' : '') +
-          '<p class="small" style="margin-top:12px">來源：' + esc(n.source) +
-          '｜<a href="' + esc(n.url) + '" target="_blank" rel="noopener" style="color:var(--accent)">看原文</a></p>' +
-          '</article>';
+      // 時間只留「月/日 時:分」，同一天的新聞看起來比較清爽
+      var short = function (t) { var m = String(t || "").match(/\d{4}-(\d{2})-(\d{2})\s+(\d{1,2}:\d{2})/); return m ? (+m[1]) + "/" + (+m[2]) + " " + m[3] : String(t || ""); };
+      var items = d.items.slice().sort(function (a, b) { return String(b.time).localeCompare(String(a.time)); });   // 新到舊
+      box.innerHTML = items.map(function (n, i) {
+        var first = n.points && n.points[0] ? n.points[0] : (n.summary || "");
+        return '<details class="news-item" data-tag="' + esc(n.tag) + '">' +
+          '<summary>' +
+            '<span class="news-tag">' + esc(n.tag) + '</span>' +
+            '<time class="news-time" datetime="' + esc(n.time) + '">' + esc(short(n.time)) + '</time>' +
+            '<span class="news-head"><b class="news-title">' + esc(n.title) + '</b><span class="news-peek">' + esc(first) + '</span></span>' +
+            '<span class="news-chev" aria-hidden="true">▾</span>' +
+          '</summary>' +
+          '<div class="news-body">' +
+            (n.points ? '<ul>' + n.points.map(function (p) { return '<li>' + num(esc(p)) + '</li>'; }).join("") + '</ul>'
+              : '<p>' + num(esc(n.summary)) + '</p>') +
+            (n.watch ? '<p class="news-watch"><b>觀察重點：</b>' + num(esc(n.watch)) + '</p>' : '') +
+            '<p class="news-src">來源：' + esc(n.source) +
+            '｜<a href="' + esc(n.url) + '" target="_blank" rel="noopener">看原文</a></p>' +
+          '</div>' +
+          '</details>';
       }).join("");
+      // 分類篩選
+      var bar = document.querySelector(".news-filter"), allBtn = document.querySelector(".news-all");
+      var tags = [];
+      items.forEach(function (n) { if (tags.indexOf(n.tag) < 0) tags.push(n.tag); });
+      var count = function (t) { return items.filter(function (n) { return !t || n.tag === t; }).length; };
+      bar.innerHTML = [""].concat(tags).map(function (t) {
+        return '<button type="button" class="news-chip' + (t ? '' : ' active') + '" data-tag="' + esc(t) + '" aria-pressed="' + (!t) + '">' + esc(t || "全部") + ' <small>' + count(t) + '</small></button>';
+      }).join("");
+      bar.addEventListener("click", function (e) {
+        var b = e.target.closest("button"); if (!b) return;
+        var t = b.getAttribute("data-tag");
+        bar.querySelectorAll("button").forEach(function (x) { var on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", on); });
+        box.querySelectorAll(".news-item").forEach(function (it) { it.hidden = !!t && it.getAttribute("data-tag") !== t; });
+      });
+      // 全部展開／收起
+      var syncAll = function () {
+        var open = [].every.call(box.querySelectorAll(".news-item:not([hidden])"), function (it) { return it.open; });
+        allBtn.textContent = open ? "全部收起" : "全部展開"; allBtn.setAttribute("aria-pressed", open);
+      };
+      allBtn.addEventListener("click", function () {
+        var open = allBtn.getAttribute("aria-pressed") !== "true";
+        box.querySelectorAll(".news-item:not([hidden])").forEach(function (it) { it.open = open; });
+        syncAll();
+      });
+      box.addEventListener("toggle", syncAll, true);
     })();
   </script>
   <script src="data.js" defer></script>
