@@ -1060,7 +1060,7 @@ const OptMath = (() => {
     const fitView = pool.filter(c => allow.includes(c.t.s.view)).map(c => evaluate(c.t, c.legs, M)).filter(Boolean);
     const rs = fitView.filter(r => !(risk === 'limited' && r.unlimited) && !(budget > 0 && r.capital > budget));
     // 所有組合一起排序（同分時所需資金少的優先），每個策略取分數最高、且和前面已選組合到期損益不重複的那一組
-    // （例如買賣權平價下，多頭買權價差與多頭賣權價差可能完全相同，後者就改取它的下一個組合）
+    // （例如買賣權平價下，買權多頭價差與賣權多頭價差可能完全相同，後者就改取它的下一個組合）
     const probe = Array.from({ length: 13 }, (_, i) => fut + (i - 6) * step);
     const list = [], names = new Set();
     rs.map(r => ({ r, s: score(r) })).sort((a, b) => b.s - a.s || a.r.capital - b.r.capital).forEach(({ r }) => {
