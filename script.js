@@ -146,7 +146,7 @@ fill('settle-list', D.settlement, cardTpl);
   const callPts = (R.initial - R.maintenance) / pv;
   const cutPts = R.initial * (1 - cut / 100) / pv;
   document.getElementById('mr-intro').textContent =
-    `假設在 ${fmtN(entry)} 點做多 1 口${R.product}（每點 ${fmtN(pv)} 元），原始保證金 ${fmtN(R.initial)} 元、維持保證金 ${fmtN(R.maintenance)} 元（假設數字，實際以期交所與期貨商公告為準）。`;
+    `假設在 ${fmtN(entry)} 點做多 1 口${R.product}（每點 ${fmtN(pv)} 元），原始保證金 ${fmtN(R.initial)} 元、維持保證金 ${fmtN(R.maintenance)} 元（${R.note || '假設數字，實際以期交所與期貨商公告為準'}）。`;
   document.getElementById('mr-summary').innerHTML =
     `以這個例子，指數下跌 <b class="mono">${fmtN(callPts)}</b> 點（跌破 ${fmtN(entry - callPts)} 點），權益數就低於維持保證金、維持率約 ${pct(R.maintenance).toFixed(1)}%，會收到追繳通知；` +
     `下跌約 <b class="mono">${fmtN(Math.ceil(cutPts))}</b> 點（跌破約 ${fmtN(Math.floor(entry - cutPts))} 點），權益數剩不到 ${fmtN(R.initial * cut / 100)} 元、維持率低於 ${cut}%，期貨商就會代為沖銷（砍倉）。`;
