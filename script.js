@@ -867,7 +867,7 @@ const OptMath = (() => {
     list.querySelectorAll('.st-card').forEach(c => { c.hidden = !!v && c.dataset.view !== v; });
     list.querySelectorAll('.st-group').forEach(g => { g.hidden = !g.querySelector('.st-card:not([hidden])'); });
   };
-  bar.innerHTML = ['', ...views].map(v => `<button type="button" class="tab${v ? '' : ' active'}" data-view="${v}" aria-pressed="${!v}">${v || '全部'} <small>${count(v)}</small></button>`).join('');
+  bar.innerHTML = ['', ...views.filter(v => count(v))].map(v => `<button type="button" class="tab${v ? '' : ' active'}" data-view="${v}" aria-pressed="${!v}">${v || '全部'} <small>${count(v)}</small></button>`).join('');
   // 點篩選按鈕：篩選後捲動到第一個符合的分類（扣掉上方黏住的選單列與篩選列高度）
   // 篩選列黏在選單列正下方（選單列高度在手機上可能不同）
   const stick = () => { bar.closest('.st-bar').style.top = (document.querySelector('.topbar')?.offsetHeight || 0) + 'px'; };
