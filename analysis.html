@@ -65,15 +65,19 @@
           <p class="hint cpi-extra" id="cpi-extra" hidden></p>
           <div class="card cpi-chart-card">
             <div class="cpi-chart-h">
-              <p class="sc-chart-h">CPI 年增率走勢<small>（%）</small></p>
-              <span class="hint" id="cpi-meta"></span>
+              <p class="sc-chart-h"><span id="cpi-title">CPI 月增率走勢</span><small>（%）</small></p>
+              <div class="tabs cpi-tabs" role="group" aria-label="切換圖表檢視方式">
+                <button type="button" class="tab active" data-mode="mom" aria-pressed="true">月增率</button>
+                <button type="button" class="tab" data-mode="yoy" aria-pressed="false">年增率</button>
+              </div>
             </div>
+            <p class="hint cpi-meta" id="cpi-meta"></p>
             <!-- 圖表位置：在 data.js 的 usCpi.rows 填入數據後，這裡會自動畫出走勢圖 -->
             <div class="sc-chart cpi-chart" id="cpi-chart"></div>
             <div class="sc-legend">
-              <span><i class="sc-sw sc-sw1"></i>CPI 年增率</span>
-              <span><i class="sc-sw sc-sw2"></i>核心 CPI 年增率</span>
-              <span><i class="sc-sw sc-sw-spot"></i>2% 參考線</span>
+              <span><i class="sc-sw sc-sw1"></i><span id="cpi-lg1">CPI 月增率</span></span>
+              <span><i class="sc-sw sc-sw2"></i><span id="cpi-lg2">核心 CPI 月增率</span></span>
+              <span><i class="sc-sw sc-sw-spot"></i><span id="cpi-lg3">0% 基準線</span></span>
             </div>
           </div>
           <div class="table-wrap cpi-table">
