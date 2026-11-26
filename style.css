@@ -1022,4 +1022,7 @@ fieldset.sc-box > legend + * { clear: both; }
 .spec-sheet header + .spec-hours { border-top: 0; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
 /* 首頁「期貨與股票的差異」表格：全部置中 */
 .tbl-center th, .tbl-center td { text-align: center; }
+/* 「期貨」欄：標題稍微往左，內容以標題為基準一起靠左對齊 */
+.tbl-center th:nth-child(3), .tbl-center td:nth-child(3) { text-align: left; padding-left: 48px; }
+@media (max-width: 640px) { .tbl-center th:nth-child(3), .tbl-center td:nth-child(3) { padding-left: 20px; } }
 .td-lines span { display: block; }
