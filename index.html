@@ -125,7 +125,7 @@
           </div>
 
           <figure class="figure">
-            <figcaption><b>圖 1　到期損益圖</b><span>以 40,000 點進場 1 口大台</span></figcaption>
+            <figcaption><b>圖 1　到期損益圖</b><span>以 40,000 點進場 1 口小台</span></figcaption>
             <svg viewBox="0 0 480 320" role="img" aria-label="做多與做空的到期損益圖：做多在價格上漲時獲利，做空在價格下跌時獲利，兩者損益對稱">
               <g class="grid-lines">
                 <line x1="60" y1="40" x2="460" y2="40"/><line x1="60" y1="100" x2="460" y2="100"/>
@@ -137,11 +137,11 @@
               <line class="ln-short" x1="60" y1="40" x2="460" y2="280"/>
               <circle class="dot" cx="260" cy="160" r="4.5"/>
               <g class="tick">
-                <text x="54" y="44" text-anchor="end">+200,000</text>
-                <text x="54" y="104" text-anchor="end">+100,000</text>
+                <text x="54" y="44" text-anchor="end">+50,000</text>
+                <text x="54" y="104" text-anchor="end">+25,000</text>
                 <text x="54" y="164" text-anchor="end">0</text>
-                <text x="54" y="224" text-anchor="end">−100,000</text>
-                <text x="54" y="284" text-anchor="end">−200,000</text>
+                <text x="54" y="224" text-anchor="end">−25,000</text>
+                <text x="54" y="284" text-anchor="end">−50,000</text>
                 <text x="60" y="308" text-anchor="middle">39,000</text>
                 <text x="260" y="308" text-anchor="middle">40,000</text>
                 <text x="460" y="308" text-anchor="middle">41,000</text>
@@ -150,7 +150,7 @@
               <text class="lbl-short" x="400" y="262" text-anchor="end">做空（賣出）</text>
               <text class="lbl-mute" x="268" y="182">進場價 40,000</text>
             </svg>
-            <p class="fig-note">縱軸為損益（元），橫軸為到期結算價（點）。每偏離 1 點，損益變動 200 元，多空兩方損益完全對稱。</p>
+            <p class="fig-note">縱軸為損益（元），橫軸為到期結算價（點）。每偏離 1 點，損益變動 50 元，多空兩方損益完全對稱。</p>
           </figure>
         </div>
 
@@ -314,7 +314,7 @@
             <div class="formula">
               <span>槓桿倍數</span><b>≈</b><span>契約價值 ÷ 保證金</span>
             </div>
-            <p>以大台為例：指數 40,000 點時，一口契約價值為 40,000 × 200 ＝ <strong class="mono">8,000,000</strong> 元。若保證金為 701,000 元，槓桿約 <strong class="mono">11.4</strong> 倍——指數只要變動 1%（400 點），帳戶權益就變動 80,000 元，約為保證金的 11%。</p>
+            <p>以小台為例：指數 40,000 點時，一口契約價值為 40,000 × 50 ＝ <strong class="mono">2,000,000</strong> 元。若保證金為 175,250 元，槓桿約 <strong class="mono">11.4</strong> 倍——指數只要變動 1%（400 點），帳戶權益就變動 20,000 元，約為保證金的 11%。</p>
           </div>
           <div class="card">
             <h3>二種保證金</h3>
@@ -327,7 +327,7 @@
         </div>
 
         <h3 class="sub">實例：每日結算與追繳</h3>
-        <p class="intro">假設做多 1 口大台，原始保證金 701,000 元、維持保證金 538,000 元（以期交所 2026/08/12 公告為例，實際以最新公告為準）。</p>
+        <p class="intro">假設做多 1 口小台，原始保證金 175,250 元、維持保證金 134,500 元（以期交所 2026/08/12 公告為例，實際以最新公告為準）。</p>
         <div class="mc">
           <figure class="figure">
             <figcaption><b>圖 2　帳戶權益變化</b><span>權益數 vs. 保證金水位</span></figcaption>
@@ -385,7 +385,7 @@
             <label>進場價（點）<input id="c-entry" type="number" step="any" value="40000"></label>
             <label>出場價（點）<input id="c-exit" type="number" step="any" value="40300"></label>
             <label>口數<input id="c-qty" type="number" min="1" step="1" value="1"></label>
-            <label>每口保證金（元，自填）<input id="c-margin" type="number" min="0" step="any" value="701000"></label>
+            <label>每口保證金（元，自填）<input id="c-margin" type="number" min="0" step="any" value="175250"></label>
           </form>
           <div class="calc-output" aria-live="polite">
             <div class="out-main">

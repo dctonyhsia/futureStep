@@ -66,7 +66,8 @@ if (gCats2) gCats2.textContent = gCats.join('、');
     o.value = p.pointValue; o.textContent = p.label;
     sel.insertBefore(o, custom);
   });
-  sel.selectedIndex = 0;
+  const def = (D.calcProducts || []).findIndex(p => p.selected);
+  sel.selectedIndex = Math.max(0, def);
 })();
 
 // ===== 保證金追繳實例：表格 + 圖表 =====
@@ -93,7 +94,7 @@ if (gCats2) gCats2.textContent = gCats.join('、');
   }).join('');
 
   // 圖表：權益數走勢（面積＋折線），原始／維持保證金參考線，維持保證金以下標成追繳區；依實際寬度畫，視窗改變時重畫
-  const wan = v => `${(v / 10000).toLocaleString('zh-TW', { maximumFractionDigits: 1 })} 萬`;
+  const wan = v => `${(v / 10000).toLocaleString('zh-TW', { maximumFractionDigits: 2 })} 萬`;
   const draw = () => {
     const W = Math.max(340, Math.round(chart.clientWidth || 520)), H = W < 460 ? 290 : 280;
     const L = 48, R = 16, T = 30, B = 52;
