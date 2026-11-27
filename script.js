@@ -111,9 +111,10 @@ if (gCats2) gCats2.textContent = gCats.join('、');
     // 橫向格線與縱軸（萬元）
     for (let v = lo; v <= hi + 1; v += step) g += `<line class="mc-grid" x1="${L}" x2="${xr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="mc-ty" x="${L - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${(v / 10000).toLocaleString('zh-TW')}萬</text>`;
     // 參考線：原始、維持保證金
-    const ref = (v, cls, label) => `<line class="mc-ref ${cls}" x1="${L}" x2="${xr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>` +
-      `<text class="mc-ref-l ${cls}" x="${L + 8}" y="${(y(v) - 6).toFixed(1)}">${label} ${fmtN(v)}</text>`;
-    g += ref(M.initial, 'init', '原始保證金') + ref(M.maintenance, 'maint', '維持保證金');
+    const ref = (v, cls) => `<line class="mc-ref ${cls}" x1="${L}" x2="${xr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>`;
+    g += ref(M.initial, 'init') + ref(M.maintenance, 'maint');
+    // 參考線的文字最後才畫，放在最上層，不會被權益線或圓點擋住
+    const refLabel = (v, cls, label, right) => `<text class="mc-ref-l ${cls}" x="${right ? xr - 8 : L + 8}" y="${(y(v) - 6).toFixed(1)}"${right ? ' text-anchor="end"' : ''}>${label} ${fmtN(v)}</text>`;
     // 權益面積與折線
     const line = rows.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(r.equity).toFixed(1)}`).join('');
     g += `<path class="mc-area" d="${line}L${x(rows.length - 1).toFixed(1)},${yb}L${x(0).toFixed(1)},${yb}Z"/><path class="mc-line" d="${line}"/>`;
@@ -135,6 +136,7 @@ if (gCats2) gCats2.textContent = gCats.join('、');
       g += `<text class="mc-day" x="${cx.toFixed(1)}" y="${yb + 22}" text-anchor="middle">第 ${i + 1} 天</text>` +
         `<text class="mc-chg${i === 0 ? '' : r.daily > 0 ? ' pos' : r.daily < 0 ? ' neg' : ''}" x="${cx.toFixed(1)}" y="${yb + 40}" text-anchor="middle">${chg}</text>`;
     });
+    g += refLabel(M.initial, 'init', '原始保證金', true) + refLabel(M.maintenance, 'maint', '維持保證金');
     // 追繳說明框：放在追繳點正下方（靠近邊緣時往內收）
     if (callAt >= 0) {
       const r = rows[callAt], cx = x(callAt), cy = y(r.equity);
