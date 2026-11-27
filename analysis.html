@@ -46,7 +46,7 @@
       </div>
     </section>
 
-    <!-- 指標下拉選單：選了哪一個，下方就只顯示那一個指標（網址加 #cpi 或 #nfp 可直接開啟） -->
+    <!-- 指標下拉選單：選了哪一個，下方就只顯示那一個指標（網址加 #cpi、#nfp 或 #vix 可直接開啟） -->
     <div class="ind-bar-wrap">
       <div class="wrap ind-bar">
         <label class="ind-pick" for="ind-select">指標</label>
@@ -56,6 +56,7 @@
             <option value="pce">美國 PCE（個人消費支出物價指數）</option>
             <option value="nfp">美國非農就業</option>
             <option value="yield">美國公債殖利率</option>
+            <option value="vix">臺指選擇權波動率指數（VIXTWN）</option>
           </select>
         </div>
       </div>
@@ -326,11 +327,65 @@
       </div>
     </section>
 
+    <section class="section ind-panel" id="vix" data-ind="vix">
+      <div class="wrap">
+        <header class="sec-head">
+          <span class="num">05</span>
+          <div><h2>臺指選擇權波動率指數（VIXTWN）</h2><p>由臺指選擇權價格推算市場對台股未來波動的預期，常被稱為「恐慌指數」</p></div>
+        </header>
+
+        <div class="cpi-panel">
+          <div class="yld-range">
+            <span class="cpi-adj-l">期間</span>
+            <div class="tabs cpi-adj-tabs" role="group" aria-label="切換圖表期間" id="vix-range">
+              <button type="button" class="tab" data-days="31" aria-pressed="false">1 個月</button>
+              <button type="button" class="tab" data-days="92" aria-pressed="false">3 個月</button>
+              <button type="button" class="tab active" data-days="0" aria-pressed="true">全部</button>
+            </div>
+          </div>
+
+          <div class="cpi-kpis" id="vix-kpis"></div>
+          <div class="card cpi-chart-card">
+            <div class="cpi-chart-h">
+              <p class="sc-chart-h">VIXTWN 走勢<small>（每日收盤）</small></p>
+            </div>
+            <p class="hint cpi-meta" id="vix-meta"></p>
+            <div class="sc-chart cpi-chart yld-chart" id="vix-chart"></div>
+          </div>
+          <div class="table-wrap cpi-table">
+            <table>
+              <thead><tr><th>日期</th><th>VIXTWN</th><th>較前一交易日</th></tr></thead>
+              <tbody id="vix-rows"></tbody>
+            </table>
+            <button type="button" class="cpi-toggle" id="vix-toggle" aria-controls="vix-rows" aria-expanded="false" hidden></button>
+          </div>
+          <p class="hint cpi-note" id="vix-note"></p>
+        </div>
+
+        <article class="card cpi-intro cpi-intro-after">
+          <section class="cpi-item"><h3>什麼是 VIXTWN</h3><p>臺指選擇權波動率指數由臺灣期貨交易所編製，參考美國芝加哥選擇權交易所（CBOE）VIX 指數的方法，以臺指選擇權（TXO）近月與次近月契約的價格，推算市場預期台股未來 30 天的年化波動程度（%）。</p></section>
+          <section class="cpi-item"><h3>誰公布、何時公布</h3><p>由臺灣期貨交易所在交易時間內即時計算並公布。本頁採用每個交易日的收盤值，台股休市日沒有資料。</p></section>
+          <section class="cpi-item"><h3>數字怎麼看</h3><p>數字越高，代表市場預期台股接下來的波動越大、避險需求越強。例如 20 代表市場預期未來一年的波動約 20%，粗略換算約為未來 30 天 ±5.8%（20 ÷ √12）的幅度，只是統計上的估計，不是漲跌預測。指數常在台股急跌時快速走高，與台股走勢多呈反向。</p></section>
+          <section class="cpi-item"><h3>和期貨市場的關係</h3><p>波動率越高，選擇權的權利金通常越貴，買權與賣權都一樣；賣方承擔的風險也越大。波動放大時，台指期的價格跳動與盤中震盪幅度常跟著擴大，期交所也可能調整保證金。</p></section>
+        </article>
+
+        <div class="keypoints">
+          <b>觀察重點</b>
+          <ul>
+            <li>VIXTWN 看的是「波動的大小」，不是方向；數字高代表市場預期震盪大，漲跌都有可能。</li>
+            <li>指數突然大幅跳升，常出現在重大消息或急跌行情時，可以和台指期走勢、外資期貨部位一起觀察。</li>
+            <li>波動率偏高時買進選擇權的成本較高，偏低時相對便宜；選擇權賣方則要留意波動突然放大的風險。</li>
+            <li>數值以臺灣期貨交易所公布為準。本頁內容僅供教育與參考，不構成任何投資建議。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- 選擇權策略篩選器暫時停用：要恢復顯示，刪掉下一行的 hidden -->
     <section class="section" id="screener" hidden>
       <div class="wrap">
         <header class="sec-head">
-          <span class="num">05</span>
+          <span class="num">06</span>
           <div><h2>選擇權策略篩選器</h2><p>依你的報價、看法與資金條件，比較各策略的損益與所需資金</p></div>
         </header>
 
@@ -436,7 +491,7 @@
       <div>
         <p class="footer-h">資料來源</p>
         <ul class="sources">
-          <li><a href="https://www.taifex.com.tw/" target="_blank" rel="noopener">臺灣期貨交易所（商品規格、保證金公告）</a></li>
+          <li><a href="https://www.taifex.com.tw/" target="_blank" rel="noopener">臺灣期貨交易所（商品規格、保證金公告、VIXTWN）</a></li>
           <li><a href="https://www.bls.gov/cpi/" target="_blank" rel="noopener">美國勞工統計局 BLS（CPI、非農就業數據）</a></li>
           <li><a href="https://www.bea.gov/data/personal-consumption-expenditures-price-index" target="_blank" rel="noopener">美國經濟分析局 BEA（PCE 數據）</a></li>
           <li><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates" target="_blank" rel="noopener">美國財政部（公債殖利率數據）</a></li>
