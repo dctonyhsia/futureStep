@@ -1139,11 +1139,12 @@ const OptMath = (() => {
   compute();
 })();
 
-// ---------- 數據頁：美國 CPI（資料在 data.js 的 usCpi，沒有資料時顯示預留位置）----------
-(function () {
-  const kpis = document.getElementById('cpi-kpis');
+// ---------- 數據頁：物價指標（美國 CPI、美國 PCE 共用同一套畫法；資料在 data.js 的 usCpi、usPce）----------
+// o.p：頁面元素 id 的前綴（cpi／pce）；o.name：指標名稱；o.fields：年增率、月增率各用哪個欄位；o.adjFixed：只有季調時填 'sa'
+function renderPriceIndex(o) {
+  const kpis = document.getElementById(o.p + '-kpis');
   if (!kpis) return;
-  const cfg = D.usCpi || {};
+  const cfg = o.cfg || {};
   const rows = (cfg.rows || []).filter(r => r && r.m).slice().sort((a, b) => a.m < b.m ? -1 : 1);
   const has = v => typeof v === 'number' && isFinite(v);
   const DEC = 2;   // 顯示到小數第幾位（data.js 目前為 2 位）
@@ -1153,14 +1154,12 @@ const OptMath = (() => {
   const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
 
   // 季節調整：mkt＝市場慣用（年增率未季調、月增率季調，與新聞相同）；sa＝全部季調；nsa＝全部未季調
-  const FIELDS = {
-    yoy: { cpi: { nsa: 'cpi', sa: 'cpiSA' }, core: { nsa: 'core', sa: 'coreSA' } },
-    mom: { cpi: { sa: 'cpiMoM', nsa: 'cpiMoMNSA' }, core: { sa: 'coreMoM', nsa: 'coreMoMNSA' } },
-  };
-  const ALL = ['cpi', 'core', 'cpiMoM', 'coreMoM', 'cpiSA', 'coreSA', 'cpiMoMNSA', 'coreMoMNSA'];
-  const hasAdj = any('cpiSA') || any('cpiMoMNSA');
-  let adj = 'mkt';
-  const adjOf = measure => adj === 'mkt' ? (measure === 'yoy' ? 'nsa' : 'sa') : adj;
+  const FIELDS = o.fields;
+  const ALL = [...new Set(Object.values(FIELDS).flatMap(m => Object.values(m).flatMap(s => Object.values(s))))];
+  const hasAdj = !o.adjFixed && (o.adjKeys || []).some(any);
+  let adj = o.adjFixed || 'mkt';
+  const adjOf = measure => o.adjFixed || (adj === 'mkt' ? (measure === 'yoy' ? 'nsa' : 'sa') : adj);
+  const N = o.name;
   const key = (measure, s) => FIELDS[measure][s][adjOf(measure)];
   const tag = measure => adjOf(measure) === 'sa' ? '季調' : '未季調';
   const okAny = r => ALL.some(k => has(r[k]));
@@ -1177,35 +1176,35 @@ const OptMath = (() => {
   };
   const renderTiles = () => {
     const tiles = [
-      tile(`CPI 年增率（${tag('yoy')}）`, key('yoy', 'cpi')), tile(`核心 CPI 年增率（${tag('yoy')}）`, key('yoy', 'core')),
-      tile(`CPI 月增率（${tag('mom')}）`, key('mom', 'cpi')), tile(`核心 CPI 月增率（${tag('mom')}）`, key('mom', 'core')),
+      tile(`${N} 年增率（${tag('yoy')}）`, key('yoy', 'cpi')), tile(`核心 ${N} 年增率（${tag('yoy')}）`, key('yoy', 'core')),
+      tile(`${N} 月增率（${tag('mom')}）`, key('mom', 'cpi')), tile(`核心 ${N} 月增率（${tag('mom')}）`, key('mom', 'core')),
     ];
     kpis.innerHTML = tiles.map(([k, v, s]) => `<div class="card cpi-kpi"><span class="cpi-k">${k}</span><b class="cpi-v">${v}</b><small>${esc(s)}</small></div>`).join('');
   };
-  const extra = document.getElementById('cpi-extra'), ei = latestOf('exp');
-  const ex = [ei >= 0 ? `${mon(rows[ei].m)} 市場預期 CPI 年增率：${pct(rows[ei].exp)}` : '', cfg.next ? `下次公布（台灣時間）：${cfg.next}` : ''].filter(Boolean);
+  const extra = document.getElementById(o.p + '-extra'), ei = latestOf('exp');
+  const ex = [ei >= 0 ? `${mon(rows[ei].m)} 市場預期 ${N} 年增率：${pct(rows[ei].exp)}` : '', cfg.next ? `下次公布（台灣時間）：${cfg.next}` : ''].filter(Boolean);
   if (extra && ex.length) { extra.textContent = ex.join('｜'); extra.hidden = false; }
-  const meta = document.getElementById('cpi-meta');
-  if (meta && rows.length) meta.textContent = `${mon(rows[0].m)} ～ ${mon(rows[rows.length - 1].m)}｜資料來源：${cfg.source || '美國勞工統計局 BLS'}${cfg.updated ? `｜更新：${cfg.updated}` : ''}`;
+  const meta = document.getElementById(o.p + '-meta');
+  if (meta && rows.length) meta.textContent = `${mon(rows[0].m)} ～ ${mon(rows[rows.length - 1].m)}｜資料來源：${cfg.source || o.source}${cfg.updated ? `｜更新：${cfg.updated}` : ''}`;
 
   // 走勢圖：可切換「月增率」（預設）與「年增率」；沒公布的月份線會斷開，整個月沒公布的標「未公布」
-  const chart = document.getElementById('cpi-chart');
+  const chart = document.getElementById(o.p + '-chart');
   const MODES = {
-    mom: { ref: 0, title: 'CPI 月增率走勢', lg: ['CPI 月增率', '核心 CPI 月增率'], ref_lg: '0% 基準線', name: '月增率' },
-    yoy: { ref: 2, title: 'CPI 年增率走勢', lg: ['CPI 年增率', '核心 CPI 年增率'], ref_lg: '2% 參考線', name: '年增率' },
+    mom: { ref: 0, title: `${N} 月增率走勢`, lg: [`${N} 月增率`, `核心 ${N} 月增率`], ref_lg: '0% 基準線', name: '月增率' },
+    yoy: { ref: 2, title: `${N} 年增率走勢`, lg: [`${N} 年增率`, `核心 ${N} 年增率`], ref_lg: '2% 參考線', name: '年增率' },
   };
   let mode = 'mom';
   const draw = () => {
     const M = MODES[mode], k1 = key(mode, 'cpi'), k2 = key(mode, 'core');
-    setText('cpi-title', `${M.title}（${tag(mode)}）`);
-    setText('cpi-lg1', `${M.lg[0]}（${tag(mode)}）`); setText('cpi-lg2', `${M.lg[1]}（${tag(mode)}）`); setText('cpi-lg3', M.ref_lg);
+    setText(o.p + '-title', `${M.title}（${tag(mode)}）`);
+    setText(o.p + '-lg1', `${M.lg[0]}（${tag(mode)}）`); setText(o.p + '-lg2', `${M.lg[1]}（${tag(mode)}）`); setText(o.p + '-lg3', M.ref_lg);
     const okM = r => has(r[k1]) || has(r[k2]);
     const i0 = rows.findIndex(okM);
     let i1 = rows.length - 1; while (i1 >= 0 && !okM(rows[i1])) i1--;
     const pts = i0 < 0 ? [] : rows.slice(i0, i1 + 1);
     if (pts.filter(okM).length < 2) {
       chart.classList.add('cpi-empty');
-      chart.innerHTML = `<div class="cpi-ph"><b>圖表位置</b><span>數據更新後，這裡會顯示 CPI 與核心 CPI ${M.name}的走勢圖</span></div>`;
+      chart.innerHTML = `<div class="cpi-ph"><b>圖表位置</b><span>數據更新後，這裡會顯示 ${N} 與核心 ${N} ${M.name}的走勢圖</span></div>`;
       return;
     }
     chart.classList.remove('cpi-empty');
@@ -1256,12 +1255,12 @@ const OptMath = (() => {
       const mid = (a.ly + b.ly) / 2; a.ly = mid - 7; b.ly = mid + 7;
     }
     const endG = ends.map(e => `<circle class="cpi-dot ${e.cls}" cx="${x(e.i).toFixed(1)}" cy="${y(e.v).toFixed(1)}" r="4.5"/><text class="cpi-end ${e.cls}" x="${(x(e.i) + 8).toFixed(1)}" y="${e.ly.toFixed(1)}">${e.v.toFixed(DEC)}%</text>`).join('');
-    chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="美國 CPI 與核心 CPI ${M.name}（${tag(mode)}）走勢圖">${g}${line(k2, 'sc-l2')}${line(k1, 'sc-l1')}${endG}</svg>`;
+    chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="美國 ${N} 與核心 ${N} ${M.name}（${tag(mode)}）走勢圖">${g}${line(k2, 'sc-l2')}${line(k1, 'sc-l1')}${endG}</svg>`;
   };
   // 切換月增率／年增率
-  document.querySelectorAll('#cpi .cpi-tabs .tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#' + o.p + ' .cpi-tabs .tab').forEach(b => b.addEventListener('click', () => {
     mode = b.dataset.mode;
-    document.querySelectorAll('#cpi .cpi-tabs .tab').forEach(t => { const on = t === b; t.classList.toggle('active', on); t.setAttribute('aria-pressed', on); });
+    document.querySelectorAll('#' + o.p + ' .cpi-tabs .tab').forEach(t => { const on = t === b; t.classList.toggle('active', on); t.setAttribute('aria-pressed', on); });
     draw();
   }));
   // 視窗寬度改變時重畫
@@ -1270,9 +1269,9 @@ const OptMath = (() => {
 
   // 表格（新到舊，最近 12 個月）；預設收起，只顯示最近 PEEK 個月
   const shown = rows.slice(-12).reverse();
-  const head = document.getElementById('cpi-head');
-  const body = document.getElementById('cpi-rows');
-  const toggle = document.getElementById('cpi-toggle');
+  const head = document.getElementById(o.p + '-head');
+  const body = document.getElementById(o.p + '-rows');
+  const toggle = document.getElementById(o.p + '-toggle');
   const PEEK = 3;
   let open = false;
   const setOpen = o => {
@@ -1286,8 +1285,8 @@ const OptMath = (() => {
   const renderTable = () => {
     const kc = key('yoy', 'cpi');
     const cols = [['資料月份', r => mon(r.m)],
-      [`CPI 月增率（${tag('mom')}）`, r => pct(r[key('mom', 'cpi')])], [`核心 CPI 月增率（${tag('mom')}）`, r => pct(r[key('mom', 'core')])],
-      [`CPI 年增率（${tag('yoy')}）`, r => pct(r[kc]), 'yoy'], [`核心 CPI 年增率（${tag('yoy')}）`, r => pct(r[key('yoy', 'core')])]];
+      [`${N} 月增率（${tag('mom')}）`, r => pct(r[key('mom', 'cpi')])], [`核心 ${N} 月增率（${tag('mom')}）`, r => pct(r[key('mom', 'core')])],
+      [`${N} 年增率（${tag('yoy')}）`, r => pct(r[kc]), 'yoy'], [`核心 ${N} 年增率（${tag('yoy')}）`, r => pct(r[key('yoy', 'core')])]];
     if (any('exp')) cols.push(['市場預期（年增率）', r => pct(r.exp)]);
     if (any('release')) cols.push(['公布日期', r => esc(r.release || '—')]);
     if (shown.some(r => r.note)) cols.push(['備註', r => esc(r.note || ''), 'rem']);
@@ -1306,33 +1305,57 @@ const OptMath = (() => {
 
   // 表格下方說明
   const renderNote = () => {
-    const note = document.getElementById('cpi-note');
+    const note = document.getElementById(o.p + '-note');
     if (!note) return;
     const gaps = rows.filter(r => !okAny(r) && r.note).map(r => `${mon(r.m)}${r.note}`);
-    const adjTxt = { mkt: '年增率為未經季節調整、與去年同月比較；月增率為經季節調整、與上月比較（與新聞報導相同）。', sa: '年增率與月增率都使用經季節調整的數字。', nsa: '年增率與月增率都使用未經季節調整的數字。' }[adj];
+    const adjTxt = (o.adjText || {})[adj] || '';
     note.textContent = [
-      `表格列出最近 12 個月（走勢圖顯示全部月份）。${adjTxt}數值依 BLS 公布的物價指數計算至小數兩位；BLS 官方新聞稿公布至小數一位，部分月份進位後會和新聞數字差 0.1 個百分點。`,
-      any('exp') ? 'CPI 年增率標紅字代表高於市場預期、綠字代表低於市場預期。' : '',
+      `表格列出最近 12 個月（走勢圖顯示全部月份）。${adjTxt}${o.precisionText || ''}`,
+      any('exp') ? `${N} 年增率標紅字代表高於市場預期、綠字代表低於市場預期。` : '',
       gaps.length ? `${gaps.join('；')}，走勢圖在該月斷開。` : '',
     ].join('');
   };
 
   // 季調／未季調切換（data.js 沒有季調、未季調另一組數字時就不顯示）
-  const adjBar = document.getElementById('cpi-adj');
-  const ADJ_HINT = { mkt: '年增率看未季調、月增率看季調，與新聞報導相同', sa: '年增率與月增率都看經季節調整的數字', nsa: '年增率與月增率都看未經季節調整的數字' };
+  const adjBar = document.getElementById(o.p + '-adj');
+  const ADJ_HINT = o.adjHint || {};
   if (adjBar && hasAdj) {
     adjBar.hidden = false;
     adjBar.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
       adj = b.dataset.adj;
       adjBar.querySelectorAll('.tab').forEach(t => { const on = t === b; t.classList.toggle('active', on); t.setAttribute('aria-pressed', on); });
-      setText('cpi-adj-hint', ADJ_HINT[adj]);
+      setText(o.p + '-adj-hint', ADJ_HINT[adj]);
       renderTiles(); draw(); renderTable(); renderNote();
     }));
-    setText('cpi-adj-hint', ADJ_HINT[adj]);
+    setText(o.p + '-adj-hint', ADJ_HINT[adj]);
   }
 
   renderTiles(); draw(); renderTable(); renderNote();
-})();
+}
+
+// 美國 CPI：年增率看未季調、月增率看季調（市場慣用），可切換全部季調／全部未季調
+renderPriceIndex({
+  p: 'cpi', name: 'CPI', cfg: D.usCpi, source: '美國勞工統計局 BLS',
+  fields: {
+    yoy: { cpi: { nsa: 'cpi', sa: 'cpiSA' }, core: { nsa: 'core', sa: 'coreSA' } },
+    mom: { cpi: { sa: 'cpiMoM', nsa: 'cpiMoMNSA' }, core: { sa: 'coreMoM', nsa: 'coreMoMNSA' } },
+  },
+  adjKeys: ['cpiSA', 'cpiMoMNSA'],
+  adjText: { mkt: '年增率為未經季節調整、與去年同月比較；月增率為經季節調整、與上月比較（與新聞報導相同）。', sa: '年增率與月增率都使用經季節調整的數字。', nsa: '年增率與月增率都使用未經季節調整的數字。' },
+  adjHint: { mkt: '年增率看未季調、月增率看季調，與新聞報導相同', sa: '年增率與月增率都看經季節調整的數字', nsa: '年增率與月增率都看未經季節調整的數字' },
+  precisionText: '數值依 BLS 公布的物價指數計算至小數兩位；BLS 官方新聞稿公布至小數一位，部分月份進位後會和新聞數字差 0.1 個百分點。',
+});
+// 美國 PCE：BEA 月資料只公布季調數字，所以不做季調切換
+renderPriceIndex({
+  p: 'pce', name: 'PCE', cfg: D.usPce, source: '美國經濟分析局 BEA',
+  fields: {
+    yoy: { cpi: { sa: 'pce', nsa: 'pce' }, core: { sa: 'core', nsa: 'core' } },
+    mom: { cpi: { sa: 'pceMoM', nsa: 'pceMoM' }, core: { sa: 'coreMoM', nsa: 'coreMoM' } },
+  },
+  adjFixed: 'sa',
+  adjText: { sa: '年增率與月增率都是經季節調整的數字（BEA 月資料只公布季調）。' },
+  precisionText: '數值依 BEA 公布的物價指數計算至小數兩位；BEA 官方月增率公布至小數一位，部分月份進位後會和新聞數字差 0.1 個百分點。',
+});
 
 // ---------- 數據頁：指標下拉選單（只顯示選中的指標；網址 #cpi、#nfp 可直接開啟）----------
 (function () {
