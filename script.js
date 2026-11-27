@@ -95,21 +95,25 @@ if (gCats2) gCats2.textContent = gCats.join('、');
   // 圖表：權益數走勢（面積＋折線），原始／維持保證金參考線，維持保證金以下標成追繳區；依實際寬度畫，視窗改變時重畫
   const wan = v => `${(v / 10000).toLocaleString('zh-TW', { maximumFractionDigits: 1 })} 萬`;
   const draw = () => {
-    const W = Math.max(340, Math.round(chart.clientWidth || 520)), H = W < 460 ? 300 : 320;
-    const L = 52, R = 18, T = 22, B = 58;
+    const W = Math.max(340, Math.round(chart.clientWidth || 520)), H = W < 460 ? 290 : 280;
+    const L = 48, R = 16, T = 30, B = 52;
     const eqs = rows.map(r => r.equity), vals = eqs.concat([M.initial, M.maintenance]);
     const span = Math.max(...vals) - Math.min(...vals) || 10000;
-    const step = [10000, 20000, 25000, 50000, 100000, 200000].find(s => span / s <= 4.5) || 500000;
-    const lo = Math.floor((Math.min(...vals) - span * 0.5) / step) * step, hi = Math.ceil((Math.max(...vals) + span * 0.22) / step) * step;
+    const step = [10000, 20000, 50000, 100000, 200000].find(s => span / s <= 2.5) || 500000;   // 格線約 3～5 條，畫面比較乾淨
+    const hi = Math.ceil((Math.max(...vals) + span * 0.12) / step) * step;
+    // 下方要留出追繳說明框的高度（約 78px）：縱軸下限一格一格往下調，直到放得下
+    let lo = Math.floor(Math.min(...vals) / step) * step;
+    const needBelow = callAt >= 0 ? 80 : 24, minEq = Math.min(...eqs);
+    while ((minEq - lo) / (hi - lo) * (H - T - B) < needBelow && lo > 0) lo -= step / 2;
     const x = i => L + 18 + (W - L - R - 36) * (rows.length === 1 ? 0.5 : i / (rows.length - 1));
     const y = v => T + (H - T - B) * (hi - v) / (hi - lo);
     const yb = H - B, xr = W - R;
     let g = `<defs><linearGradient id="mcFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.26"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient></defs>`;
     // 追繳區（維持保證金以下）
     g += `<rect class="mc-zone" x="${L}" y="${y(M.maintenance).toFixed(1)}" width="${xr - L}" height="${(yb - y(M.maintenance)).toFixed(1)}"/>`;
-    g += `<text class="mc-zone-l" x="${xr - 8}" y="${(yb - 8).toFixed(1)}" text-anchor="end">追繳區</text>`;
+    g += `<text class="mc-zone-l" x="${L + 8}" y="${(yb - 8).toFixed(1)}">追繳區</text>`;
     // 橫向格線與縱軸（萬元）
-    for (let v = lo; v <= hi + 1; v += step) g += `<line class="mc-grid" x1="${L}" x2="${xr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="mc-ty" x="${L - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${(v / 10000).toLocaleString('zh-TW')}萬</text>`;
+    for (let v = Math.ceil(lo / step) * step; v <= hi + 1; v += step) g += `<line class="mc-grid" x1="${L}" x2="${xr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="mc-ty" x="${L - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${(v / 10000).toLocaleString('zh-TW')}萬</text>`;
     // 參考線：原始、維持保證金
     const ref = (v, cls) => `<line class="mc-ref ${cls}" x1="${L}" x2="${xr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>`;
     g += ref(M.initial, 'init') + ref(M.maintenance, 'maint');
@@ -140,7 +144,7 @@ if (gCats2) gCats2.textContent = gCats.join('、');
     // 追繳說明框：放在追繳點正下方（靠近邊緣時往內收）
     if (callAt >= 0) {
       const r = rows[callAt], cx = x(callAt), cy = y(r.equity);
-      const bw = Math.min(W - L - R - 8, 196), bh = 52, bx = Math.min(Math.max(cx - bw / 2, L + 4), xr - bw - 4), by = Math.min(cy + 18, yb - bh - 6);
+      const bw = Math.min(W - L - R - 8, 196), bh = 52, bx = Math.min(Math.max(cx - bw / 2, L + 4), xr - bw - 4), by = Math.min(cy + 20, yb - bh - 4);
       g += `<line class="mc-call-lead" x1="${cx.toFixed(1)}" x2="${cx.toFixed(1)}" y1="${(cy + 11).toFixed(1)}" y2="${by.toFixed(1)}"/>` +
         `<rect class="mc-call-box" x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${bw}" height="${bh}" rx="8"/>` +
         `<text class="mc-call-t" x="${(bx + bw / 2).toFixed(1)}" y="${(by + 21).toFixed(1)}" text-anchor="middle">追繳　權益 ${fmtN(r.equity)}</text>` +
