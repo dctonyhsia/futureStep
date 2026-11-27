@@ -110,7 +110,7 @@ if (gCats2) gCats2.textContent = gCats.join('、');
     `<text class="lbl-call" x="${L + 4}" y="${y(M.maintenance) + 17}">維持保證金</text>`,
     `<polyline class="ln-equity" points="${pts}"/>`,
     ...rows.map((r, i) => `<circle class="pt${r.call ? ' call' : ''}" cx="${x(i)}" cy="${y(r.equity)}" r="5"/>` +
-      `<text class="${r.call ? 'lbl-call' : 'lbl-val'}" x="${x(i) + (i === 0 ? 8 : 0)}" y="${y(r.equity) + (r.call ? 22 : -12)}" text-anchor="${i === 0 ? 'start' : 'middle'}">${fmtN(r.equity)}${r.call ? ' 追繳' : ''}</text>` + (r.call ? `<text class="lbl-call lbl-call-sub" x="${x(i)}" y="${y(r.equity) + 38}" text-anchor="end">盤中高風險通知或盤後追繳通知</text>` : '') +
+      `<text class="${r.call ? 'lbl-call' : 'lbl-val'}" x="${x(i) + (i === 0 ? 8 : 0)}" y="${y(r.equity) + (r.call ? 22 : -12)}" text-anchor="${i === 0 ? 'start' : 'middle'}">${fmtN(r.equity)}${r.call ? ' 追繳' : ''}</text>` + (r.call ? `<text class="lbl-call lbl-call-sub" x="${Math.min(x(i), W - 88)}" y="${y(r.equity) + 38}" text-anchor="middle">盤中高風險通知或盤後追繳通知</text>` : '') +
       `<g class="tick"><text x="${x(i)}" y="${H - 14}" text-anchor="middle">D${i + 1}</text></g>`),
     `</svg>`,
   ].join('');
