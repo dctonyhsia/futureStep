@@ -92,29 +92,65 @@ if (gCats2) gCats2.textContent = gCats.join('、');
     return `<tr><td>${esc(r.label)}</td><td>${fmtN(r.price)}</td><td class="${cls}">${daily}</td><td>${fmtN(r.equity)}</td><td>${tag}</td></tr>`;
   }).join('');
 
-  // 圖表
-  const W = 480, H = 280, L = 70, R = 44, T = 28, B = 40;
-  const vals = rows.map(r => r.equity).concat([M.initial, M.maintenance]);
-  const pad = (Math.max(...vals) - Math.min(...vals)) * 0.18 || 10000;
-  const lo = Math.min(...vals) - pad, hi = Math.max(...vals) + pad;
-  const x = i => L + (W - L - R) * (rows.length === 1 ? 0.5 : i / (rows.length - 1));
-  const y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
-  const pts = rows.map((r, i) => `${x(i)},${y(r.equity)}`).join(' ');
-  const svg = [
-    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="帳戶權益每日變化，與原始及維持保證金比較">`,
-    `<line class="ln-init" x1="${L}" x2="${W - R}" y1="${y(M.initial)}" y2="${y(M.initial)}"/>`,
-    `<line class="ln-maint" x1="${L}" x2="${W - R}" y1="${y(M.maintenance)}" y2="${y(M.maintenance)}"/>`,
-    `<g class="tick"><text x="${L - 6}" y="${y(M.initial) + 4}" text-anchor="end">${fmtN(M.initial)}</text>`,
-    `<text x="${L - 6}" y="${y(M.maintenance) + 4}" text-anchor="end">${fmtN(M.maintenance)}</text></g>`,
-    `<text class="lbl-mute" x="${L + 4}" y="${y(M.initial) + 17}">原始保證金</text>`,
-    `<text class="lbl-call" x="${L + 4}" y="${y(M.maintenance) + 17}">維持保證金</text>`,
-    `<polyline class="ln-equity" points="${pts}"/>`,
-    ...rows.map((r, i) => `<circle class="pt${r.call ? ' call' : ''}" cx="${x(i)}" cy="${y(r.equity)}" r="5"/>` +
-      `<text class="${r.call ? 'lbl-call' : 'lbl-val'}" x="${x(i) + (i === 0 ? 8 : 0)}" y="${y(r.equity) + (r.call ? 22 : -12)}" text-anchor="${i === 0 ? 'start' : 'middle'}">${fmtN(r.equity)}${r.call ? ' 追繳' : ''}</text>` + (r.call ? `<text class="lbl-call lbl-call-sub" x="${Math.min(x(i), W - 88)}" y="${y(r.equity) + 38}" text-anchor="middle">盤中高風險通知或盤後追繳通知</text>` : '') +
-      `<g class="tick"><text x="${x(i)}" y="${H - 14}" text-anchor="middle">D${i + 1}</text></g>`),
-    `</svg>`,
-  ].join('');
-  chart.innerHTML = svg;
+  // 圖表：權益數走勢（面積＋折線），原始／維持保證金參考線，維持保證金以下標成追繳區；依實際寬度畫，視窗改變時重畫
+  const wan = v => `${(v / 10000).toLocaleString('zh-TW', { maximumFractionDigits: 1 })} 萬`;
+  const draw = () => {
+    const W = Math.max(340, Math.round(chart.clientWidth || 520)), H = W < 460 ? 300 : 320;
+    const L = 52, R = 18, T = 22, B = 58;
+    const eqs = rows.map(r => r.equity), vals = eqs.concat([M.initial, M.maintenance]);
+    const span = Math.max(...vals) - Math.min(...vals) || 10000;
+    const step = [10000, 20000, 25000, 50000, 100000, 200000].find(s => span / s <= 4.5) || 500000;
+    const lo = Math.floor((Math.min(...vals) - span * 0.5) / step) * step, hi = Math.ceil((Math.max(...vals) + span * 0.22) / step) * step;
+    const x = i => L + 18 + (W - L - R - 36) * (rows.length === 1 ? 0.5 : i / (rows.length - 1));
+    const y = v => T + (H - T - B) * (hi - v) / (hi - lo);
+    const yb = H - B, xr = W - R;
+    let g = `<defs><linearGradient id="mcFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.26"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient></defs>`;
+    // 追繳區（維持保證金以下）
+    g += `<rect class="mc-zone" x="${L}" y="${y(M.maintenance).toFixed(1)}" width="${xr - L}" height="${(yb - y(M.maintenance)).toFixed(1)}"/>`;
+    g += `<text class="mc-zone-l" x="${xr - 8}" y="${(yb - 8).toFixed(1)}" text-anchor="end">追繳區</text>`;
+    // 橫向格線與縱軸（萬元）
+    for (let v = lo; v <= hi + 1; v += step) g += `<line class="mc-grid" x1="${L}" x2="${xr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="mc-ty" x="${L - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${(v / 10000).toLocaleString('zh-TW')}萬</text>`;
+    // 參考線：原始、維持保證金
+    const ref = (v, cls, label) => `<line class="mc-ref ${cls}" x1="${L}" x2="${xr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>` +
+      `<text class="mc-ref-l ${cls}" x="${L + 8}" y="${(y(v) - 6).toFixed(1)}">${label} ${fmtN(v)}</text>`;
+    g += ref(M.initial, 'init', '原始保證金') + ref(M.maintenance, 'maint', '維持保證金');
+    // 權益面積與折線
+    const line = rows.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(r.equity).toFixed(1)}`).join('');
+    g += `<path class="mc-area" d="${line}L${x(rows.length - 1).toFixed(1)},${yb}L${x(0).toFixed(1)},${yb}Z"/><path class="mc-line" d="${line}"/>`;
+    // 每一天：圓點、數值標籤、日期與當日損益
+    rows.forEach((r, i) => {
+      const cx = x(i), cy = y(r.equity);
+      g += `<line class="mc-drop" x1="${cx.toFixed(1)}" x2="${cx.toFixed(1)}" y1="${(cy + 6).toFixed(1)}" y2="${yb}"/>`;
+      if (r.call) {
+        g += `<circle class="mc-halo" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="11"/><circle class="mc-pt call" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="6"/>`;
+      } else if (r.equity === M.initial) {
+        g += `<circle class="mc-pt" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="5.5"/>`;   // 和原始保證金相同，數字已標在參考線上
+      } else {
+        const t = fmtN(r.equity), w = t.length * 7.4 + 14, px = Math.min(Math.max(cx, L + w / 2 + 2), xr - w / 2 - 2);
+        g += `<circle class="mc-pt" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="5.5"/>` +
+          `<rect class="mc-pill" x="${(px - w / 2).toFixed(1)}" y="${(cy - 33).toFixed(1)}" width="${w.toFixed(1)}" height="21" rx="10.5"/>` +
+          `<text class="mc-val" x="${px.toFixed(1)}" y="${(cy - 18.5).toFixed(1)}" text-anchor="middle">${t}</text>`;
+      }
+      const chg = i === 0 ? '建倉' : `${r.daily > 0 ? '+' : r.daily < 0 ? '−' : '±'}${wan(Math.abs(r.daily))}`;
+      g += `<text class="mc-day" x="${cx.toFixed(1)}" y="${yb + 22}" text-anchor="middle">第 ${i + 1} 天</text>` +
+        `<text class="mc-chg${i === 0 ? '' : r.daily > 0 ? ' pos' : r.daily < 0 ? ' neg' : ''}" x="${cx.toFixed(1)}" y="${yb + 40}" text-anchor="middle">${chg}</text>`;
+    });
+    // 追繳說明框：放在追繳點正下方（靠近邊緣時往內收）
+    if (callAt >= 0) {
+      const r = rows[callAt], cx = x(callAt), cy = y(r.equity);
+      const bw = Math.min(W - L - R - 8, 196), bh = 52, bx = Math.min(Math.max(cx - bw / 2, L + 4), xr - bw - 4), by = Math.min(cy + 18, yb - bh - 6);
+      g += `<line class="mc-call-lead" x1="${cx.toFixed(1)}" x2="${cx.toFixed(1)}" y1="${(cy + 11).toFixed(1)}" y2="${by.toFixed(1)}"/>` +
+        `<rect class="mc-call-box" x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${bw}" height="${bh}" rx="8"/>` +
+        `<text class="mc-call-t" x="${(bx + bw / 2).toFixed(1)}" y="${(by + 21).toFixed(1)}" text-anchor="middle">追繳　權益 ${fmtN(r.equity)}</text>` +
+        `<text class="mc-call-s" x="${(bx + bw / 2).toFixed(1)}" y="${(by + 41).toFixed(1)}" text-anchor="middle">盤中高風險通知或盤後追繳通知</text>`;
+    }
+    chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="帳戶權益每日變化，與原始及維持保證金比較">${g}</svg>`;
+  };
+  draw();
+  // 寬度改變就重畫（含頁面剛載入、寬度還沒算好的時候）
+  let lastW = chart.clientWidth, tm;
+  const redraw = () => { clearTimeout(tm); tm = setTimeout(() => { if (chart.clientWidth && chart.clientWidth !== lastW) { lastW = chart.clientWidth; draw(); } }, 120); };
+  if (window.ResizeObserver) new ResizeObserver(redraw).observe(chart); else addEventListener('resize', redraw);
 
   const sum = document.getElementById('mc-summary');
   if (callAt >= 0) {
