@@ -108,15 +108,17 @@ if (gCats2) gCats2.textContent = gCats.join('、');
     const x = i => L + 18 + (W - L - R - 36) * (rows.length === 1 ? 0.5 : i / (rows.length - 1));
     const y = v => T + (H - T - B) * (hi - v) / (hi - lo);
     const yb = H - B, xr = W - R;
-    let g = `<defs><linearGradient id="mcFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.26"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient></defs>`;
-    // 追繳區（維持保證金以下）
-    g += `<rect class="mc-zone" x="${L}" y="${y(M.maintenance).toFixed(1)}" width="${xr - L}" height="${(yb - y(M.maintenance)).toFixed(1)}"/>`;
-    g += `<text class="mc-zone-l" x="${L + 8}" y="${(yb - 8).toFixed(1)}">追繳區</text>`;
+    let g = `<defs><linearGradient id="mcFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.26"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></linearGradient>` +
+      `<pattern id="mcHatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="mc-hatch" x1="0" y1="0" x2="0" y2="7"/></pattern></defs>`;
+    // 追繳區：維持保證金以下整塊標成紅色斜線底（權益掉進這一塊就會被追繳）
+    const ym = y(M.maintenance);
+    g += `<rect class="mc-zone" x="${L}" y="${ym.toFixed(1)}" width="${xr - L}" height="${(yb - ym).toFixed(1)}"/>` +
+      `<rect fill="url(#mcHatch)" x="${L}" y="${ym.toFixed(1)}" width="${xr - L}" height="${(yb - ym).toFixed(1)}"/>`;
     // 橫向格線與縱軸（萬元）
     for (let v = Math.ceil(lo / step) * step; v <= hi + 1; v += step) g += `<line class="mc-grid" x1="${L}" x2="${xr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="mc-ty" x="${L - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${(v / 10000).toLocaleString('zh-TW')}萬</text>`;
     // 參考線：原始、維持保證金
     const ref = (v, cls) => `<line class="mc-ref ${cls}" x1="${L}" x2="${xr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/>`;
-    g += ref(M.initial, 'init') + ref(M.maintenance, 'maint');
+    g += ref(M.initial, 'init');
     // 參考線的文字最後才畫，放在最上層，不會被權益線或圓點擋住
     const refLabel = (v, cls, label, right) => `<text class="mc-ref-l ${cls}" x="${right ? xr - 8 : L + 8}" y="${(y(v) - 6).toFixed(1)}"${right ? ' text-anchor="end"' : ''}>${label} ${fmtN(v)}</text>`;
     // 權益面積與折線
@@ -140,7 +142,10 @@ if (gCats2) gCats2.textContent = gCats.join('、');
       g += `<text class="mc-day" x="${cx.toFixed(1)}" y="${yb + 22}" text-anchor="middle">第 ${i + 1} 天</text>` +
         `<text class="mc-chg${i === 0 ? '' : r.daily > 0 ? ' pos' : r.daily < 0 ? ' neg' : ''}" x="${cx.toFixed(1)}" y="${yb + 40}" text-anchor="middle">${chg}</text>`;
     });
+    // 維持保證金＝追繳區的上緣：畫成實線；線上方標「維持保證金」，線下方標「追繳區」
+    g += `<line class="mc-zone-edge" x1="${L}" x2="${xr}" y1="${ym.toFixed(1)}" y2="${ym.toFixed(1)}"/>`;
     g += refLabel(M.initial, 'init', '原始保證金', true) + refLabel(M.maintenance, 'maint', '維持保證金');
+    g += `<text class="mc-zone-l" x="${L + 8}" y="${(ym + 19).toFixed(1)}">▼ 追繳區${W < 460 ? '' : '<tspan class="mc-zone-s">（權益低於維持保證金）</tspan>'}</text>`;
     // 追繳說明框：放在追繳點正下方（靠近邊緣時往內收）
     if (callAt >= 0) {
       const r = rows[callAt], cx = x(callAt), cy = y(r.equity);
