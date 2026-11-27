@@ -149,11 +149,11 @@ fill('settle-list', D.settlement, cardTpl);
     `假設在 ${fmtN(entry)} 點做多 1 口${R.product}（每點 ${fmtN(pv)} 元），原始保證金 ${fmtN(R.initial)} 元、維持保證金 ${fmtN(R.maintenance)} 元（${R.note || '假設數字，實際以期交所與期貨商公告為準'}）。`;
   document.getElementById('mr-summary').innerHTML =
     `以這個例子，指數下跌 <b class="mono">${fmtN(callPts)}</b> 點（跌破 ${fmtN(entry - callPts)} 點），權益數就低於維持保證金、維持率約 ${pct(R.maintenance).toFixed(1)}%，會收到追繳通知；` +
-    `下跌約 <b class="mono">${fmtN(Math.ceil(cutPts))}</b> 點（跌破約 ${fmtN(Math.floor(entry - cutPts))} 點），權益數剩不到 ${fmtN(R.initial * cut / 100)} 元、維持率低於 ${cut}%，期貨商就會代為沖銷（砍倉）。`;
+    `下跌約 <b class="mono">${fmtN(Math.ceil(cutPts))}</b> 點（跌破約 ${fmtN(Math.floor(entry - cutPts))} 點），權益數剩不到 ${fmtN(R.initial * cut / 100)} 元、維持率低於約定比率，期貨商就會代為沖銷（砍倉）。`;
   document.getElementById('mr-points').innerHTML = [
     `維持率 = 權益數 ÷ 原始保證金；剛進場時為 100%，賺錢會上升、賠錢會下降。`,
     `權益數低於維持保證金時會被追繳，必須在期限內補足至原始保證金。`,
-    `維持率低於 ${cut}% 時，期貨商會直接以市價代為沖銷（砍倉），不必等到收盤或追繳期限。`,
+    `維持率低於約定比率時，期貨商會直接以市價代為沖銷（砍倉），不必等到收盤或追繳期限。`,
     `砍倉是盤中即時計算；行情跳空時成交價可能更差，虧損甚至超過保證金，需另外補足。`,
   ].map(t => `<li>${esc(t)}</li>`).join('');
 })();
